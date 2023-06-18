@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "openapi-client-gen"
+version = "0.1.0"
+description = ""
+authors = ["Daniel Sánchez Gallego <dsanchez@altair.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+openapi3 = "^1.7.0"
+openapi-spec-validator = "^0.5.1"
+prance = "^0.22.11"
+Jinja2 = "^3.1.2"
+autopep8 = "^2.0.1"
+isort = "^5.11.4"
+autoflake = "^2.1.1"
+pydantic = "^1.10.9"
+vulture = "^2.7"
+
+[tool.poetry.group.test.dependencies]
+pytest = "^7.3.2"
+pytest-cov = "^4.1.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
