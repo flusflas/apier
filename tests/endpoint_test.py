@@ -1,6 +1,6 @@
 import pytest
 
-from endpoints import Endpoint, EndpointLayer, EndpointParameter, parse_endpoint
+from endpoints import Endpoint, EndpointLayer, EndpointParameter, parse_endpoint, split_endpoint_layers
 from openapi import Definition
 
 openapi_definition = Definition({
@@ -79,6 +79,64 @@ openapi_definition = Definition({
 def test_parse_endpoint(path, expected):
     """ Tests parsing an endpoint. """
     assert parse_endpoint(path, openapi_definition) == expected
+
+
+@pytest.mark.parametrize("endpoint, expected", [
+    (
+            Endpoint("/stores/{store_id}"),
+            Endpoint(path="/stores/{store_id}",
+                     layers=[
+                         EndpointLayer(
+                             path="/stores/{store_id}",
+                             api_levels=["stores"],
+                             parameters=[
+                                 EndpointParameter(name="store_id", type="string", required=False),
+                             ],
+                         )
+                     ])
+    ),
+    (
+            Endpoint("/stores/{store_id}/products/{product_id}"),
+            Endpoint(path="/stores/{store_id}/products/{product_id}",
+                     layers=[
+                         EndpointLayer(
+                             path="/stores/{store_id}",
+                             api_levels=["stores"],
+                             parameters=[
+                                 EndpointParameter(name="store_id", type="string", required=False),
+                             ],
+                         ),
+                         EndpointLayer(
+                             path="/products/{product_id}",
+                             api_levels=["products"],
+                             parameters=[
+                                 EndpointParameter(name="product_id", type="string", required=False),
+                             ],
+                         )
+                     ])
+    ),
+    (
+            Endpoint("/{first_id}/{second_id}/info"),
+            Endpoint(path="/{first_id}/{second_id}/info",
+                     layers=[
+                         EndpointLayer(
+                             path="/{first_id}/{second_id}",
+                             parameters=[
+                                 EndpointParameter(name="first_id", type="string", required=False),
+                                 EndpointParameter(name="second_id", type="string", required=False),
+                             ],
+                         ),
+                         EndpointLayer(
+                             path="/info",
+                             api_levels=["info"],
+                         )
+                     ])
+    ),
+])
+def test_split_endpoint_layers(endpoint, expected):
+    """ Tests splitting an endpoint into its layers. """
+    split_endpoint_layers(endpoint)
+    assert endpoint == expected
 
 
 @pytest.mark.parametrize("layer, expected_param_names, expected_param_types", [

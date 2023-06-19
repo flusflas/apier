@@ -1,12 +1,14 @@
 from __future__ import annotations
 
-import itertools
-from collections import OrderedDict
-from dataclasses import dataclass, field
 import re
 import uuid
-from typing import List
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, List
+
 from openapi import Definition
+
+if TYPE_CHECKING:
+    from tree import APINode
 
 
 @dataclass
@@ -82,17 +84,22 @@ class Endpoint:
 
 
 def parse_endpoint(path: str, definition: Definition = None) -> Endpoint:
-    path_levels = path.split("/")
-
-    # TODO: Review special cases (e.g. empty endpoints, trailing slash...)
-    path_levels = path_levels[1:]
-
     if definition is not None:
         endpoint_definition = definition.paths[path]
     else:
         endpoint_definition = {}
 
     endpoint = Endpoint(path=path, definition=endpoint_definition)
+    split_endpoint_layers(endpoint)
+    return endpoint
+
+
+def split_endpoint_layers(endpoint: Endpoint):
+    path_levels = endpoint.path.split("/")
+
+    # TODO: Review special cases (e.g. empty endpoints, trailing slash...)
+    path_levels = path_levels[1:]
+
     endpoint_layer = EndpointLayer(path='')
 
     for i, p in enumerate(path_levels):
@@ -112,4 +119,3 @@ def parse_endpoint(path: str, definition: Definition = None) -> Endpoint:
             endpoint_layer.api_levels.append(p)
 
     endpoint.layers.append(endpoint_layer)
-    return endpoint
