@@ -1,0 +1,322 @@
+openapi: 3.0.3
+info:
+  title: Company Maker API
+  description: An OpenAPI definition for testing.
+  version: 1.0.0
+servers:
+  - url: 'https://company-maker.test'
+    description: Testing server
+tags:
+  - name: Companies
+    description: Companies API
+  - name: Employees
+    description: Employees API
+paths:
+  /companies:
+    post:
+      tags:
+        - Companies
+      summary: Create a new Company
+      description: Creates a new Company and expands your capitalist empire.
+      operationId: CreateCompany
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompanyCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+        '400':
+          description: Bad Request
+        '409':
+          description: Conflict
+        '500':
+          description: Server Error
+
+    get:
+      tags:
+        - Companies
+      summary: List Companies
+      description: Returns all your companies.
+      parameters:
+        - in: query
+          description: Filters companies by name.
+          name: name
+          required: false
+          schema:
+            type: string
+            example: Stickers
+      operationId: ListCompanies
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyList'
+        '500':
+          description: Server Error
+
+  /companies/{company_id}:
+    parameters:
+      - $ref: '#/components/parameters/company_id'
+
+    get:
+      parameters:
+        - $ref: '#/components/parameters/company_id'
+      tags:
+        - Companies
+      summary: Get a Company
+      description: Returns a company by its ID.
+      operationId: GetCompany
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+        '404':
+          description: Not Found
+        '500':
+          description: Server Error
+
+    put:
+      tags:
+        - Companies
+      summary: Update Company
+      operationId: UpdateCompany
+      description: Updates an exising company.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompanyUpdate'
+            example:
+              name: Shiny Stickers Corporation
+              category: stickers
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+              example:
+                id: shiny_stickers
+                name: Shiny Stickers Corporation
+                category: stickers
+                created: "2023-06-19T21:00:00Z"
+                modified: "2023-06-19T21:30:00Z"
+        '400':
+          description: Bad Request
+        '409':
+          description: Conflict
+        '500':
+          description: Server Error
+
+    delete:
+      tags:
+        - Companies
+      summary: Delete a Company
+      operationId: DeleteCompany
+      description: Deletes a company :(
+      responses:
+        '204':
+          description: No content
+        '404':
+          description: Not Found
+        '500':
+          description: Server Error
+
+  /companies/{company_id}/{number}:
+    parameters:
+      - $ref: '#/components/parameters/company_id'
+
+    get:
+      parameters:
+        - $ref: '#/components/parameters/company_id'
+        - in: path
+          name: number
+          required: true
+          schema:
+            type: integer
+            example: 1
+      tags:
+        - Companies
+      summary: Get a Company with its ID and some number
+      description: It doesn't make sense, but I need to test weird endpoints too.
+      operationId: GetCompanyWithNumber
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+        '404':
+          description: Not Found
+        '500':
+          description: Server Error
+
+  /companies/{company_id}/employees:
+    parameters:
+      - $ref: '#/components/parameters/company_id'
+    post:
+      tags:
+        - Employees
+      summary: Hire an Employee
+      description: Hires a new employee!
+      operationId: CreateEmployee
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmployeeCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+        '400':
+          description: Bad Request
+        '409':
+          description: Conflict
+        '500':
+          description: Server Error
+
+  /companies/{company_id}/employees/{employee_num}:
+    get:
+      parameters:
+        - $ref: '#/components/parameters/company_id'
+        - $ref: '#/components/parameters/employee_num'
+      tags:
+        - Employees
+      summary: Get a Employee
+      description: Returns one of your company employees
+      operationId: GetEmployee
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+        '404':
+          description: Not Found
+        '500':
+          description: Server Error
+
+components:
+  parameters:
+    company_id:
+      in: path
+      name: company_id
+      required: true
+      schema:
+        type: string
+        example: mcdonalds
+
+    employee_num:
+      in: path
+      name: employee_num
+      required: true
+      schema:
+        type: integer
+        example: 17
+
+
+  schemas:
+#    AnyValue:
+#      description: "Can be any value - string, number, boolean, array or object."
+
+    CompanyBase:
+      title: Company Base
+      type: object
+      properties:
+        id:
+          type: string
+          example: shiny_stickers
+          description: ID of the Company.
+        name:
+          type: string
+          example: Shiny Stickers
+          description: Name of the Company.
+        category:
+          type: string
+          enum:
+            - food
+            - clothing
+            - technology
+            - evil
+            - stickers
+          example: stickers
+
+    CompanyCreate:
+      title: Company Creation Request
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/CompanyBase'
+
+    CompanyUpdate:
+      title: Company Update Request
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/CompanyBase'
+
+    Company:
+      title: Company
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/CompanyBase'
+        - type: object
+          properties:
+            created:
+              type: string
+              format: date-time
+              example: "2023-06-19T21:00:00Z"
+            modified:
+              type: string
+              format: date-time
+              example: "2023-06-19T21:00:00Z"
+
+    CompanyList:
+      title: Company List
+      type: array
+      items:
+        $ref: '#/components/schemas/Company'
+
+    EmployeeBase:
+      title: Employee Base
+      type: object
+      properties:
+        number:
+          type: integer
+          example: 17
+          description: ID number of the employee.
+        name:
+          type: string
+          example: Billy
+          description: Name of the employee.
+
+    EmployeeCreate:
+      title: Employee Create Request
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/EmployeeBase'
+
+    Employee:
+      title: Employee
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/EmployeeBase'
