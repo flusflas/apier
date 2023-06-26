@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, List
 
 from openapi import Definition
+from utils import get_multi_key
 
 if TYPE_CHECKING:
     from tree import APINode
@@ -17,10 +18,10 @@ class EndpointParameter:
     Defines a parameter used by an endpoint.
     """
     name: str
+    in_location: str  # "query", "header", "path" or "cookie".
     type: str
     required: bool = False
-
-    # kind: str   TODO: path, query, header...
+    format: str = ""
 
     def __hash__(self):
         return hash(repr(self))
@@ -43,8 +44,10 @@ class EndpointMethod:
     Defines a method used by an endpoint (e.g. GET, POST...).
     """
     name: str
+    parameters: List[EndpointParameter] = field(default_factory=list)
     request_schemas: List[ContentSchema] = field(default_factory=list)
     response_schemas: List[ContentSchema] = field(default_factory=list)
+
     # kind: str   TODO: path, query, header...
 
     def __hash__(self):
@@ -61,7 +64,7 @@ class EndpointLayer:
     """
     path: str
     api_levels: List[str] = field(default_factory=list)
-    parameters: List[EndpointParameter] = field(default_factory=list)
+    parameters: List[EndpointParameter] = field(default_factory=list)  # Only path parameters
     next: List[APINode] = field(default_factory=list)
     methods: List[EndpointMethod] = field(default_factory=list)
     _id: uuid.UUID = field(default_factory=uuid.uuid4, compare=False)
@@ -80,17 +83,17 @@ class Endpoint:
     """
     path: str
     layers: List[EndpointLayer] = field(default_factory=list)
-    definition: dict = field(default_factory=dict)
+    definition: Definition = None
+
+    @property
+    def methods(self):
+        return self.layers[-1].methods
 
 
 def parse_endpoint(path: str, definition: Definition = None) -> Endpoint:
-    if definition is not None:
-        endpoint_definition = definition.paths[path]
-    else:
-        endpoint_definition = {}
-
-    endpoint = Endpoint(path=path, definition=endpoint_definition)
+    endpoint = Endpoint(path=path, definition=definition)
     split_endpoint_layers(endpoint)
+    # parse_parameters(endpoint)
     return endpoint
 
 
@@ -107,7 +110,10 @@ def split_endpoint_layers(endpoint: Endpoint):
             continue
         elif re.match(r'^{.+}$', p):
             endpoint_layer.path += f"/{p}"
-            param = EndpointParameter(name=p[1:len(p) - 1], type="string")
+            param = EndpointParameter(name=p[1:len(p) - 1],
+                                      in_location="path",
+                                      type="string",
+                                      required=True)
             endpoint_layer.parameters.append(param)
         elif p.startswith("{") or p.endswith("}"):
             raise Exception("wrong parameter format in path")
@@ -119,3 +125,49 @@ def split_endpoint_layers(endpoint: Endpoint):
             endpoint_layer.api_levels.append(p)
 
     endpoint.layers.append(endpoint_layer)
+
+
+def parse_parameters(endpoint: Endpoint):
+    _ALLOWED_OPERATIONS = ["get", "put", "post", "delete", "options", "head", "patch", "trace"]
+
+    parameters = {}  # type: dict[tuple, EndpointParameter]
+
+    path_config = endpoint.definition.paths[endpoint.path]
+
+    if 'parameters' in path_config:
+        for p in path_config['parameters']:
+            parameter = parse_parameter(endpoint.definition, p)
+            parameters[(parameter.in_location, parameter.name)] = parameter
+
+    for operation_name in path_config:
+        if operation_name.lower() not in _ALLOWED_OPERATIONS:
+            continue
+
+        operation = path_config[operation_name]
+        op_parameters = parameters.copy()
+
+        if 'parameters' in operation:
+            for p in operation['parameters']:
+                parameter = parse_parameter(endpoint.definition, p)
+                op_parameters[(parameter.in_location, parameter.name)] = parameter
+
+        endpoint.methods.append(EndpointMethod(
+            name=operation_name.lower(),
+            parameters=list(op_parameters.values())
+        ))
+
+    return None
+
+
+def parse_parameter(definition: Definition, parameter_info: dict) -> EndpointParameter:
+    info = parameter_info
+    if '$ref' in info:
+        info = definition.solve_ref(info['$ref'])
+
+    return EndpointParameter(
+        name=info['name'],
+        in_location=info['in'],
+        type=get_multi_key(info, 'schema.type', default='string'),
+        required=info['required'] if info['in'] != 'path' else True,
+        format=info.get('format', ''),
+    )
