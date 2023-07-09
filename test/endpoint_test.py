@@ -1,10 +1,52 @@
 import pytest
 
 from endpoints import (Endpoint, EndpointLayer, EndpointParameter,
-                       parse_endpoint, split_endpoint_layers, parse_parameters, EndpointMethod)
+                       parse_endpoint, split_endpoint_layers, parse_parameters, EndpointMethod, ContentSchema,
+                       parse_content_schemas)
 from openapi import Definition
 
 openapi_definition = Definition.load('definitions/companies_api.yaml')
+
+
+@pytest.mark.parametrize("layer, expected_param_names, expected_param_types", [
+    (
+            EndpointLayer(
+                path="/companies/{company_id}",
+                parameters=[
+                    EndpointParameter(name="company_id", in_location="path", type="string", required=True),
+                ]),
+            ["company_id"],
+            ["string"]
+    ),
+    (
+            EndpointLayer(
+                path="/employees/{employee_num}",
+                parameters=[
+                    EndpointParameter(name="employee_num", in_location="path", type="string", required=True),
+                ],
+            ),
+            ["employee_num"],
+            ["string"]
+    ),
+    (
+            EndpointLayer(
+                path="/{first_id}/{second_id}",
+                parameters=[
+                    EndpointParameter(name="first_id", in_location="path", type="integer", required=True),
+                    EndpointParameter(name="second_id", in_location="path", type="boolean", required=True),
+                ],
+            ),
+            ["first_id", "second_id"],
+            ["integer", "boolean"]
+    ),
+])
+def test_endpoint_layer_param_functions(layer: EndpointLayer, expected_param_names, expected_param_types):
+    """
+    Tests the convenience methods EndpointLayer.param_names() and
+    EndpointLayer.param_types().
+    """
+    assert layer.param_names() == expected_param_names
+    assert layer.param_types() == expected_param_types
 
 
 @pytest.mark.parametrize("path, expected", [
@@ -244,42 +286,88 @@ def test_parse_parameters(endpoint, expected):
     assert endpoint == expected
 
 
-@pytest.mark.parametrize("layer, expected_param_names, expected_param_types", [
+@pytest.mark.parametrize("endpoint, expected_methods", [
     (
-            EndpointLayer(
-                path="/companies/{company_id}",
-                parameters=[
-                    EndpointParameter(name="company_id", in_location="path", type="string", required=True),
-                ]),
-            ["company_id"],
-            ["string"]
+            Endpoint("/companies/{company_id}/{number}", definition=openapi_definition),
+            [
+                EndpointMethod(
+                    name="get",
+                    parameters=[
+                        EndpointParameter(name="company_id", in_location="path",
+                                          type="string", required=True),
+                        EndpointParameter(name="number", in_location="path",
+                                          type="integer", required=True),
+                    ],
+                    request_schemas=[],
+                    response_schemas=[
+                        ContentSchema(
+                            name="Company",
+                            code=200,
+                            content_type="application/json",
+                            definition=openapi_definition.definition['components']['schemas']['Company'],
+                        ),
+                        ContentSchema(
+                            name="Company",
+                            code=200,
+                            content_type="application/xml",
+                            definition=openapi_definition.definition['components']['schemas']['Company'],
+                        ),
+                    ]
+                )
+            ]
     ),
     (
-            EndpointLayer(
-                path="/employees/{employee_num}",
-                parameters=[
-                    EndpointParameter(name="employee_num", in_location="path", type="string", required=True),
-                ],
-            ),
-            ["employee_num"],
-            ["string"]
-    ),
-    (
-            EndpointLayer(
-                path="/{first_id}/{second_id}",
-                parameters=[
-                    EndpointParameter(name="first_id", in_location="path", type="integer", required=True),
-                    EndpointParameter(name="second_id", in_location="path", type="boolean", required=True),
-                ],
-            ),
-            ["first_id", "second_id"],
-            ["integer", "boolean"]
-    ),
+            Endpoint("/companies/{company_id}/employees", definition=openapi_definition),
+            [
+                EndpointMethod(
+                    name="post",
+                    parameters=[
+                        EndpointParameter(name="company_id", in_location="path",
+                                          type="string", required=True),
+                    ],
+                    request_schemas=[
+                        ContentSchema(
+                            name="EmployeeCreate",
+                            code=0,
+                            content_type="application/json",
+                            definition=openapi_definition.definition['components']['schemas']['EmployeeCreate'],
+                        ),
+                    ],
+                    response_schemas=[
+                        ContentSchema(
+                            name="Employee",
+                            code=201,
+                            content_type="application/json",
+                            definition=openapi_definition.definition['components']['schemas']['Employee'],
+                        ),
+                    ]
+                ),
+                EndpointMethod(
+                    name="get",
+                    parameters=[
+                        EndpointParameter(name="company_id", in_location="path",
+                                          type="string", required=True),
+                    ],
+                    request_schemas=[],
+                    response_schemas=[
+                        ContentSchema(
+                            name="EmployeeList",
+                            code=200,
+                            content_type="application/json",
+                            definition=openapi_definition.definition['components']['schemas']['EmployeeList'],
+                        ),
+                    ]
+                )
+            ]
+    )
 ])
-def test_endpoint_layer_param_functions(layer: EndpointLayer, expected_param_names, expected_param_types):
+def test_process_endpoint_config(endpoint, expected_methods):
     """
-    Tests the convenience methods EndpointLayer.param_names() and
-    EndpointLayer.param_types().
+    Tests processing an Endpoint to fill their content schemas for request and
+    responses.
     """
-    assert layer.param_names() == expected_param_names
-    assert layer.param_types() == expected_param_types
+    split_endpoint_layers(endpoint)
+    parse_parameters(endpoint)
+
+    parse_content_schemas(endpoint)
+    assert endpoint.methods == expected_methods

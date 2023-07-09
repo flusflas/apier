@@ -152,7 +152,7 @@ paths:
       tags:
         - Companies
       summary: Get a Company with its ID and some number
-      description: It doesn't make sense, but I need to test weird endpoints too.
+      description: An endpoint used to test random things.
       operationId: GetCompanyWithNumber
       responses:
         '200':
@@ -161,6 +161,28 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Company'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Company'
+#        '201':
+#          description: Content without x-apigen-model-name
+#          content:
+#            application/json:
+#              schema:
+#                type: object
+#                properties:
+#                  info:
+#                    type: string
+#        '202':
+#          description: Content with x-apigen-model-name
+#          content:
+#            application/json:
+#              schema:
+#                type: object
+#                x-apigen-model-name: ResponseContent202
+#                properties:
+#                  info2:
+#                    type: string
         '404':
           description: Not Found
         '500':
@@ -188,6 +210,26 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Employee'
+        '400':
+          description: Bad Request
+        '409':
+          description: Conflict
+        '500':
+          description: Server Error
+
+    get:
+      tags:
+        - Employees
+      summary: List Employees
+      description: Returns all your employees.
+      operationId: ListEmployees
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployeeList'
         '400':
           description: Bad Request
         '409':
@@ -320,3 +362,9 @@ components:
       type: object
       allOf:
         - $ref: '#/components/schemas/EmployeeBase'
+
+    EmployeeList:
+      title: Employee List
+      type: array
+      items:
+        $ref: '#/components/schemas/Employee'

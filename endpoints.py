@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 import uuid
+import warnings
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, List
 
@@ -10,6 +11,8 @@ from utils import get_multi_key
 
 if TYPE_CHECKING:
     from tree import APINode
+
+_ALLOWED_OPERATIONS = ["get", "put", "post", "delete", "options", "head", "patch", "trace"]
 
 
 @dataclass
@@ -75,6 +78,12 @@ class EndpointLayer:
     def param_types(self):
         return [p.type for p in self.parameters]
 
+    def get_method(self, method_name: str) -> EndpointMethod | None:
+        for method in self.methods:
+            if method.name == method_name:
+                return method
+        return None
+
 
 @dataclass
 class Endpoint:
@@ -98,6 +107,10 @@ def parse_endpoint(path: str, definition: Definition = None) -> Endpoint:
 
 
 def split_endpoint_layers(endpoint: Endpoint):
+    """
+    Splits the path of the given Endpoint into all their layers and adds them
+    to the instance.
+    """
     path_levels = endpoint.path.split("/")
 
     # TODO: Review special cases (e.g. empty endpoints, trailing slash...)
@@ -128,10 +141,11 @@ def split_endpoint_layers(endpoint: Endpoint):
 
 
 def parse_parameters(endpoint: Endpoint):
-    _ALLOWED_OPERATIONS = ["get", "put", "post", "delete", "options", "head", "patch", "trace"]
-
+    """
+    Parses all the request parameters of the given Endpoint and adds them
+    to the instance.
+    """
     parameters = {}  # type: dict[tuple, EndpointParameter]
-
     path_config = endpoint.definition.paths[endpoint.path]
 
     if 'parameters' in path_config:
@@ -139,11 +153,10 @@ def parse_parameters(endpoint: Endpoint):
             parameter = parse_parameter(endpoint.definition, p)
             parameters[(parameter.in_location, parameter.name)] = parameter
 
-    for operation_name in path_config:
+    for operation_name, operation in path_config.items():
         if operation_name.lower() not in _ALLOWED_OPERATIONS:
             continue
 
-        operation = path_config[operation_name]
         op_parameters = parameters.copy()
 
         if 'parameters' in operation:
@@ -160,6 +173,13 @@ def parse_parameters(endpoint: Endpoint):
 
 
 def parse_parameter(definition: Definition, parameter_info: dict) -> EndpointParameter:
+    """
+    Parses a parameter definition.
+
+    :param definition: The OpenAPI definition.
+    :param parameter_info: The parameter definition.
+    :return: An EndpointParameter with the parameter information.
+    """
     info = parameter_info
     if '$ref' in info:
         info = definition.solve_ref(info['$ref'])
@@ -170,4 +190,71 @@ def parse_parameter(definition: Definition, parameter_info: dict) -> EndpointPar
         type=get_multi_key(info, 'schema.type', default='string'),
         required=info['required'] if info['in'] != 'path' else True,
         format=info.get('format', ''),
+    )
+
+
+def parse_content_schemas(endpoint: Endpoint):
+    """
+    Parses the content schemas of the given Endpoint and adds them
+    to the instance.
+    """
+    path_config = endpoint.definition.paths[endpoint.path]
+
+    for operation_name, operation in path_config.items():
+        if operation_name.lower() not in _ALLOWED_OPERATIONS:
+            continue
+
+        req_schemas = []
+        req_definition = get_multi_key(operation, 'requestBody.content', '.', {})
+        for content_type, content_type_definition in req_definition.items():
+            schema = content_type_definition.get('schema', {})
+            req_schemas.append(parse_schema(endpoint, operation_name,
+                                            schema, content_type))
+
+        resp_schemas = []
+        resp_definition = operation.get('responses', {})
+        for resp_code, resp_definition in resp_definition.items():
+            resp_code = int(resp_code)
+            if resp_code < 200 or resp_code >= 300:
+                continue
+
+            resp_definition = resp_definition.get('content', {})
+            for content_type, content_type_definition in resp_definition.items():
+                schema = content_type_definition.get('schema', {})
+                resp_schemas.append(parse_schema(endpoint, operation_name, schema,
+                                                 content_type, resp_code))
+
+        method = endpoint.layers[-1].get_method(operation_name)
+        method.request_schemas = req_schemas
+        method.response_schemas = resp_schemas
+
+
+def parse_schema(endpoint: Endpoint, operation_name: str,
+                 schema_def: dict, content_type: str,
+                 resp_code: int = 0) -> ContentSchema:
+    """
+    Parses a content schema.
+
+    :param endpoint: The Endpoint where the schema is used.
+    :param operation_name: Name of the endpoint operation.
+    :param schema_def: Schema definition.
+    :param content_type: Content type of the request/response.
+    :param resp_code: Response code returned (omitted for requests).
+    :return: A ContentSchema with the content schema information.
+    """
+    if '$ref' in schema_def:
+        schema_name = schema_def['$ref'].split('/')[-1]
+        schema_def = endpoint.definition.solve_ref(schema_def['$ref'])
+    else:
+        schema_name = schema_def.get('x-model-name')
+        if schema_name is None:
+            warnings.warn(f"Content schema with non-defined name in endpoint "
+                          f"'{operation_name.upper()} {endpoint.path}'")
+        # TODO: Generate pydantic model for schema
+
+    return ContentSchema(
+        name=schema_name,
+        code=resp_code,
+        content_type=content_type,
+        definition=schema_def,
     )
