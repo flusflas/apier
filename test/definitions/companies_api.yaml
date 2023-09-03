@@ -3,6 +3,10 @@ info:
   title: Company Maker API
   description: An OpenAPI definition for testing.
   version: 1.0.0
+  x-api-gen:
+    equivalent_paths:
+      - source: /companies/{company_id}/departments/{department_name}/employees/{employee_num}
+        target: /companies/{company_id}/employees/{employee_num}
 servers:
   - url: 'https://company-maker.test'
     description: Testing server
@@ -259,6 +263,29 @@ paths:
         '500':
           description: Server Error
 
+  /companies/{company_id}/departments/{department_name}/employees/{employee_num}:
+    get:
+      parameters:
+        - $ref: '#/components/parameters/company_id'
+        - $ref: '#/components/parameters/department_name'
+        - $ref: '#/components/parameters/employee_num'
+      tags:
+        - Employees
+      summary: Get a Employee by department
+      description: Returns one of your company employees by a department
+      operationId: GetEmployeeByDepartment
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+        '404':
+          description: Not Found
+        '500':
+          description: Server Error
+
 components:
   parameters:
     company_id:
@@ -276,6 +303,14 @@ components:
       schema:
         type: integer
         example: 17
+
+    department_name:
+      in: path
+      name: department_name
+      required: true
+      schema:
+        type: string
+        example: accounting
 
 
   schemas:
