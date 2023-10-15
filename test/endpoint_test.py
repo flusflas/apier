@@ -7,6 +7,301 @@ from openapi import Definition
 
 openapi_definition = Definition.load('definitions/companies_api.yaml')
 
+expected_endpoints = {
+    "/companies/{company_id}": Endpoint(
+        path="/companies/{company_id}",
+        definition=openapi_definition,
+        layers=[
+            EndpointLayer(
+                path="/companies/{company_id}",
+                api_levels=["companies"],
+                parameters=[
+                    EndpointParameter(name="company_id", in_location="path", type="string", required=True),
+                ],
+                next=[],
+                methods=[
+                    EndpointMethod(
+                        name='get',
+                        description='Returns a company by its ID.',
+                        parameters=[
+                            EndpointParameter(name='company_id',
+                                              in_location='path',
+                                              type='string',
+                                              required=True,
+                                              format='')
+                        ],
+                        request_schemas=[],
+                        response_schemas=[
+                            ContentSchema(name='Company',
+                                          content_type='application/json',
+                                          definition={'allOf': [
+                                              {'$ref': '#/components/schemas/CompanyBase'},
+                                              {'properties': {'created': {
+                                                  'example': '2023-06-19T21:00:00Z',
+                                                  'format': 'date-time',
+                                                  'type': 'string'},
+                                                  'modified': {
+                                                      'example': '2023-06-19T21:00:00Z',
+                                                      'format': 'date-time',
+                                                      'type': 'string'}},
+                                                  'type': 'object'}],
+                                              'title': 'Company',
+                                              'type': 'object'},
+                                          code=200)
+                        ]
+                    ),
+                    EndpointMethod(
+                        name='put',
+                        description='Updates an exising company.',
+                        parameters=[
+                            EndpointParameter(name='company_id',
+                                              in_location='path',
+                                              type='string',
+                                              required=True,
+                                              format='')
+                        ],
+                        request_schemas=[
+                            ContentSchema(name='CompanyUpdate',
+                                          content_type='application/json',
+                                          definition={'allOf': [
+                                              {'$ref': '#/components/schemas/CompanyBase'}],
+                                              'title': 'Company '
+                                                       'Update '
+                                                       'Request',
+                                              'type': 'object'},
+                                          code=0)
+                        ],
+                        response_schemas=[
+                            ContentSchema(name='Company',
+                                          content_type='application/json',
+                                          definition={'allOf': [
+                                              {'$ref': '#/components/schemas/CompanyBase'},
+                                              {'properties': {'created': {
+                                                  'example': '2023-06-19T21:00:00Z',
+                                                  'format': 'date-time',
+                                                  'type': 'string'},
+                                                  'modified': {
+                                                      'example': '2023-06-19T21:00:00Z',
+                                                      'format': 'date-time',
+                                                      'type': 'string'}},
+                                                  'type': 'object'}],
+                                              'title': 'Company',
+                                              'type': 'object'},
+                                          code=200)
+                        ]
+                    ),
+                    EndpointMethod(name='delete',
+                                   description='Deletes a company :(',
+                                   parameters=[EndpointParameter(name='company_id',
+                                                                 in_location='path',
+                                                                 type='string',
+                                                                 required=True,
+                                                                 format='')],
+                                   request_schemas=[],
+                                   response_schemas=[])
+                ],
+            )
+        ],
+    ),
+    "/companies/{company_id}/employees": Endpoint(
+        path='/companies/{company_id}/employees',
+        definition=openapi_definition,
+        layers=[
+            EndpointLayer(
+                path='/companies/{company_id}',
+                api_levels=['companies'],
+                parameters=[
+                    EndpointParameter(
+                        name='company_id',
+                        in_location='path',
+                        type='string',
+                        required=True,
+                        format='')
+                ],
+                next=[],
+                methods=[]
+            ),
+            EndpointLayer(
+                path='/employees',
+                api_levels=['employees'],
+                parameters=[],
+                next=[],
+                methods=[
+                    EndpointMethod(
+                        name="post",
+                        description='Hires a new employee!',
+                        parameters=[
+                            EndpointParameter(name="company_id", in_location="path",
+                                              type="string", required=True),
+                        ],
+                        request_schemas=[
+                            ContentSchema(
+                                name="EmployeeCreate",
+                                code=0,
+                                content_type="application/json",
+                                definition=openapi_definition.definition['components']['schemas']['EmployeeCreate'],
+                            ),
+                        ],
+                        response_schemas=[
+                            ContentSchema(
+                                name="Employee",
+                                code=201,
+                                content_type="application/json",
+                                definition=openapi_definition.definition['components']['schemas']['Employee'],
+                            ),
+                        ]
+                    ),
+                    EndpointMethod(
+                        name="get",
+                        description='Returns all your employees.',
+                        parameters=[
+                            EndpointParameter(name="company_id", in_location="path",
+                                              type="string", required=True),
+                        ],
+                        request_schemas=[],
+                        response_schemas=[
+                            ContentSchema(
+                                name="EmployeeList",
+                                code=200,
+                                content_type="application/json",
+                                definition=openapi_definition.definition['components']['schemas']['EmployeeList'],
+                            ),
+                        ]
+                    ),
+                ],
+            ),
+        ],
+    ),
+    "/companies/{company_id}/employees/{employee_num}": Endpoint(
+        path="/companies/{company_id}/employees/{employee_num}",
+        definition=openapi_definition,
+        layers=[
+            EndpointLayer(
+                path="/companies/{company_id}",
+                api_levels=["companies"],
+                parameters=[
+                    EndpointParameter(name="company_id", in_location="path", type="string", required=True),
+                ],
+                next=[],
+                methods=[],
+            ),
+            EndpointLayer(
+                path="/employees/{employee_num}",
+                api_levels=["employees"],
+                parameters=[
+                    EndpointParameter(name="employee_num", in_location="path", type="string", required=True),
+                ],
+                next=[],
+                methods=[
+                    EndpointMethod(
+                        name='get',
+                        description='Returns one of your company employees',
+                        parameters=[
+                            EndpointParameter(name='company_id',
+                                              in_location='path',
+                                              type='string',
+                                              required=True,
+                                              format=''),
+                            EndpointParameter(name='employee_num',
+                                              in_location='path',
+                                              type='integer',
+                                              required=True,
+                                              format='')],
+                        request_schemas=[],
+                        response_schemas=[
+                            ContentSchema(
+                                name='Employee',
+                                content_type='application/json',
+                                definition={
+                                    'allOf': [
+                                        {'$ref': '#/components/schemas/EmployeeBase'}
+                                    ],
+                                    'title': 'Employee',
+                                    'type': 'object'
+                                },
+                                code=200)
+                        ]
+                    )
+                ],
+            )
+        ]
+    ),
+    "/companies/{company_id}/{number}": Endpoint(
+        path='/companies/{company_id}/{number}',
+        definition=openapi_definition,
+        layers=[
+            EndpointLayer(
+                path='/companies/{company_id}/{number}',
+                api_levels=['companies'],
+                parameters=[
+                    EndpointParameter(
+                        name='company_id',
+                        in_location='path',
+                        type='string',
+                        required=True,
+                        format=''
+                    ),
+                    EndpointParameter(
+                        name='number',
+                        in_location='path',
+                        type='string',
+                        required=True,
+                        format=''
+                    )
+                ],
+                next=[],
+                methods=[
+                    EndpointMethod(
+                        name="get",
+                        description='An endpoint used to test random things.',
+                        parameters=[
+                            EndpointParameter(name="company_id", in_location="path",
+                                              type="string", required=True),
+                            EndpointParameter(name="number", in_location="path",
+                                              type="integer", required=True),
+                        ],
+                        request_schemas=[],
+                        response_schemas=[
+                            ContentSchema(
+                                name="Company",
+                                code=200,
+                                content_type="application/json",
+                                definition=openapi_definition.definition['components']['schemas']['Company'],
+                            ),
+                            ContentSchema(
+                                name="Company",
+                                code=200,
+                                content_type="application/xml",
+                                definition=openapi_definition.definition['components']['schemas']['Company'],
+                            ),
+                            ContentSchema(
+                                name='ErrorResponse',
+                                content_type='application/json',
+                                definition={
+                                    'properties': {
+                                        'message': {
+                                            'example': 'Oh, no!',
+                                            'type': 'string'
+                                        },
+                                        'status': {
+                                            'example': 400,
+                                            'type': 'integer'
+                                        }
+                                    },
+                                    'required': ['status', 'message'],
+                                    'title': 'Error Response',
+                                    'type': 'object'
+                                },
+                                code=404
+                            ),
+                        ]
+                    )
+                ]
+            )
+        ]
+    ),
+}
+
 
 @pytest.mark.parametrize("layer, expected_param_names, expected_param_types", [
     (
@@ -50,45 +345,14 @@ def test_endpoint_layer_param_functions(layer: EndpointLayer, expected_param_nam
 
 
 @pytest.mark.parametrize("path, expected", [
-    ("/companies/{company_id}", Endpoint(
-        path="/companies/{company_id}",
-        definition=openapi_definition,
-        layers=[
-            EndpointLayer(
-                path="/companies/{company_id}",
-                api_levels=["companies"],
-                parameters=[
-                    EndpointParameter(name="company_id", in_location="path", type="string", required=True),
-                ],
-                next=[],
-                methods=[],
-            )
-        ],
-    )),
-    ("/companies/{company_id}/employees/{employee_num}", Endpoint(
-        path="/companies/{company_id}/employees/{employee_num}",
-        definition=openapi_definition,
-        layers=[
-            EndpointLayer(
-                path="/companies/{company_id}",
-                api_levels=["companies"],
-                parameters=[
-                    EndpointParameter(name="company_id", in_location="path", type="string", required=True),
-                ],
-                next=[],
-                methods=[],
-            ),
-            EndpointLayer(
-                path="/employees/{employee_num}",
-                api_levels=["employees"],
-                parameters=[
-                    EndpointParameter(name="employee_num", in_location="path", type="string", required=True),
-                ],
-                next=[],
-                methods=[],
-            )
-        ]
-    )),
+    (
+            "/companies/{company_id}",
+            expected_endpoints["/companies/{company_id}"]
+    ),
+    (
+            "/companies/{company_id}/employees/{employee_num}",
+            expected_endpoints["/companies/{company_id}/employees/{employee_num}"]
+    ),
     # ("/{first_id}/{second_id}/info", Endpoint(
     #     path="/{first_id}/{second_id}/info",
     #     definition=openapi_definition.paths["/{first_id}/{second_id}/info"],
@@ -193,11 +457,18 @@ def test_split_endpoint_layers(endpoint, expected):
                              methods=[
                                  EndpointMethod(
                                      name="get",
+                                     description='An endpoint used to test random things.',
                                      parameters=[
-                                         EndpointParameter(name="company_id", in_location="path",
-                                                           type="string", required=True),
-                                         EndpointParameter(name="number", in_location="path",
-                                                           type="integer", required=True),
+                                         EndpointParameter(
+                                             name="company_id",
+                                             in_location="path",
+                                             type="string",
+                                             required=True),
+                                         EndpointParameter(
+                                             name="number",
+                                             in_location="path",
+                                             type="integer",
+                                             required=True),
                                      ]
                                  )
                              ]
@@ -218,6 +489,7 @@ def test_split_endpoint_layers(endpoint, expected):
                              methods=[
                                  EndpointMethod(
                                      name="get",
+                                     description='Returns a company by its ID.',
                                      parameters=[
                                          EndpointParameter(name="company_id", in_location="path",
                                                            type="string", required=True),
@@ -225,6 +497,7 @@ def test_split_endpoint_layers(endpoint, expected):
                                  ),
                                  EndpointMethod(
                                      name="put",
+                                     description='Updates an exising company.',
                                      parameters=[
                                          EndpointParameter(name="company_id", in_location="path",
                                                            type="string", required=True),
@@ -232,6 +505,7 @@ def test_split_endpoint_layers(endpoint, expected):
                                  ),
                                  EndpointMethod(
                                      name="delete",
+                                     description='Deletes a company :(',
                                      parameters=[
                                          EndpointParameter(name="company_id", in_location="path",
                                                            type="string", required=True),
@@ -250,24 +524,34 @@ def test_split_endpoint_layers(endpoint, expected):
                              path="/companies/{company_id}",
                              api_levels=["companies"],
                              parameters=[
-                                 EndpointParameter(name="company_id", in_location="path", type="string", required=True),
+                                 EndpointParameter(name="company_id",
+                                                   in_location="path",
+                                                   type="string",
+                                                   required=True),
                              ],
                          ),
                          EndpointLayer(
                              path="/employees/{employee_num}",
                              api_levels=["employees"],
                              parameters=[
-                                 EndpointParameter(name="employee_num", in_location="path", type="string",
+                                 EndpointParameter(name="employee_num",
+                                                   in_location="path",
+                                                   type="string",
                                                    required=True),
                              ],
                              methods=[
                                  EndpointMethod(
                                      name="get",
+                                     description='Returns one of your company employees',
                                      parameters=[
-                                         EndpointParameter(name="company_id", in_location="path",
-                                                           type="string", required=True),
-                                         EndpointParameter(name="employee_num", in_location="path",
-                                                           type="integer", required=True),
+                                         EndpointParameter(name="company_id",
+                                                           in_location="path",
+                                                           type="string",
+                                                           required=True),
+                                         EndpointParameter(name="employee_num",
+                                                           in_location="path",
+                                                           type="integer",
+                                                           required=True),
                                      ]
                                  )
                              ]
@@ -289,76 +573,11 @@ def test_parse_parameters(endpoint, expected):
 @pytest.mark.parametrize("endpoint, expected_methods", [
     (
             Endpoint("/companies/{company_id}/{number}", definition=openapi_definition),
-            [
-                EndpointMethod(
-                    name="get",
-                    parameters=[
-                        EndpointParameter(name="company_id", in_location="path",
-                                          type="string", required=True),
-                        EndpointParameter(name="number", in_location="path",
-                                          type="integer", required=True),
-                    ],
-                    request_schemas=[],
-                    response_schemas=[
-                        ContentSchema(
-                            name="Company",
-                            code=200,
-                            content_type="application/json",
-                            definition=openapi_definition.definition['components']['schemas']['Company'],
-                        ),
-                        ContentSchema(
-                            name="Company",
-                            code=200,
-                            content_type="application/xml",
-                            definition=openapi_definition.definition['components']['schemas']['Company'],
-                        ),
-                    ]
-                )
-            ]
+            expected_endpoints["/companies/{company_id}/{number}"].methods,
     ),
     (
             Endpoint("/companies/{company_id}/employees", definition=openapi_definition),
-            [
-                EndpointMethod(
-                    name="post",
-                    parameters=[
-                        EndpointParameter(name="company_id", in_location="path",
-                                          type="string", required=True),
-                    ],
-                    request_schemas=[
-                        ContentSchema(
-                            name="EmployeeCreate",
-                            code=0,
-                            content_type="application/json",
-                            definition=openapi_definition.definition['components']['schemas']['EmployeeCreate'],
-                        ),
-                    ],
-                    response_schemas=[
-                        ContentSchema(
-                            name="Employee",
-                            code=201,
-                            content_type="application/json",
-                            definition=openapi_definition.definition['components']['schemas']['Employee'],
-                        ),
-                    ]
-                ),
-                EndpointMethod(
-                    name="get",
-                    parameters=[
-                        EndpointParameter(name="company_id", in_location="path",
-                                          type="string", required=True),
-                    ],
-                    request_schemas=[],
-                    response_schemas=[
-                        ContentSchema(
-                            name="EmployeeList",
-                            code=200,
-                            content_type="application/json",
-                            definition=openapi_definition.definition['components']['schemas']['EmployeeList'],
-                        ),
-                    ]
-                )
-            ]
+            expected_endpoints["/companies/{company_id}/employees"].methods,
     )
 ])
 def test_process_endpoint_config(endpoint, expected_methods):

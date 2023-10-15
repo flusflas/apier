@@ -4,7 +4,7 @@ import re
 import uuid
 import warnings
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional
 
 from openapi import Definition
 from utils import get_multi_key
@@ -47,6 +47,7 @@ class EndpointMethod:
     Defines a method used by an endpoint (e.g. GET, POST...).
     """
     name: str
+    description: Optional[str] = ""
     parameters: List[EndpointParameter] = field(default_factory=list)
     request_schemas: List[ContentSchema] = field(default_factory=list)
     response_schemas: List[ContentSchema] = field(default_factory=list)
@@ -102,7 +103,9 @@ class Endpoint:
 def parse_endpoint(path: str, definition: Definition = None) -> Endpoint:
     endpoint = Endpoint(path=path, definition=definition)
     split_endpoint_layers(endpoint)
-    # parse_parameters(endpoint)
+    if definition is not None:
+        parse_parameters(endpoint)
+        parse_content_schemas(endpoint)
     return endpoint
 
 
@@ -166,6 +169,7 @@ def parse_parameters(endpoint: Endpoint):
 
         endpoint.methods.append(EndpointMethod(
             name=operation_name.lower(),
+            description=operation.get("description"),
             parameters=list(op_parameters.values())
         ))
 
@@ -215,9 +219,6 @@ def parse_content_schemas(endpoint: Endpoint):
         resp_definition = operation.get('responses', {})
         for resp_code, resp_definition in resp_definition.items():
             resp_code = int(resp_code)
-            if resp_code < 200 or resp_code >= 300:
-                continue
-
             resp_definition = resp_definition.get('content', {})
             for content_type, content_type_definition in resp_definition.items():
                 schema = content_type_definition.get('schema', {})

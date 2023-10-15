@@ -38,6 +38,10 @@ paths:
                 $ref: '#/components/schemas/Company'
         '400':
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '409':
           description: Conflict
         '500':
@@ -189,6 +193,10 @@ paths:
 #                    type: string
         '404':
           description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Server Error
 
@@ -316,6 +324,20 @@ components:
   schemas:
 #    AnyValue:
 #      description: "Can be any value - string, number, boolean, array or object."
+
+    ErrorResponse:
+      title: Error Response
+      type: object
+      required:
+        - status
+        - message
+      properties:
+        status:
+          type: integer
+          example: 400
+        message:
+          type: string
+          example: Oh, no!
 
     CompanyBase:
       title: Company Base
