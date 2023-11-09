@@ -1,0 +1,81 @@
+from dataclasses import dataclass
+from typing import Union, overload
+
+from .internal.resource import APIResource, handle_response
+from .models.models import *
+from .models.primitives import *
+
+{% set ns = namespace() %}
+
+{% for layer in api_node.layers %}
+
+{% for next_node in layer.next %}
+from .{{ next_node.api }} import _{{ next_node.api.capitalize() }}Method
+{% endfor %}
+
+@dataclass
+class {{ class_id_name }}{{ loop.index }}(APIResource{% for next_node in layer.next %}, _{{ next_node.api.capitalize() }}Method{% endfor %}):
+    {% for param in layer.parameters %}
+    {{ param.name }}: {{ eq_type_func(param.type) }}
+    {% endfor %}
+
+    {%- for method in layer.methods %}
+    def {{ method.name }}(self
+            {%- for req_schema in method.request_schemas -%}{% if loop.first or not loop.last %}, {% endif %}req: {{ eq_type_func(req_schema) }}{% endfor %})
+            {%- if method.response_schemas | length > 0 %} -> {{ eq_type_func(*method.response_schemas) }}{% endif %}:
+        """
+        {{ method.description }}
+        {% set query_params = get_params_by_location(method.parameters, 'query') %}
+        {% if query_params | length > 0 %}
+
+        Query parameters:
+        {% for param in query_params %}
+         - {{ param.name }}: {{ param.description }}
+        {% endfor %}
+        {% endif %}
+        """
+        resp = self._make_request("{{ method.name.upper() }}")
+        return handle_response(resp, [
+        {% for schema in method.response_schemas %}
+            ({{ schema.code }}, "{{ schema.content_type }}", {{ eq_type_func(schema) }}),
+        {% endfor %}
+        ])
+    {% endfor %}
+
+    def _build_partial_path(self):
+        return f"{% if api_node.api %}/{% endif %}{{ api_node.api }}{% for param in layer.parameters %}/{self.{{ param.name }}}{% endfor %}"
+
+{% endfor %}
+
+class _{{ api_node.api.capitalize() }}Method:
+    """
+    This class declares and implements the `{{ api_node.api }}()` method.
+    """
+    {% for layer in api_node.layers %}
+
+    @overload
+    def {{ api_node.api }}(self{% for param in layer.parameters %}, {{ param.name }}: {{ eq_type_func(param.type) }}{% endfor %}) -> {{ class_id_name }}{{ loop.index }}:
+        ...
+    {% endfor %}
+
+    def {{ api_node.api }}(self{% for param in api_node.params_set() %}, {{ param.name }}: {{ eq_type_func(param.type) }}{% if param.name in optional_param_names %} = None{% endif %}{% endfor %}):
+        {% for layer in api_node.layers %}
+        {% if api_node.layers | length > 1 and layer.parameters | length > 1 or (has_layer_without_params and layer.parameters | length == 1) %}
+        if {% for param in layer.param_names() %}{% if param in optional_param_names %}{{ param }} is not None {% if not loop.last %} and {% endif %}{% endif %}{% endfor %}:
+            return {{ class_id_name }}{{ loop.index }}({{ layer.param_names() | join (", ") }})._child_of(self)
+
+        {% elif optional_param_names | length > 0 %}
+        if {{ optional_param_names | join(" is None and ") }} is None:
+            return {{ class_id_name }}{{ loop.index }}({{ layer.param_names() | join(", ") }})._child_of(self)
+
+        {% else %}
+
+        {%- set ns.raise_stmt = False %}
+        return {{ class_id_name }}{{ loop.index }}({{ layer.param_names() | join(", ") }})._child_of(self)
+
+        {% endif %}
+        {% endfor  %}
+
+        {%- if ns.raise_stmt is not defined %}
+        raise Exception("Invalid parameters")
+        {% endif %}
