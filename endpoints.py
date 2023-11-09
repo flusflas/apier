@@ -4,7 +4,7 @@ import re
 import uuid
 import warnings
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Tuple
 
 from openapi import Definition
 from utils import get_multi_key
@@ -127,11 +127,9 @@ def split_endpoint_layers(endpoint: Endpoint):
         if len(p) == 0:
             continue
         elif re.match(r'^{.+}$', p):
+            param_name = p[1:len(p) - 1]
             endpoint_layer.path += f"/{p}"
-            param = EndpointParameter(name=p[1:len(p) - 1],
-                                      in_location="path",
-                                      type="string",
-                                      required=True)
+            param, _ = get_first_endpoint_param(endpoint, param_name, 'path')
             endpoint_layer.parameters.append(param)
         elif p.startswith("{") or p.endswith("}"):
             raise Exception("wrong parameter format in path")
@@ -143,6 +141,55 @@ def split_endpoint_layers(endpoint: Endpoint):
             endpoint_layer.api_levels.append(p)
 
     endpoint.layers.append(endpoint_layer)
+
+
+def get_first_endpoint_param(endpoint: Endpoint, param_name: str,
+                             in_location: str) -> Tuple[EndpointParameter, bool]:
+    """
+    Return an EndpointParameter with the information of the first parameter
+    found in an endpoint that matches the given name and location.
+    If the Endpoint doesn't have an OpenAPI definition or the parameter is not
+    found, a basic EndpointParameter instance will be returned with the given
+    information.
+
+    :param endpoint:    The Endpoint to search for the parameter.
+    :param param_name:  The parameter name.
+    :param in_location: The location of the parameter (path, query...).
+    :return: The parameter information and a boolean value indicating whether
+             the parameter description has been found in the endpoint definition.
+    """
+    schema_found = False
+    param_schema = {}
+    if endpoint.definition is not None:
+        for key, value in endpoint.definition.paths[endpoint.path].items():
+            if schema_found:
+                break
+
+            if key != "parameters" and key not in _ALLOWED_OPERATIONS:
+                continue
+
+            if key in _ALLOWED_OPERATIONS:
+                if 'parameters' in value:
+                    value = value['parameters']
+                else:
+                    continue
+
+            for schema_def in value:
+                if '$ref' in schema_def:
+                    schema_def = endpoint.definition.solve_ref(schema_def['$ref'])
+                if schema_def.get('in') == in_location and schema_def.get('name') == param_name:
+                    param_schema = schema_def
+                    schema_found = True
+                    break
+
+    return EndpointParameter(
+        name=param_name,
+        description=param_schema.get('description', ''),
+        in_location=in_location,
+        type=get_multi_key(param_schema, 'schema.type', default='string'),
+        required=param_schema.get('required', False) if in_location != 'path' else True,
+        format=param_schema.get('format', ''),
+    ), schema_found
 
 
 def parse_parameters(endpoint: Endpoint):

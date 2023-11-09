@@ -274,7 +274,7 @@ expected_endpoints = {
                 path="/employees/{employee_num}",
                 api_levels=["employees"],
                 parameters=[
-                    EndpointParameter(name="employee_num", in_location="path", type="string", required=True),
+                    EndpointParameter(name="employee_num", in_location="path", type="integer", required=True),
                 ],
                 next=[],
                 methods=[
@@ -339,7 +339,7 @@ expected_endpoints = {
                     EndpointParameter(
                         name='number',
                         in_location='path',
-                        type='string',
+                        type='integer',
                         required=True,
                         format=''
                     )
@@ -348,7 +348,7 @@ expected_endpoints = {
                 methods=[
                     EndpointMethod(
                         name="get",
-                        description='An endpoint used to test random things.',
+                        description='An endpoint used to test multiple path parameters in the same layer.',
                         parameters=[
                             EndpointParameter(name="company_id", in_location="path",
                                               type="string", required=True),
@@ -417,11 +417,11 @@ expected_endpoints = {
             EndpointLayer(
                 path="/employees/{employee_num}",
                 parameters=[
-                    EndpointParameter(name="employee_num", in_location="path", type="string", required=True),
+                    EndpointParameter(name="employee_num", in_location="path", type="integer", required=True),
                 ],
             ),
             ["employee_num"],
-            ["string"]
+            ["integer"]
     ),
     (
             EndpointLayer(
@@ -468,7 +468,10 @@ def test_parse_endpoint(path, expected):
                              path="/companies/{company_id}",
                              api_levels=["companies"],
                              parameters=[
-                                 EndpointParameter(name="company_id", in_location="path", type="string", required=True),
+                                 EndpointParameter(name="company_id",
+                                                   in_location="path",
+                                                   type="string",
+                                                   required=True),
                              ],
                          )
                      ])
@@ -481,14 +484,19 @@ def test_parse_endpoint(path, expected):
                              path="/companies/{company_id}",
                              api_levels=["companies"],
                              parameters=[
-                                 EndpointParameter(name="company_id", in_location="path", type="string", required=True),
+                                 EndpointParameter(name="company_id",
+                                                   in_location="path",
+                                                   type="string",
+                                                   required=True),
                              ],
                          ),
                          EndpointLayer(
                              path="/employees/{employee_num}",
                              api_levels=["employees"],
                              parameters=[
-                                 EndpointParameter(name="employee_num", in_location="path", type="string",
+                                 EndpointParameter(name="employee_num",
+                                                   in_location="path",
+                                                   type="string",
                                                    required=True),
                              ],
                          )
@@ -529,12 +537,12 @@ def test_split_endpoint_layers(endpoint, expected):
                              api_levels=["companies"],
                              parameters=[
                                  EndpointParameter(name="company_id", in_location="path", type="string", required=True),
-                                 EndpointParameter(name="number", in_location="path", type="string", required=True),
+                                 EndpointParameter(name="number", in_location="path", type="integer", required=True),
                              ],
                              methods=[
                                  EndpointMethod(
                                      name="get",
-                                     description='An endpoint used to test random things.',
+                                     description='An endpoint used to test multiple path parameters in the same layer.',
                                      parameters=[
                                          EndpointParameter(
                                              name="company_id",
@@ -613,7 +621,7 @@ def test_split_endpoint_layers(endpoint, expected):
                              parameters=[
                                  EndpointParameter(name="employee_num",
                                                    in_location="path",
-                                                   type="string",
+                                                   type="integer",
                                                    required=True),
                              ],
                              methods=[
