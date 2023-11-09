@@ -160,7 +160,7 @@ paths:
       tags:
         - Companies
       summary: Get a Company with its ID and some number
-      description: An endpoint used to test random things.
+      description: An endpoint used to test multiple path parameters in the same layer.
       operationId: GetCompanyWithNumber
       responses:
         '200':
@@ -464,6 +464,17 @@ components:
       type: array
       items:
         $ref: '#/components/schemas/Company'
+      example:
+        - id: shiny_stickers
+          name: Shiny Stickers Corporation
+          category: stickers
+          created: "2023-06-19T21:00:00Z"
+          modified: "2023-06-19T21:30:00Z"
+        - id: happy_pharma
+          name: Happy Pharmaceutical Corp.
+          category: evil
+          created: "2017-10-08T10:30:00Z"
+          modified: "2021-08-30T12:15:00Z"
 
     EmployeeBase:
       title: Employee Base

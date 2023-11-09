@@ -1,7 +1,7 @@
 from unittest import mock
 
 from _build.api import API
-from .common import make_json_response
+from .common import make_json_response, to_json
 
 
 def test_create_successfully():
@@ -29,10 +29,8 @@ def test_make_request():
     m.assert_called_once_with("POST",
                               "https://test-api.com/info",
                               params=None,
-                              headers={
-                                  'Content-Type': 'application/json',
-                              },
-                              data=req_payload,
+                              headers={'Content-Type': 'application/json'},
+                              data=to_json(req_payload),
                               timeout=3)
 
     assert resp.status_code == 200
