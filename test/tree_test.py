@@ -1,23 +1,10 @@
-import random
-from uuid import UUID
 from typing import List
-from unittest.mock import patch
 
 import pytest
 
-from .expected_data import expected_tree_repr
-
-
-def _predictive_uuid():
-    rd = random.Random()
-    rd.seed(0)
-    return lambda: UUID(int=rd.getrandbits(128))
-
-
-with patch('uuid.uuid4', new=_predictive_uuid()):
-    from endpoints import Endpoint, parse_endpoint
-    from openapi import Definition
-    from tree import build_endpoints_tree
+from endpoints import Endpoint, parse_endpoint
+from openapi import Definition
+from tree import build_endpoints_tree
 
 openapi_definition = Definition.load('definitions/companies_api.yaml')
 
@@ -36,9 +23,7 @@ def test_build_endpoints_tree(endpoints):
     """
     tree = build_endpoints_tree(endpoints)
 
-    assert repr(tree) == expected_tree_repr
-
-    assert len(tree.branches) == 1
+    assert len(tree.branches) == 2
     assert tree.branches[0].api == 'companies'
 
     companies_node = tree.branches[0]

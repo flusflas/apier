@@ -294,6 +294,76 @@ paths:
         '500':
           description: Server Error
 
+  /tests/echo_string:
+    get:
+      tags:
+        - Tests
+      summary: Get a text response
+      description: Returns a text response (string)
+      operationId: GetTextResponse
+      requestBody:
+        required: true
+        content:
+          text/plain:
+            schema:
+              type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+#                $ref: '#/components/schemas/StringResponse'
+                type: string
+#                x-model-name: Wowowow
+
+  /tests/echo_bool:
+    get:
+      tags:
+        - Tests
+      summary: Get a boolean response
+      description: Returns a boolean response
+      operationId: GetBooleanResponse
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: boolean
+
+  /tests/echo_object:
+    get:
+      tags:
+        - Tests
+      summary: Get an object response
+      description: Returns an object response
+      operationId: GetObjectResponse
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /tests/echo_array:
+    get:
+      tags:
+        - Tests
+      summary: Get an array response
+      description: Returns an array response
+      operationId: GetArrayResponse
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: integer
+
 components:
   parameters:
     company_id:
@@ -425,3 +495,6 @@ components:
       type: array
       items:
         $ref: '#/components/schemas/Employee'
+
+    StringResponse:
+      type: string
