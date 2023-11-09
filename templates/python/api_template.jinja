@@ -30,7 +30,7 @@ class API(
         self.headers = {}
 
     def make_request(self, method: str, url: str, body=None, params=None,
-                     headers: dict = None) -> requests.Response:
+                     headers: dict = None, timeout = 3) -> requests.Response:
         """
         Makes a request to the API server.
 
@@ -43,6 +43,9 @@ class API(
         :param params: (optional) Dictionary, list of tuples or bytes to send
             in the query string for the :class:`Request`.
         :param headers: (optional) Dictionary of HTTP headers to send.
+        :param timeout: (optional) How many seconds to wait for the server to
+            send data before giving up, as a float, or a :ref:`(connect timeout,
+            read timeout) <timeouts>` tuple.
         :return: An instance of :class:`request.Response`.
         """
         if headers is None:
@@ -59,4 +62,4 @@ class API(
             body = body.json()
 
         return requests.request(method, self.host + url, params=params,
-                                headers=headers, data=body, timeout=3)
+                                headers=headers, data=body, timeout=timeout)

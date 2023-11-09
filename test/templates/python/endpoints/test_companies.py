@@ -145,14 +145,14 @@ def test_delete():
     with mock.patch("_build.api.requests.request", return_value=expected_resp) as m:
         resp = (API(host="test-api.com").
                 companies("shiny_stickers").
-                delete(params={'foo': 'bar'}))
+                delete(params={'foo': 'bar'}, timeout=5.5))
 
     m.assert_called_once_with("DELETE",
                               "https://test-api.com/companies/shiny_stickers",
                               params={'foo': 'bar'},
                               headers={},
                               data=None,
-                              timeout=3)
+                              timeout=5.5)
 
     assert resp == NoResponse()
     assert type(resp) == NoResponse
