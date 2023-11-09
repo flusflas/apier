@@ -1,4 +1,7 @@
+import json
+
 import requests
+from pydantic import BaseModel
 
 {% for branch in root_branches -%}
     from .{{ branch.api }} import _{{ branch.api.capitalize() }}Method
@@ -47,8 +50,13 @@ class API(
 
         headers.update(self.headers)
 
+        # TODO: Handle request Content-Type
         if isinstance(body, dict):
             headers['Content-Type'] = 'application/json'
+            body = json.dumps(body)
+        elif isinstance(body, BaseModel):
+            headers['Content-Type'] = 'application/json'
+            body = body.json()
 
         return requests.request(method, self.host + url, params=params,
                                 headers=headers, data=body, timeout=3)
