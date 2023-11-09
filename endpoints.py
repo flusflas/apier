@@ -4,7 +4,7 @@ import re
 import uuid
 import warnings
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List
 
 from openapi import Definition
 from utils import get_multi_key
@@ -25,6 +25,7 @@ class EndpointParameter:
     type: str
     required: bool = False
     format: str = ""
+    description: str = ""
 
     def __hash__(self):
         return hash(repr(self))
@@ -39,6 +40,7 @@ class ContentSchema:
     content_type: str
     definition: dict
     code: int = 0
+    is_primitive: bool = False
 
 
 @dataclass
@@ -47,7 +49,7 @@ class EndpointMethod:
     Defines a method used by an endpoint (e.g. GET, POST...).
     """
     name: str
-    description: Optional[str] = ""
+    description: str
     parameters: List[EndpointParameter] = field(default_factory=list)
     request_schemas: List[ContentSchema] = field(default_factory=list)
     response_schemas: List[ContentSchema] = field(default_factory=list)
@@ -190,6 +192,7 @@ def parse_parameter(definition: Definition, parameter_info: dict) -> EndpointPar
 
     return EndpointParameter(
         name=info['name'],
+        description=info.get('description', ""),
         in_location=info['in'],
         type=get_multi_key(info, 'schema.type', default='string'),
         required=info['required'] if info['in'] != 'path' else True,
@@ -225,6 +228,15 @@ def parse_content_schemas(endpoint: Endpoint):
                 resp_schemas.append(parse_schema(endpoint, operation_name, schema,
                                                  content_type, resp_code))
 
+            if len(resp_definition) == 0:
+                resp_schemas.append(ContentSchema(
+                    name='',
+                    code=resp_code,
+                    content_type='',
+                    definition=resp_definition,
+                    is_primitive=True,
+                ))
+
         method = endpoint.layers[-1].get_method(operation_name)
         method.request_schemas = req_schemas
         method.response_schemas = resp_schemas
@@ -243,19 +255,35 @@ def parse_schema(endpoint: Endpoint, operation_name: str,
     :param resp_code: Response code returned (omitted for requests).
     :return: A ContentSchema with the content schema information.
     """
+    is_primitive = False
     if '$ref' in schema_def:
         schema_name = schema_def['$ref'].split('/')[-1]
         schema_def = endpoint.definition.solve_ref(schema_def['$ref'])
     else:
         schema_name = schema_def.get('x-model-name')
         if schema_name is None:
-            warnings.warn(f"Content schema with non-defined name in endpoint "
-                          f"'{operation_name.upper()} {endpoint.path}'")
-        # TODO: Generate pydantic model for schema
+            schema_type = schema_def.get('type')
+            primitive_types = [
+                'string',
+                'number',
+                'integer',
+                'object',
+                'array',
+                'boolean',
+                'null',
+            ]
+            if schema_type in primitive_types:
+                schema_name = schema_type
+                is_primitive = True
+            else:
+                warnings.warn(f"Content schema with non-defined name in endpoint "
+                              f"'{operation_name.upper()} {endpoint.path}'")
+                # TODO: Generate pydantic model for schema
 
     return ContentSchema(
         name=schema_name,
         code=resp_code,
         content_type=content_type,
         definition=schema_def,
+        is_primitive=is_primitive,
     )

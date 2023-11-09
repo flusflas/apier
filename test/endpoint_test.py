@@ -16,7 +16,10 @@ expected_endpoints = {
                 path="/companies/{company_id}",
                 api_levels=["companies"],
                 parameters=[
-                    EndpointParameter(name="company_id", in_location="path", type="string", required=True),
+                    EndpointParameter(name="company_id",
+                                      in_location="path",
+                                      type="string",
+                                      required=True),
                 ],
                 next=[],
                 methods=[
@@ -47,7 +50,17 @@ expected_endpoints = {
                                                   'type': 'object'}],
                                               'title': 'Company',
                                               'type': 'object'},
-                                          code=200)
+                                          code=200),
+                            ContentSchema(name='',
+                                          content_type='',
+                                          definition={},
+                                          code=404,
+                                          is_primitive=True),
+                            ContentSchema(name='',
+                                          content_type='',
+                                          definition={},
+                                          code=500,
+                                          is_primitive=True)
                         ]
                     ),
                     EndpointMethod(
@@ -65,40 +78,78 @@ expected_endpoints = {
                                           content_type='application/json',
                                           definition={'allOf': [
                                               {'$ref': '#/components/schemas/CompanyBase'}],
-                                              'title': 'Company '
-                                                       'Update '
-                                                       'Request',
+                                              'title': 'Company Update Request',
                                               'type': 'object'},
                                           code=0)
                         ],
                         response_schemas=[
                             ContentSchema(name='Company',
                                           content_type='application/json',
-                                          definition={'allOf': [
-                                              {'$ref': '#/components/schemas/CompanyBase'},
-                                              {'properties': {'created': {
-                                                  'example': '2023-06-19T21:00:00Z',
-                                                  'format': 'date-time',
-                                                  'type': 'string'},
-                                                  'modified': {
-                                                      'example': '2023-06-19T21:00:00Z',
-                                                      'format': 'date-time',
-                                                      'type': 'string'}},
-                                                  'type': 'object'}],
+                                          definition={
+                                              'allOf': [
+                                                  {'$ref': '#/components/schemas/CompanyBase'},
+                                                  {
+                                                      'properties': {
+                                                          'created': {
+                                                              'example': '2023-06-19T21:00:00Z',
+                                                              'format': 'date-time',
+                                                              'type': 'string'
+                                                          },
+                                                          'modified': {
+                                                              'example': '2023-06-19T21:00:00Z',
+                                                              'format': 'date-time',
+                                                              'type': 'string'}
+                                                      },
+                                                      'type': 'object'
+                                                  }],
                                               'title': 'Company',
-                                              'type': 'object'},
-                                          code=200)
+                                              'type': 'object'
+                                          },
+                                          code=200),
+                            ContentSchema(name='',
+                                          content_type='',
+                                          definition={},
+                                          code=400,
+                                          is_primitive=True),
+                            ContentSchema(name='',
+                                          content_type='',
+                                          definition={},
+                                          code=409,
+                                          is_primitive=True),
+                            ContentSchema(name='',
+                                          content_type='',
+                                          definition={},
+                                          code=500,
+                                          is_primitive=True),
                         ]
                     ),
                     EndpointMethod(name='delete',
                                    description='Deletes a company :(',
-                                   parameters=[EndpointParameter(name='company_id',
-                                                                 in_location='path',
-                                                                 type='string',
-                                                                 required=True,
-                                                                 format='')],
+                                   parameters=[
+                                       EndpointParameter(name='company_id',
+                                                         in_location='path',
+                                                         type='string',
+                                                         required=True,
+                                                         format='')
+                                   ],
                                    request_schemas=[],
-                                   response_schemas=[])
+                                   response_schemas=[
+                                       ContentSchema(name='',
+                                                     content_type='',
+                                                     definition={},
+                                                     code=204,
+                                                     is_primitive=True),
+                                       ContentSchema(name='',
+                                                     content_type='',
+                                                     definition={},
+                                                     code=404,
+                                                     is_primitive=True),
+                                       ContentSchema(name='',
+                                                     content_type='',
+                                                     definition={},
+                                                     code=500,
+                                                     is_primitive=True),
+                                   ])
                 ],
             )
         ],
@@ -131,8 +182,10 @@ expected_endpoints = {
                         name="post",
                         description='Hires a new employee!',
                         parameters=[
-                            EndpointParameter(name="company_id", in_location="path",
-                                              type="string", required=True),
+                            EndpointParameter(name="company_id",
+                                              in_location="path",
+                                              type="string",
+                                              required=True),
                         ],
                         request_schemas=[
                             ContentSchema(
@@ -149,14 +202,31 @@ expected_endpoints = {
                                 content_type="application/json",
                                 definition=openapi_definition.definition['components']['schemas']['Employee'],
                             ),
+                            ContentSchema(name='',
+                                          content_type='',
+                                          definition={},
+                                          code=400,
+                                          is_primitive=True),
+                            ContentSchema(name='',
+                                          content_type='',
+                                          definition={},
+                                          code=409,
+                                          is_primitive=True),
+                            ContentSchema(name='',
+                                          content_type='',
+                                          definition={},
+                                          code=500,
+                                          is_primitive=True)
                         ]
                     ),
                     EndpointMethod(
                         name="get",
                         description='Returns all your employees.',
                         parameters=[
-                            EndpointParameter(name="company_id", in_location="path",
-                                              type="string", required=True),
+                            EndpointParameter(name="company_id",
+                                              in_location="path",
+                                              type="string",
+                                              required=True),
                         ],
                         request_schemas=[],
                         response_schemas=[
@@ -166,6 +236,21 @@ expected_endpoints = {
                                 content_type="application/json",
                                 definition=openapi_definition.definition['components']['schemas']['EmployeeList'],
                             ),
+                            ContentSchema(name='',
+                                          content_type='',
+                                          definition={},
+                                          code=400,
+                                          is_primitive=True),
+                            ContentSchema(name='',
+                                          content_type='',
+                                          definition={},
+                                          code=409,
+                                          is_primitive=True),
+                            ContentSchema(name='',
+                                          content_type='',
+                                          definition={},
+                                          code=500,
+                                          is_primitive=True)
                         ]
                     ),
                 ],
@@ -219,7 +304,17 @@ expected_endpoints = {
                                     'title': 'Employee',
                                     'type': 'object'
                                 },
-                                code=200)
+                                code=200),
+                            ContentSchema(name='',
+                                          content_type='',
+                                          definition={},
+                                          code=404,
+                                          is_primitive=True),
+                            ContentSchema(name='',
+                                          content_type='',
+                                          definition={},
+                                          code=500,
+                                          is_primitive=True)
                         ]
                     )
                 ],
@@ -294,6 +389,11 @@ expected_endpoints = {
                                 },
                                 code=404
                             ),
+                            ContentSchema(name='',
+                                          content_type='',
+                                          definition={},
+                                          code=500,
+                                          is_primitive=True)
                         ]
                     )
                 ]
@@ -353,29 +453,6 @@ def test_endpoint_layer_param_functions(layer: EndpointLayer, expected_param_nam
             "/companies/{company_id}/employees/{employee_num}",
             expected_endpoints["/companies/{company_id}/employees/{employee_num}"]
     ),
-    # ("/{first_id}/{second_id}/info", Endpoint(
-    #     path="/{first_id}/{second_id}/info",
-    #     definition=openapi_definition.paths["/{first_id}/{second_id}/info"],
-    #     layers=[
-    #         EndpointLayer(
-    #             path="/{first_id}/{second_id}",
-    #             api_levels=[],
-    #             parameters=[
-    #                 EndpointParameter(name="first_id", type="string", required=True),
-    #                 EndpointParameter(name="second_id", type="string", required=True),
-    #             ],
-    #             next=[],
-    #             methods=[],
-    #         ),
-    #         EndpointLayer(
-    #             path="/info",
-    #             api_levels=["info"],
-    #             parameters=[],
-    #             next=[],
-    #             methods=[],
-    #         )
-    #     ]
-    # )),
 ])
 def test_parse_endpoint(path, expected):
     """ Tests parsing an endpoint. """
