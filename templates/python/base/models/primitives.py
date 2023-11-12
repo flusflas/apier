@@ -1,29 +1,29 @@
-from .basemodel import IterBaseModel
+from .basemodel import APIBaseModel
 
 
-class StringResponse(IterBaseModel):
+class StringResponse(APIBaseModel):
     __root__: str
 
 
-class IntegerResponse(IterBaseModel):
+class IntegerResponse(APIBaseModel):
     __root__: int
 
 
-class FloatResponse(IterBaseModel):
+class FloatResponse(APIBaseModel):
     __root__: float
 
 
-class BooleanResponse(IterBaseModel):
+class BooleanResponse(APIBaseModel):
     __root__: bool
 
 
-class ObjectResponse(IterBaseModel):
+class ObjectResponse(APIBaseModel):
     __root__: object
 
 
-class ArrayResponse(IterBaseModel):
+class ArrayResponse(APIBaseModel):
     __root__: list
 
 
-class NoResponse(IterBaseModel):
+class NoResponse(APIBaseModel):
     pass

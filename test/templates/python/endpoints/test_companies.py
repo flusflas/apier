@@ -58,6 +58,7 @@ def test_create(req, expected_resp):
                               data=to_json(req),
                               timeout=3)
 
+    assert resp.http_response().status_code == 201
     assert resp == expected_resp
     assert type(resp) == Company
 
@@ -80,6 +81,7 @@ def test_get():
                               data=None,
                               timeout=3)
 
+    assert resp.http_response().status_code == 200
     assert resp == test_resp_company01
     assert type(resp) == Company
 
@@ -106,6 +108,7 @@ def test_list():
                               data=None,
                               timeout=3)
 
+    assert resp.http_response().status_code == 200
     assert resp == expected_list
     assert type(resp) == CompanyList
 
@@ -132,6 +135,7 @@ def test_update(req, expected_resp):
                               data=to_json(req),
                               timeout=3)
 
+    assert resp.http_response().status_code == 200
     assert resp == expected_resp
     assert type(resp) == Company
 
@@ -154,6 +158,7 @@ def test_delete():
                               data=None,
                               timeout=5.5)
 
+    assert resp.http_response().status_code == 204
     assert resp == NoResponse()
     assert type(resp) == NoResponse
 
@@ -177,5 +182,6 @@ def test_get_multi_param():
                               data=None,
                               timeout=3)
 
+    assert resp.http_response().status_code == 200
     assert resp == test_resp_company01
     assert type(resp) == Company

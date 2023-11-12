@@ -89,7 +89,9 @@ def handle_response(response: requests.Response, expected_responses: list):
         code, content_type, resp_class = r
 
         if not content_type:
-            return resp_class()
+            ret = resp_class()
+            ret._http_response = response
+            return ret
 
         if response.status_code == code and resp_content_type.startswith(content_type):
             resp_payload = response.content
@@ -99,6 +101,8 @@ def handle_response(response: requests.Response, expected_responses: list):
                 import xmltodict
                 resp_payload = xmltodict.parse(response.content)['root']
 
-            return resp_class.parse_obj(resp_payload)
+            ret = resp_class.parse_obj(resp_payload)
+            ret._http_response = response
+            return ret
 
     raise Exception(f"Unexpected response content type ({resp_content_type})")

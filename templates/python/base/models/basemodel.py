@@ -1,6 +1,7 @@
 from typing import Optional, Union
 
-from pydantic import BaseModel, typing
+import requests
+from pydantic import BaseModel, typing, PrivateAttr
 
 
 class IterBaseModel(BaseModel):
@@ -106,3 +107,25 @@ class IterBaseModel(BaseModel):
             return self.__root__.items()
         else:
             return self.__iter__()
+
+
+class HTTPResponseModel(BaseModel):
+    """
+    Extends :class:`pydantic.BaseModel` to allow embedding a requests.Response
+    instance. The method http_response() returns this instance.
+    """
+    _http_response: requests.Response = PrivateAttr(None)
+
+    def http_response(self):
+        """
+        Returns the HTTP response of this model instance.
+        :return:
+        """
+        return self._http_response
+
+
+class APIBaseModel(IterBaseModel, HTTPResponseModel):
+    """
+    The Pydantic base model used for API schema models.
+    """
+    pass
