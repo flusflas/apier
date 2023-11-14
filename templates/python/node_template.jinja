@@ -2,16 +2,18 @@ from dataclasses import dataclass
 from typing import Union, overload
 
 from .internal.resource import APIResource, handle_response
-from .models.models import *
+from .models import models
 from .models import primitives
 
 {% set ns = namespace() %}
 
 {% for layer in api_node.layers %}
-
 {% for next_node in layer.next %}
 from .{{ next_node.api }} import _{{ next_node.api.capitalize() }}Method
 {% endfor %}
+{% endfor %}
+
+{% for layer in api_node.layers %}
 
 @dataclass
 class {{ class_id_name }}{{ loop.index }}(APIResource{% for next_node in layer.next %}, _{{ next_node.api.capitalize() }}Method{% endfor %}):
@@ -20,6 +22,7 @@ class {{ class_id_name }}{{ loop.index }}(APIResource{% for next_node in layer.n
     {% endfor %}
 
     {%- for method in layer.methods %}
+
     def {{ method.name }}(self
             {%- if method.request_schemas -%}, req: {{ get_type_hint(*method.request_schemas, include_primitive_type=True) }}{% endif %}, **kwargs)
             {%- if method.response_schemas | length > 0 %} -> {{ get_type_hint(*method.response_schemas) }}{% endif %}:

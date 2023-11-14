@@ -18,6 +18,8 @@ def render(definition: Definition, schemas: dict, api_tree: APITree):
     render_api_file(definition, api_tree)
     render_api_components(api_tree)
 
+    format_file("_build/")
+
 
 def render_api_file(definition: Definition, api_tree: APITree):
     filename = "_build/api.py"
@@ -30,8 +32,6 @@ def render_api_file(definition: Definition, api_tree: APITree):
     )
     with open(filename, mode="w", encoding="utf-8") as message:
         message.write(content)
-
-    format_file(filename)
 
 
 def render_api_components(api_tree: APITree):
@@ -71,11 +71,8 @@ def render_api_component(api_node: APINode):
     with open(filename, mode="w", encoding="utf-8") as message:
         message.write(content)
 
-    format_file(filename)
     print("OK")
 
 
 def format_file(filename):
-    os.system(f"autopep8 --max-line-length 119 --in-place --aggressive --aggressive {filename}")
-    # os.system(f"autoflake --in-place {filename}")
-    os.system(f"isort -q {filename}")
+    os.system(f"ruff check {filename} --fix")

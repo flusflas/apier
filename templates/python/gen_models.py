@@ -22,7 +22,7 @@ def generate_models(definition: Definition, schemas: dict[str, ContentSchema]):
 
     openapi_output['components'] = {'schemas': definition_schemas}
 
-    filename = f"_temp/schemas.yaml"
+    filename = "_temp/schemas.yaml"
 
     import yaml
     from pathlib import Path
