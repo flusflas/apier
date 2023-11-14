@@ -3,7 +3,7 @@ from typing import Union, overload
 
 from .internal.resource import APIResource, handle_response
 from .models.models import *
-from .models.primitives import *
+from .models import primitives
 
 {% set ns = namespace() %}
 
@@ -16,13 +16,13 @@ from .{{ next_node.api }} import _{{ next_node.api.capitalize() }}Method
 @dataclass
 class {{ class_id_name }}{{ loop.index }}(APIResource{% for next_node in layer.next %}, _{{ next_node.api.capitalize() }}Method{% endfor %}):
     {% for param in layer.parameters %}
-    {{ param.name }}: {{ eq_type_func(param.type) }}
+    {{ param.name }}: {{ get_type_hint(param.type) }}
     {% endfor %}
 
     {%- for method in layer.methods %}
     def {{ method.name }}(self
-            {%- if method.request_schemas -%}, req: {{ eq_type_func(*method.request_schemas) }}{% endif %}, **kwargs)
-            {%- if method.response_schemas | length > 0 %} -> {{ eq_type_func(*method.response_schemas) }}{% endif %}:
+            {%- if method.request_schemas -%}, req: {{ get_type_hint(*method.request_schemas, include_primitive_type=True) }}{% endif %}, **kwargs)
+            {%- if method.response_schemas | length > 0 %} -> {{ get_type_hint(*method.response_schemas) }}{% endif %}:
         """
         {{ method.description }}
         {% set query_params = get_params_by_location(method.parameters, 'query') %}
@@ -37,7 +37,7 @@ class {{ class_id_name }}{{ loop.index }}(APIResource{% for next_node in layer.n
         resp = self._make_request("{{ method.name.upper() }}"{% if method.request_schemas %}, req{% endif %}, **kwargs)
         return handle_response(resp, [
         {% for schema in method.response_schemas %}
-            ({{ schema.code }}, "{{ schema.content_type }}", {{ eq_type_func(schema) }}),
+            ({{ schema.code }}, "{{ schema.content_type }}", {{ get_type_hint(schema) }}),
         {% endfor %}
         ])
     {% endfor %}
@@ -54,11 +54,11 @@ class _{{ api_node.api.capitalize() }}Method:
     {% for layer in api_node.layers %}
 
     @overload
-    def {{ api_node.api }}(self{% for param in layer.parameters %}, {{ param.name }}: {{ eq_type_func(param.type) }}{% endfor %}) -> {{ class_id_name }}{{ loop.index }}:
+    def {{ api_node.api }}(self{% for param in layer.parameters %}, {{ param.name }}: {{ get_type_hint(param.type) }}{% endfor %}) -> {{ class_id_name }}{{ loop.index }}:
         ...
     {% endfor %}
 
-    def {{ api_node.api }}(self{% for param in api_node.params_set() %}, {{ param.name }}: {{ eq_type_func(param.type) }}{% if param.name in optional_param_names %} = None{% endif %}{% endfor %}):
+    def {{ api_node.api }}(self{% for param in api_node.params_set() %}, {{ param.name }}: {{ get_type_hint(param.type) }}{% if param.name in optional_param_names %} = None{% endif %}{% endfor %}):
         {% for layer in api_node.layers %}
         {% if api_node.layers | length > 1 and layer.parameters | length > 1 or (has_layer_without_params and layer.parameters | length == 1) %}
         if {% for param in layer.param_names() %}{% if param in optional_param_names %}{{ param }} is not None {% if not loop.last %} and {% endif %}{% endif %}{% endfor %}:

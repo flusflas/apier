@@ -4,15 +4,17 @@ import shutil
 from jinja2 import Environment, FileSystemLoader
 
 from openapi import Definition
-from templates.python.functions import get_type, get_params_by_location
+from templates.python.functions import get_type_hint, get_params_by_location
+from templates.python.gen_models import generate_models
 from tree import APINode, APITree
 
 
-def render(definition: Definition, api_tree: APITree):
+def render(definition: Definition, schemas: dict, api_tree: APITree):
     if os.path.exists('_build'):
         shutil.rmtree('_build')
     shutil.copytree('templates/python/base', '_build')
 
+    generate_models(definition, schemas)
     render_api_file(definition, api_tree)
     render_api_components(api_tree)
 
@@ -63,7 +65,7 @@ def render_api_component(api_node: APINode):
         class_id_name=api_node.api.capitalize(),
         optional_param_names=optional_param_names,
         has_layer_without_params=has_layer_without_params,
-        eq_type_func=get_type,
+        get_type_hint=get_type_hint,
         get_params_by_location=get_params_by_location,
     )
     with open(filename, mode="w", encoding="utf-8") as message:
