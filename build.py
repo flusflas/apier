@@ -2,7 +2,7 @@ import sys
 
 import yaml
 
-from endpoints import parse_endpoint
+from endpoints import parse_endpoint, get_schemas
 from openapi import Definition
 from renderer import render_api
 from tree import build_endpoints_tree
@@ -17,8 +17,9 @@ def build(filename):
     for path in definition.paths:
         endpoints.append(parse_endpoint(path, definition))
 
+    schemas = get_schemas()
     api_tree = build_endpoints_tree(endpoints)
-    render_api('python', definition, api_tree)
+    render_api('python', definition, schemas, api_tree)
 
 
 if __name__ == '__main__':

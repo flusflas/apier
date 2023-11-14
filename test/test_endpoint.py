@@ -1,5 +1,6 @@
 import pytest
 
+from consts import NO_RESPONSE_ID
 from endpoints import (Endpoint, EndpointLayer, EndpointParameter,
                        parse_endpoint, split_endpoint_layers, parse_parameters, EndpointMethod, ContentSchema,
                        parse_content_schemas)
@@ -51,16 +52,16 @@ expected_endpoints = {
                                               'title': 'Company',
                                               'type': 'object'},
                                           code=200),
-                            ContentSchema(name='',
+                            ContentSchema(name=NO_RESPONSE_ID,
                                           content_type='',
                                           definition={},
                                           code=404,
-                                          is_primitive=True),
-                            ContentSchema(name='',
+                                          is_inline=True),
+                            ContentSchema(name=NO_RESPONSE_ID,
                                           content_type='',
                                           definition={},
                                           code=500,
-                                          is_primitive=True)
+                                          is_inline=True)
                         ]
                     ),
                     EndpointMethod(
@@ -106,21 +107,21 @@ expected_endpoints = {
                                               'type': 'object'
                                           },
                                           code=200),
-                            ContentSchema(name='',
+                            ContentSchema(name=NO_RESPONSE_ID,
                                           content_type='',
                                           definition={},
                                           code=400,
-                                          is_primitive=True),
-                            ContentSchema(name='',
+                                          is_inline=True),
+                            ContentSchema(name=NO_RESPONSE_ID,
                                           content_type='',
                                           definition={},
                                           code=409,
-                                          is_primitive=True),
-                            ContentSchema(name='',
+                                          is_inline=True),
+                            ContentSchema(name=NO_RESPONSE_ID,
                                           content_type='',
                                           definition={},
                                           code=500,
-                                          is_primitive=True),
+                                          is_inline=True),
                         ]
                     ),
                     EndpointMethod(name='delete',
@@ -134,21 +135,21 @@ expected_endpoints = {
                                    ],
                                    request_schemas=[],
                                    response_schemas=[
-                                       ContentSchema(name='',
+                                       ContentSchema(name=NO_RESPONSE_ID,
                                                      content_type='',
                                                      definition={},
                                                      code=204,
-                                                     is_primitive=True),
-                                       ContentSchema(name='',
+                                                     is_inline=True),
+                                       ContentSchema(name=NO_RESPONSE_ID,
                                                      content_type='',
                                                      definition={},
                                                      code=404,
-                                                     is_primitive=True),
-                                       ContentSchema(name='',
+                                                     is_inline=True),
+                                       ContentSchema(name=NO_RESPONSE_ID,
                                                      content_type='',
                                                      definition={},
                                                      code=500,
-                                                     is_primitive=True),
+                                                     is_inline=True),
                                    ])
                 ],
             )
@@ -202,21 +203,21 @@ expected_endpoints = {
                                 content_type="application/json",
                                 definition=openapi_definition.definition['components']['schemas']['Employee'],
                             ),
-                            ContentSchema(name='',
+                            ContentSchema(name=NO_RESPONSE_ID,
                                           content_type='',
                                           definition={},
                                           code=400,
-                                          is_primitive=True),
-                            ContentSchema(name='',
+                                          is_inline=True),
+                            ContentSchema(name=NO_RESPONSE_ID,
                                           content_type='',
                                           definition={},
                                           code=409,
-                                          is_primitive=True),
-                            ContentSchema(name='',
+                                          is_inline=True),
+                            ContentSchema(name=NO_RESPONSE_ID,
                                           content_type='',
                                           definition={},
                                           code=500,
-                                          is_primitive=True)
+                                          is_inline=True)
                         ]
                     ),
                     EndpointMethod(
@@ -236,21 +237,21 @@ expected_endpoints = {
                                 content_type="application/json",
                                 definition=openapi_definition.definition['components']['schemas']['EmployeeList'],
                             ),
-                            ContentSchema(name='',
+                            ContentSchema(name=NO_RESPONSE_ID,
                                           content_type='',
                                           definition={},
                                           code=400,
-                                          is_primitive=True),
-                            ContentSchema(name='',
+                                          is_inline=True),
+                            ContentSchema(name=NO_RESPONSE_ID,
                                           content_type='',
                                           definition={},
                                           code=409,
-                                          is_primitive=True),
-                            ContentSchema(name='',
+                                          is_inline=True),
+                            ContentSchema(name=NO_RESPONSE_ID,
                                           content_type='',
                                           definition={},
                                           code=500,
-                                          is_primitive=True)
+                                          is_inline=True)
                         ]
                     ),
                 ],
@@ -305,16 +306,16 @@ expected_endpoints = {
                                     'type': 'object'
                                 },
                                 code=200),
-                            ContentSchema(name='',
+                            ContentSchema(name=NO_RESPONSE_ID,
                                           content_type='',
                                           definition={},
                                           code=404,
-                                          is_primitive=True),
-                            ContentSchema(name='',
+                                          is_inline=True),
+                            ContentSchema(name=NO_RESPONSE_ID,
                                           content_type='',
                                           definition={},
                                           code=500,
-                                          is_primitive=True)
+                                          is_inline=True)
                         ]
                     )
                 ],
@@ -389,11 +390,11 @@ expected_endpoints = {
                                 },
                                 code=404
                             ),
-                            ContentSchema(name='',
+                            ContentSchema(name=NO_RESPONSE_ID,
                                           content_type='',
                                           definition={},
                                           code=500,
-                                          is_primitive=True)
+                                          is_inline=True)
                         ]
                     )
                 ]

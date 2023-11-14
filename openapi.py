@@ -1,11 +1,9 @@
-import operator
-from functools import reduce
 from typing import Mapping, Any
 
 from openapi_spec_validator import validate_spec
 from openapi_spec_validator.readers import read_from_filename
 
-from utils import get_multi_key, _default
+from utils.dicts import get_multi_key, _default
 
 
 class Definition:

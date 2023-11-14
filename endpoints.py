@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import re
 import uuid
-import warnings
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, List, Tuple
 
+from consts import NO_RESPONSE_ID
 from openapi import Definition
-from utils import get_multi_key
+from utils.dicts import get_multi_key
+from utils.strings import to_pascal_case
 
 if TYPE_CHECKING:
     from tree import APINode
@@ -37,10 +38,10 @@ class ContentSchema:
     Defines a content schema used by an endpoint.
     """
     name: str
-    content_type: str
-    definition: dict
+    content_type: str = ''
+    definition: dict = None
     code: int = 0
-    is_primitive: bool = False
+    is_inline: bool = False
 
 
 @dataclass
@@ -53,8 +54,6 @@ class EndpointMethod:
     parameters: List[EndpointParameter] = field(default_factory=list)
     request_schemas: List[ContentSchema] = field(default_factory=list)
     response_schemas: List[ContentSchema] = field(default_factory=list)
-
-    # kind: str   TODO: path, query, header...
 
     def __hash__(self):
         return hash(repr(self))
@@ -100,6 +99,38 @@ class Endpoint:
     @property
     def methods(self):
         return self.layers[-1].methods
+
+
+_schemas = {}
+
+
+def init_schemas(definition: Definition):
+    """
+    Initializes the dictionary of schemas with the ones defined in the given
+    OpenAPI definition under the 'components.schemas' section.
+    """
+    clear_schemas()
+    schemas = definition.get_value('components.schemas', default={})
+    for schema_name, schema_def in schemas.items():
+        _schemas[schema_name] = ContentSchema(
+            name=schema_name,
+            definition=schema_def,
+        )
+
+
+def get_schemas():
+    """
+    Returns the dictionary of schemas.
+    """
+    return _schemas
+
+
+def clear_schemas():
+    """
+    Clears the dictionary of schemas.
+    """
+    global _schemas
+    _schemas = {}
 
 
 def parse_endpoint(path: str, definition: Definition = None) -> Endpoint:
@@ -277,11 +308,11 @@ def parse_content_schemas(endpoint: Endpoint):
 
             if len(resp_definition) == 0:
                 resp_schemas.append(ContentSchema(
-                    name='',
+                    name=NO_RESPONSE_ID,
                     code=resp_code,
                     content_type='',
                     definition=resp_definition,
-                    is_primitive=True,
+                    is_inline=True,
                 ))
 
         method = endpoint.layers[-1].get_method(operation_name)
@@ -293,7 +324,12 @@ def parse_schema(endpoint: Endpoint, operation_name: str,
                  schema_def: dict, content_type: str,
                  resp_code: int = 0) -> ContentSchema:
     """
-    Parses a content schema.
+    Parses a content schema and inserts it to the global dictionary of schemas
+    if it's missing.
+
+    If the given schema is defined inline, the name will be taken from the
+    'title' attribute. Otherwise, the name will be generated based on the
+    'type' attribute.
 
     :param endpoint: The Endpoint where the schema is used.
     :param operation_name: Name of the endpoint operation.
@@ -302,35 +338,41 @@ def parse_schema(endpoint: Endpoint, operation_name: str,
     :param resp_code: Response code returned (omitted for requests).
     :return: A ContentSchema with the content schema information.
     """
-    is_primitive = False
+    if not _schemas:
+        init_schemas(endpoint.definition)
+
+    is_inline = False
     if '$ref' in schema_def:
         schema_name = schema_def['$ref'].split('/')[-1]
         schema_def = endpoint.definition.solve_ref(schema_def['$ref'])
     else:
-        schema_name = schema_def.get('x-model-name')
-        if schema_name is None:
-            schema_type = schema_def.get('type')
-            primitive_types = [
-                'string',
-                'number',
-                'integer',
-                'object',
-                'array',
-                'boolean',
-                'null',
-            ]
-            if schema_type in primitive_types:
-                schema_name = schema_type
-                is_primitive = True
-            else:
-                warnings.warn(f"Content schema with non-defined name in endpoint "
-                              f"'{operation_name.upper()} {endpoint.path}'")
-                # TODO: Generate pydantic model for schema
+        is_inline = True
+        schema_name = schema_def.get('title')
+        if schema_name:
+            if schema_name in _schemas:
+                raise Exception(f"Schema name '{schema_name}' is already taken")
+        else:
+            schema_name = schema_def.get('type', 'string')
 
-    return ContentSchema(
+    schema_name = to_pascal_case(schema_name)
+
+    # Generate a new schema name if the current is already taken
+    i = 1
+    original_schema_name = schema_name
+    while is_inline and schema_name in _schemas:
+        # An identical schema already exists
+        if _schemas[schema_name].definition == schema_def:
+            return _schemas[schema_name]
+
+        # Rename schema
+        i += 1
+        schema_name = to_pascal_case(original_schema_name + str(i))
+
+    _schemas[schema_name] = ContentSchema(
         name=schema_name,
         code=resp_code,
         content_type=content_type,
         definition=schema_def,
-        is_primitive=is_primitive,
+        is_inline=is_inline,
     )
+    return _schemas[schema_name]
