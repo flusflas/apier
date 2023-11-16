@@ -28,6 +28,7 @@ class API(
 
         self.host = host
         self.headers = {}
+        self._raise_errors = {{ raise_errors }}
 
     def make_request(self, method: str, url: str, body=None, params=None,
                      headers: dict = None, timeout: float = 3) -> requests.Response:

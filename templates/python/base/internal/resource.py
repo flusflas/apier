@@ -2,7 +2,9 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 
 import requests
-from requests import Response
+from requests import Response, HTTPError
+
+from ..models.exceptions import ResponseError
 
 
 @dataclass
@@ -78,31 +80,40 @@ class APIResource(ABC):
         api = self._stack[0]
         return api.make_request(method, self.build_path(), body=body, **kwargs)
 
+    def handle_response(self, response: requests.Response, expected_responses: list):
+        expected_status_codes = set([r[0] for r in expected_responses])
+        if response.status_code not in expected_status_codes:
+            raise Exception(f"Unexpected response status code ({response.status_code})")
 
-def handle_response(response: requests.Response, expected_responses: list):
-    expected_status_codes = set([r[0] for r in expected_responses])
-    if response.status_code not in expected_status_codes:
-        raise Exception(f"Unexpected response status code ({response.status_code})")
+        resp_content_type = response.headers.get('content-type')
+        for r in expected_responses:
+            code, content_type, resp_class = r
 
-    resp_content_type = response.headers.get('content-type')
-    for r in expected_responses:
-        code, content_type, resp_class = r
+            if not content_type:
+                ret = resp_class()
+                ret._http_response = response
+                return self.handle_error(ret)
 
-        if not content_type:
-            ret = resp_class()
-            ret._http_response = response
-            return ret
+            if response.status_code == code and resp_content_type.startswith(content_type):
+                resp_payload = response.content
+                if resp_content_type.startswith('application/json'):
+                    resp_payload = response.json()
+                elif resp_content_type.startswith('application/xml'):
+                    import xmltodict
+                    resp_payload = xmltodict.parse(response.content)['root']
 
-        if response.status_code == code and resp_content_type.startswith(content_type):
-            resp_payload = response.content
-            if resp_content_type.startswith('application/json'):
-                resp_payload = response.json()
-            elif resp_content_type.startswith('application/xml'):
-                import xmltodict
-                resp_payload = xmltodict.parse(response.content)['root']
+                ret = resp_class.parse_obj(resp_payload)
+                ret._http_response = response
+                return self.handle_error(ret)
 
-            ret = resp_class.parse_obj(resp_payload)
-            ret._http_response = response
-            return ret
+        raise Exception(f"Unexpected response content type ({resp_content_type})")
 
-    raise Exception(f"Unexpected response content type ({resp_content_type})")
+    def handle_error(self, ret):
+        api = self._stack[0]
+        if api._raise_errors:
+            try:
+                ret.http_response().raise_for_status()
+            except HTTPError as e:
+                raise ResponseError(ret, str(e))
+
+        return ret

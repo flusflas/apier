@@ -7,6 +7,9 @@ info:
     equivalent_paths:
       - source: /companies/{company_id}/departments/{department_name}/employees/{employee_num}
         target: /companies/{company_id}/employees/{employee_num}
+    templates:
+      python:
+        raise-response-errors: true
 servers:
   - url: 'https://company-maker.test'
     description: Testing server
@@ -44,8 +47,16 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '409':
           description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
     get:
       tags:
@@ -70,6 +81,10 @@ paths:
                 $ref: '#/components/schemas/CompanyList'
         '500':
           description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /companies/{company_id}:
     parameters:
@@ -92,8 +107,16 @@ paths:
                 $ref: '#/components/schemas/Company'
         '404':
           description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
     put:
       tags:
@@ -125,10 +148,22 @@ paths:
                 modified: "2023-06-19T21:30:00Z"
         '400':
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '409':
           description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
     delete:
       tags:
@@ -141,8 +176,16 @@ paths:
           description: No content
         '404':
           description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /companies/{company_id}/{number}:
     parameters:
@@ -199,6 +242,10 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /companies/{company_id}/employees:
     parameters:
@@ -224,10 +271,22 @@ paths:
                 $ref: '#/components/schemas/Employee'
         '400':
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '409':
           description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
     get:
       tags:
@@ -244,10 +303,22 @@ paths:
                 $ref: '#/components/schemas/EmployeeList'
         '400':
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '409':
           description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /companies/{company_id}/employees/{employee_num}:
     get:
@@ -268,8 +339,16 @@ paths:
                 $ref: '#/components/schemas/Employee'
         '404':
           description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /companies/{company_id}/departments/{department_name}/employees/{employee_num}:
     get:
@@ -291,8 +370,16 @@ paths:
                 $ref: '#/components/schemas/Employee'
         '404':
           description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /tests/echo_string:
     post:

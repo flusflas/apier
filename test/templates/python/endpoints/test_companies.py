@@ -3,8 +3,10 @@ from unittest import mock
 import pytest
 
 from _build.api import API
+from _build.models.exceptions import ResponseError
 from test.templates.python.common import make_json_response, to_dict, to_json
-from _build.models.models import CompanyCreate, Company, CompanyList, CompanyUpdate
+from _build.models.models import (CompanyCreate, Company, CompanyList,
+                                  CompanyUpdate, ErrorResponse)
 from _build.models.primitives import NoResponse
 
 test_req_create01 = CompanyCreate(
@@ -35,6 +37,11 @@ test_resp_company02 = Company(
     modified="2021-08-30T12:15:00Z",
 )
 
+test_company_not_found = ErrorResponse(
+    status=404,
+    message="Company not found!"
+)
+
 
 @pytest.mark.parametrize("req, expected_resp", [
     (test_req_create01, test_resp_company01),
@@ -60,7 +67,7 @@ def test_create(req, expected_resp):
 
     assert resp.http_response().status_code == 201
     assert resp == expected_resp
-    assert type(resp) == Company
+    assert isinstance(resp, Company)
 
 
 def test_get():
@@ -83,7 +90,7 @@ def test_get():
 
     assert resp.http_response().status_code == 200
     assert resp == test_resp_company01
-    assert type(resp) == Company
+    assert isinstance(resp, Company)
 
 
 def test_list():
@@ -110,7 +117,7 @@ def test_list():
 
     assert resp.http_response().status_code == 200
     assert resp == expected_list
-    assert type(resp) == CompanyList
+    assert isinstance(resp, CompanyList)
 
 
 @pytest.mark.parametrize("req, expected_resp", [
@@ -137,7 +144,7 @@ def test_update(req, expected_resp):
 
     assert resp.http_response().status_code == 200
     assert resp == expected_resp
-    assert type(resp) == Company
+    assert isinstance(resp, Company)
 
 
 def test_delete():
@@ -160,7 +167,7 @@ def test_delete():
 
     assert resp.http_response().status_code == 204
     assert resp == NoResponse()
-    assert type(resp) == NoResponse
+    assert isinstance(resp, NoResponse)
 
 
 def test_get_multi_param():
@@ -184,4 +191,27 @@ def test_get_multi_param():
 
     assert resp.http_response().status_code == 200
     assert resp == test_resp_company01
-    assert type(resp) == Company
+    assert isinstance(resp, Company)
+
+
+def test_get_error():
+    """
+    Tests a request to get a Company that returns a 404 error response.
+    """
+    expected_resp = make_json_response(404, test_company_not_found)
+
+    with mock.patch("_build.api.requests.request", return_value=expected_resp) as m:
+        with pytest.raises(ResponseError) as e:
+            API(host="test-api.com").companies("shiny_stickers").get()
+
+    m.assert_called_once_with("GET",
+                              "https://test-api.com/companies/shiny_stickers",
+                              params=None,
+                              headers={},
+                              data=None,
+                              timeout=3)
+
+    exc = e.value
+    assert exc.http_response().status_code == 404
+    assert exc.error == test_company_not_found
+    assert isinstance(exc.error, ErrorResponse)

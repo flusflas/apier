@@ -8,6 +8,22 @@ from openapi import Definition
 
 openapi_definition = Definition.load('definitions/companies_api.yaml')
 
+ERROR_RESPONSE_DEFINITION = {
+    'properties': {
+        'message': {
+            'example': 'Oh, no!',
+            'type': 'string'
+        },
+        'status': {
+            'example': 400,
+            'type': 'integer'
+        }
+    },
+    'required': ['status', 'message'],
+    'title': 'Error Response',
+    'type': 'object'
+}
+
 expected_endpoints = {
     "/companies/{company_id}": Endpoint(
         path="/companies/{company_id}",
@@ -52,16 +68,14 @@ expected_endpoints = {
                                               'title': 'Company',
                                               'type': 'object'},
                                           code=200),
-                            ContentSchema(name=NO_RESPONSE_ID,
-                                          content_type='',
-                                          definition={},
-                                          code=404,
-                                          is_inline=True),
-                            ContentSchema(name=NO_RESPONSE_ID,
-                                          content_type='',
-                                          definition={},
-                                          code=500,
-                                          is_inline=True)
+                            ContentSchema(name='ErrorResponse',
+                                          content_type='application/json',
+                                          definition=ERROR_RESPONSE_DEFINITION,
+                                          code=404),
+                            ContentSchema(name='ErrorResponse',
+                                          content_type='application/json',
+                                          definition=ERROR_RESPONSE_DEFINITION,
+                                          code=500)
                         ]
                     ),
                     EndpointMethod(
@@ -107,21 +121,18 @@ expected_endpoints = {
                                               'type': 'object'
                                           },
                                           code=200),
-                            ContentSchema(name=NO_RESPONSE_ID,
-                                          content_type='',
-                                          definition={},
-                                          code=400,
-                                          is_inline=True),
-                            ContentSchema(name=NO_RESPONSE_ID,
-                                          content_type='',
-                                          definition={},
-                                          code=409,
-                                          is_inline=True),
-                            ContentSchema(name=NO_RESPONSE_ID,
-                                          content_type='',
-                                          definition={},
-                                          code=500,
-                                          is_inline=True),
+                            ContentSchema(name='ErrorResponse',
+                                          content_type='application/json',
+                                          definition=ERROR_RESPONSE_DEFINITION,
+                                          code=400),
+                            ContentSchema(name='ErrorResponse',
+                                          content_type='application/json',
+                                          definition=ERROR_RESPONSE_DEFINITION,
+                                          code=409),
+                            ContentSchema(name='ErrorResponse',
+                                          content_type='application/json',
+                                          definition=ERROR_RESPONSE_DEFINITION,
+                                          code=500),
                         ]
                     ),
                     EndpointMethod(name='delete',
@@ -140,16 +151,14 @@ expected_endpoints = {
                                                      definition={},
                                                      code=204,
                                                      is_inline=True),
-                                       ContentSchema(name=NO_RESPONSE_ID,
-                                                     content_type='',
-                                                     definition={},
-                                                     code=404,
-                                                     is_inline=True),
-                                       ContentSchema(name=NO_RESPONSE_ID,
-                                                     content_type='',
-                                                     definition={},
-                                                     code=500,
-                                                     is_inline=True),
+                                       ContentSchema(name='ErrorResponse',
+                                                     content_type='application/json',
+                                                     definition=ERROR_RESPONSE_DEFINITION,
+                                                     code=404),
+                                       ContentSchema(name='ErrorResponse',
+                                                     content_type='application/json',
+                                                     definition=ERROR_RESPONSE_DEFINITION,
+                                                     code=500),
                                    ])
                 ],
             )
@@ -203,21 +212,18 @@ expected_endpoints = {
                                 content_type="application/json",
                                 definition=openapi_definition.definition['components']['schemas']['Employee'],
                             ),
-                            ContentSchema(name=NO_RESPONSE_ID,
-                                          content_type='',
-                                          definition={},
-                                          code=400,
-                                          is_inline=True),
-                            ContentSchema(name=NO_RESPONSE_ID,
-                                          content_type='',
-                                          definition={},
-                                          code=409,
-                                          is_inline=True),
-                            ContentSchema(name=NO_RESPONSE_ID,
-                                          content_type='',
-                                          definition={},
-                                          code=500,
-                                          is_inline=True)
+                            ContentSchema(name='ErrorResponse',
+                                          content_type='application/json',
+                                          definition=ERROR_RESPONSE_DEFINITION,
+                                          code=400),
+                            ContentSchema(name='ErrorResponse',
+                                          content_type='application/json',
+                                          definition=ERROR_RESPONSE_DEFINITION,
+                                          code=409),
+                            ContentSchema(name='ErrorResponse',
+                                          content_type='application/json',
+                                          definition=ERROR_RESPONSE_DEFINITION,
+                                          code=500)
                         ]
                     ),
                     EndpointMethod(
@@ -237,21 +243,18 @@ expected_endpoints = {
                                 content_type="application/json",
                                 definition=openapi_definition.definition['components']['schemas']['EmployeeList'],
                             ),
-                            ContentSchema(name=NO_RESPONSE_ID,
-                                          content_type='',
-                                          definition={},
-                                          code=400,
-                                          is_inline=True),
-                            ContentSchema(name=NO_RESPONSE_ID,
-                                          content_type='',
-                                          definition={},
-                                          code=409,
-                                          is_inline=True),
-                            ContentSchema(name=NO_RESPONSE_ID,
-                                          content_type='',
-                                          definition={},
-                                          code=500,
-                                          is_inline=True)
+                            ContentSchema(name='ErrorResponse',
+                                          content_type='application/json',
+                                          definition=ERROR_RESPONSE_DEFINITION,
+                                          code=400),
+                            ContentSchema(name='ErrorResponse',
+                                          content_type='application/json',
+                                          definition=ERROR_RESPONSE_DEFINITION,
+                                          code=409),
+                            ContentSchema(name='ErrorResponse',
+                                          content_type='application/json',
+                                          definition=ERROR_RESPONSE_DEFINITION,
+                                          code=500)
                         ]
                     ),
                 ],
@@ -306,16 +309,14 @@ expected_endpoints = {
                                     'type': 'object'
                                 },
                                 code=200),
-                            ContentSchema(name=NO_RESPONSE_ID,
-                                          content_type='',
-                                          definition={},
-                                          code=404,
-                                          is_inline=True),
-                            ContentSchema(name=NO_RESPONSE_ID,
-                                          content_type='',
-                                          definition={},
-                                          code=500,
-                                          is_inline=True)
+                            ContentSchema(name='ErrorResponse',
+                                          content_type='application/json',
+                                          definition=ERROR_RESPONSE_DEFINITION,
+                                          code=404),
+                            ContentSchema(name='ErrorResponse',
+                                          content_type='application/json',
+                                          definition=ERROR_RESPONSE_DEFINITION,
+                                          code=500)
                         ]
                     )
                 ],
@@ -373,28 +374,13 @@ expected_endpoints = {
                             ContentSchema(
                                 name='ErrorResponse',
                                 content_type='application/json',
-                                definition={
-                                    'properties': {
-                                        'message': {
-                                            'example': 'Oh, no!',
-                                            'type': 'string'
-                                        },
-                                        'status': {
-                                            'example': 400,
-                                            'type': 'integer'
-                                        }
-                                    },
-                                    'required': ['status', 'message'],
-                                    'title': 'Error Response',
-                                    'type': 'object'
-                                },
+                                definition=ERROR_RESPONSE_DEFINITION,
                                 code=404
                             ),
-                            ContentSchema(name=NO_RESPONSE_ID,
-                                          content_type='',
-                                          definition={},
-                                          code=500,
-                                          is_inline=True)
+                            ContentSchema(name='ErrorResponse',
+                                          content_type='application/json',
+                                          definition=ERROR_RESPONSE_DEFINITION,
+                                          code=500)
                         ]
                     )
                 ]

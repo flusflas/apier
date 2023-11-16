@@ -28,6 +28,8 @@ def render_api_file(definition: Definition, api_tree: APITree):
     content = template.render(
         openapi=definition.definition,
         root_branches=api_tree.branches,
+        raise_errors=bool(definition.get_value('info.x-api-gen.templates.python.raise-response-errors',
+                                               default=True)),
     )
     with open(filename, mode="w", encoding="utf-8") as message:
         message.write(content)
@@ -57,10 +59,8 @@ def render_api_component(api_node: APINode):
                             if len(api_node.layers) > 1 and i > 0 or has_layer_without_params]
 
     # TODO: Handle APIs with the same name
-
     content = template.render(
         api_node=api_node,
-
         class_id_name=api_node.api.capitalize(),
         optional_param_names=optional_param_names,
         has_layer_without_params=has_layer_without_params,
