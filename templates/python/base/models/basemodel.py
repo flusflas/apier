@@ -1,7 +1,7 @@
 from typing import Optional, Union
 
 import requests
-from pydantic import BaseModel, typing, PrivateAttr
+from pydantic import BaseModel, PrivateAttr, typing
 
 
 class IterBaseModel(BaseModel):

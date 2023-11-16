@@ -1,6 +1,9 @@
 import copy
 import os
 import shutil
+from pathlib import Path
+
+import yaml
 
 from endpoints import ContentSchema
 from openapi import Definition
@@ -24,8 +27,6 @@ def generate_models(definition: Definition, schemas: dict[str, ContentSchema]):
 
     filename = "_temp/schemas.yaml"
 
-    import yaml
-    from pathlib import Path
     file = Path(filename)
     file.parent.mkdir(parents=True, exist_ok=True)
     with file.open('w') as f:

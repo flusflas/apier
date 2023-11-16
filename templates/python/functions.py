@@ -8,22 +8,22 @@ def get_params_by_location(parameters: List[EndpointParameter], param_type: str)
     return list(filter(lambda p: p.in_location == param_type, parameters))
 
 
-def get_type_hint(*args: List[Union[str, ContentSchema]],
+def get_type_hint(*args: Union[str, ContentSchema],
                   include_primitive_type: bool = False) -> str:
     """
     Returns the type string associated to the given array of schemas so that
     it can be used for type hints.
 
     >>> get_type_hint(ContentSchema(name='MyType'))
-    'MyType'
+    'models.MyType'
     >>> get_type_hint('string')
     'str'
     >>> get_type_hint('string', 'integer')
-    'Union[str,int]'
+    'Union[str, int]'
     >>> get_type_hint(ContentSchema(name='MyType'), 'array')
-    'Union[MyType,list]'
+    'Union[models.MyType, list]'
     >>> get_type_hint(ContentSchema(name='MyType', definition={'type': 'object'}), include_primitive_type=True)
-    'Union[MyType,dict]'
+    'Union[models.MyType, dict]'
 
     :param args:    List of type strings and/or ContentSchema instances.
     :param include_primitive_type: If True, the primitive type of the
@@ -64,4 +64,4 @@ def get_type_hint(*args: List[Union[str, ContentSchema]],
     if len(types) == 1:
         return types[0]
     else:
-        return f"Union[{','.join(types)}]"
+        return f"Union[{', '.join(types)}]"

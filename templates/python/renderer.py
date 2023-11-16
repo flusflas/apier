@@ -2,9 +2,8 @@ import os
 import shutil
 
 from jinja2 import Environment, FileSystemLoader
-
 from openapi import Definition
-from templates.python.functions import get_type_hint, get_params_by_location
+from templates.python.functions import get_params_by_location, get_type_hint
 from templates.python.gen_models import generate_models
 from tree import APINode, APITree
 
@@ -75,4 +74,8 @@ def render_api_component(api_node: APINode):
 
 
 def format_file(filename):
-    os.system(f"ruff check {filename} --fix")
+    config_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'ruff.toml')
+
+    os.system(f"ruff --config {config_file} check {filename} --fix -q")
+    os.system(f"ruff --config {config_file} format {filename} -q")
+    pass

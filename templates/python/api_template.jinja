@@ -30,7 +30,7 @@ class API(
         self.headers = {}
 
     def make_request(self, method: str, url: str, body=None, params=None,
-                     headers: dict = None, timeout = 3) -> requests.Response:
+                     headers: dict = None, timeout: float = 3) -> requests.Response:
         """
         Makes a request to the API server.
 
