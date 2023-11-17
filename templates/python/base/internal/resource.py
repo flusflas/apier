@@ -49,7 +49,7 @@ class APIResource(ABC):
             self._stack.append(obj)
         return self
 
-    def build_url(self) -> str:
+    def _build_url(self) -> str:
         """
         Builds and returns the URL using all the stack information.
         The first item in the stack must be an `API` instance, and the rest
@@ -59,9 +59,9 @@ class APIResource(ABC):
         if len(self._stack) == 0 or not isinstance(self._stack[0], API):
             raise Exception("API instance is missing in the stack")
 
-        return self._stack[0].host.rstrip("/") + self.build_path()
+        return self._stack[0].host.rstrip("/") + self._build_path()
 
-    def build_path(self) -> str:
+    def _build_path(self) -> str:
         """
         Builds the URL path using all the `APIResource` instances in the stack.
         """
@@ -78,9 +78,9 @@ class APIResource(ABC):
             raise Exception("API instance is missing in the stack")
 
         api = self._stack[0]
-        return api.make_request(method, self.build_path(), body=body, **kwargs)
+        return api.make_request(method, self._build_path(), body=body, **kwargs)
 
-    def handle_response(self, response: requests.Response, expected_responses: list):
+    def _handle_response(self, response: requests.Response, expected_responses: list):
         expected_status_codes = set([r[0] for r in expected_responses])
         if response.status_code not in expected_status_codes:
             raise Exception(f"Unexpected response status code ({response.status_code})")
@@ -92,7 +92,7 @@ class APIResource(ABC):
             if not content_type:
                 ret = resp_class()
                 ret._http_response = response
-                return self.handle_error(ret)
+                return self._handle_error(ret)
 
             if response.status_code == code and resp_content_type.startswith(content_type):
                 resp_payload = response.content
@@ -104,11 +104,11 @@ class APIResource(ABC):
 
                 ret = resp_class.parse_obj(resp_payload)
                 ret._http_response = response
-                return self.handle_error(ret)
+                return self._handle_error(ret)
 
         raise Exception(f"Unexpected response content type ({resp_content_type})")
 
-    def handle_error(self, ret):
+    def _handle_error(self, ret):
         api = self._stack[0]
         if api._raise_errors:
             try:

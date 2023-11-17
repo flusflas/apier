@@ -273,7 +273,7 @@ def parse_parameter(definition: Definition, parameter_info: dict) -> EndpointPar
         description=info.get('description', ""),
         in_location=info['in'],
         type=get_multi_key(info, 'schema.type', default='string'),
-        required=info['required'] if info['in'] != 'path' else True,
+        required=info.get('required', False) if info['in'] != 'path' else True,
         format=info.get('format', ''),
     )
 
@@ -362,7 +362,16 @@ def parse_schema(endpoint: Endpoint, operation_name: str,
     while is_inline and schema_name in _schemas:
         # An identical schema already exists
         if _schemas[schema_name].definition == schema_def:
-            return _schemas[schema_name]
+            if content_type == _schemas[schema_name].content_type:
+                return _schemas[schema_name]
+            else:
+                return ContentSchema(
+                    name=schema_name,
+                    code=resp_code,
+                    content_type=content_type,
+                    definition=schema_def,
+                    is_inline=is_inline,
+                )
 
         # Rename schema
         i += 1
