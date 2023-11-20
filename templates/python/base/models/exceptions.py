@@ -14,3 +14,9 @@ class ResponseError(APIException):
 
     def http_response(self) -> Response:
         return self.error.http_response()
+
+
+class ExceptionList(APIException):
+    def __init__(self, msg: str, exceptions: list[Exception], *attr):
+        super().__init__(msg, *attr)
+        self.exceptions = exceptions

@@ -37,7 +37,15 @@ class {{ class_id_name }}{{ loop.index }}(APIResource{% for next_node in layer.n
         {% endfor %}
         {% endif %}
         """
-        resp = self._make_request("{{ method.name.upper() }}"{% if method.request_schemas %}, req{% endif %}, **kwargs)
+        {% if method.request_schemas %}
+        req_content_types = [
+        {% for schema in method.request_schemas %}
+            ("{{ schema.content_type }}", {{ get_type_hint(schema) }}),
+        {% endfor %}
+        ]
+
+        {% endif %}
+        resp = self._make_request("{{ method.name.upper() }}"{% if method.request_schemas %}, req, req_content_types=req_content_types{% endif %}, **kwargs)
         return self._handle_response(resp, [
         {% for schema in method.response_schemas %}
             ({{ schema.code }}, "{{ schema.content_type }}", {{ get_type_hint(schema) }}),

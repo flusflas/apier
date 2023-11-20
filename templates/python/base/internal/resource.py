@@ -1,10 +1,15 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+from typing import Union
 
 import requests
-from requests import Response, HTTPError
+from pyexpat import ExpatError
+from requests import HTTPError, Response
+from requests.structures import CaseInsensitiveDict
 
-from ..models.exceptions import ResponseError
+from ..models.basemodel import APIBaseModel
+from ..models.exceptions import ExceptionList, ResponseError
+from .content_type import SUPPORTED_REQUEST_CONTENT_TYPES, content_types_match
 
 
 @dataclass
@@ -72,10 +77,13 @@ class APIResource(ABC):
 
         return path + self._build_partial_path()
 
-    def _make_request(self, method="GET", body=None, **kwargs) -> Response:
+    def _make_request(self, method="GET", body=None, req_content_types: list = None, **kwargs) -> Response:
         from _build.api import API
         if len(self._stack) == 0 or not isinstance(self._stack[0], API):
             raise Exception("API instance is missing in the stack")
+
+        body, headers = _validate_request_payload(body, req_content_types, kwargs.get('headers'))
+        kwargs['headers'] = headers
 
         api = self._stack[0]
         return api.make_request(method, self._build_path(), body=body, **kwargs)
@@ -117,3 +125,58 @@ class APIResource(ABC):
                 raise ResponseError(ret, str(e))
 
         return ret
+
+
+def _validate_request_payload(body: Union[str, bytes, dict, APIBaseModel],
+                              req_content_types: list, headers: dict) -> tuple[str, dict]:
+    """
+    Tries to parse the request body into one of the supported pairs of
+    content-type / class type. An exception will be returned if the body
+    doesn't match any of the given expected types.
+
+    If req_content_types is None or an empty list, this is a no-op.
+
+    :param body:              Payload of the request.
+    :param req_content_types: List of tuples defining the supported types of the
+                              request. The first element of each tuple is the
+                              Content-Type, and the second one is the class of
+                              the payload model.
+    :param headers:           The headers of the request. If a Content-Type is
+                              set, only the types in req_content_types that
+                              matches that Content-Type will be validated.
+    :return:                  The body ready to be sent, and the headers with
+                              the proper Content-Type added.
+    """
+    exceptions_raised = []
+
+    if req_content_types:
+        content_type_defined = False
+
+        # If Content-Type header is set, only that one is allowed
+        headers = CaseInsensitiveDict(headers)
+        headers.items()
+        expected_content_type = headers.get('content-type', None)
+        if expected_content_type:
+            content_type_defined = True
+            req_content_types = [(content_type, req_class) for content_type, req_class in req_content_types if
+                                 content_types_match(content_type, expected_content_type)]
+
+        for content_type, request_class in req_content_types:
+            # TODO: currently, request_class is not used, but it could be used
+            #       to validate that the payload matches a given model
+            for ct, conv_func in SUPPORTED_REQUEST_CONTENT_TYPES.items():
+                if content_types_match(content_type, ct):
+                    try:
+                        body = conv_func(body)
+
+                        if not content_type_defined:
+                            # Set content type header
+                            headers['Content-Type'] = content_type
+                        return body, dict(headers)
+                    except (ValueError, ExpatError) as e:
+                        exceptions_raised.append(e)
+
+    if len(exceptions_raised) > 0:
+        raise ExceptionList('nooo', exceptions_raised)
+
+    return body, headers
