@@ -17,7 +17,7 @@ class API(
     The top-level class used as an abstraction of the {{ openapi.info.title }}.
     """
 
-    def __init__(self, host: str = "{{ openapi.servers[0].url }}"):
+    def __init__(self, host: str{% if server_url %} = "{{ server_url }}"{% endif %}):
         """
         Creates a new API instance.
 

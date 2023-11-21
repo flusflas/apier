@@ -3,9 +3,11 @@ import shutil
 
 from jinja2 import Environment, FileSystemLoader
 from openapi import Definition
+from tree import APINode, APITree
+from utils.dicts import get_multi_key
+
 from templates.python.functions import get_params_by_location, get_type_hint
 from templates.python.gen_models import generate_models
-from tree import APINode, APITree
 
 
 def render(definition: Definition, schemas: dict, api_tree: APITree):
@@ -27,6 +29,7 @@ def render_api_file(definition: Definition, api_tree: APITree):
     template = environment.get_template("api_template.jinja")
     content = template.render(
         openapi=definition.definition,
+        server_url=get_multi_key(definition.definition, 'servers.0.url', default=None),
         root_branches=api_tree.branches,
         raise_errors=bool(definition.get_value('info.x-api-gen.templates.python.raise-response-errors',
                                                default=True)),

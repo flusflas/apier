@@ -1,4 +1,3 @@
-import operator
 from functools import reduce
 
 _default = object()
@@ -19,8 +18,17 @@ def get_multi_key(d: dict, key: str, separator: str = '.', default=_default):
              is not found and default is not set.
     """
     try:
-        return reduce(operator.getitem, key.split(separator), d)
+        def get_item(a, b):
+            if isinstance(a, list):
+                b = int(b)
+            return a[b]
+
+        return reduce(get_item, key.split(separator), d)
     except KeyError:
         if default != _default:
             return default
         raise KeyError(f"Key '{key}' not found")
+    except IndexError:
+        if default != _default:
+            return default
+        raise IndexError(f"Index '{key}' out of range")
