@@ -261,8 +261,8 @@ expected_endpoints = {
             ),
         ],
     ),
-    "/companies/{company_id}/employees/{employee_num}": Endpoint(
-        path="/companies/{company_id}/employees/{employee_num}",
+    "/companies/{company_id}/employees/{employee-num}": Endpoint(
+        path="/companies/{company_id}/employees/{employee-num}",
         definition=openapi_definition,
         layers=[
             EndpointLayer(
@@ -275,10 +275,10 @@ expected_endpoints = {
                 methods=[],
             ),
             EndpointLayer(
-                path="/employees/{employee_num}",
+                path="/employees/{employee-num}",
                 api_levels=["employees"],
                 parameters=[
-                    EndpointParameter(name="employee_num", in_location="path", type="integer", required=True),
+                    EndpointParameter(name="employee-num", in_location="path", type="integer", required=True),
                 ],
                 next=[],
                 methods=[
@@ -291,7 +291,7 @@ expected_endpoints = {
                                               type='string',
                                               required=True,
                                               format=''),
-                            EndpointParameter(name='employee_num',
+                            EndpointParameter(name='employee-num',
                                               in_location='path',
                                               type='integer',
                                               required=True,
@@ -402,12 +402,12 @@ expected_endpoints = {
     ),
     (
             EndpointLayer(
-                path="/employees/{employee_num}",
+                path="/employees/{employee-num}",
                 parameters=[
-                    EndpointParameter(name="employee_num", in_location="path", type="integer", required=True),
+                    EndpointParameter(name="employee-num", in_location="path", type="integer", required=True),
                 ],
             ),
-            ["employee_num"],
+            ["employee-num"],
             ["integer"]
     ),
     (
@@ -437,8 +437,8 @@ def test_endpoint_layer_param_functions(layer: EndpointLayer, expected_param_nam
             expected_endpoints["/companies/{company_id}"]
     ),
     (
-            "/companies/{company_id}/employees/{employee_num}",
-            expected_endpoints["/companies/{company_id}/employees/{employee_num}"]
+            "/companies/{company_id}/employees/{employee-num}",
+            expected_endpoints["/companies/{company_id}/employees/{employee-num}"]
     ),
 ])
 def test_parse_endpoint(path, expected):
@@ -464,8 +464,8 @@ def test_parse_endpoint(path, expected):
                      ])
     ),
     (
-            Endpoint("/companies/{company_id}/employees/{employee_num}"),
-            Endpoint(path="/companies/{company_id}/employees/{employee_num}",
+            Endpoint("/companies/{company_id}/employees/{employee-num}"),
+            Endpoint(path="/companies/{company_id}/employees/{employee-num}",
                      layers=[
                          EndpointLayer(
                              path="/companies/{company_id}",
@@ -478,10 +478,10 @@ def test_parse_endpoint(path, expected):
                              ],
                          ),
                          EndpointLayer(
-                             path="/employees/{employee_num}",
+                             path="/employees/{employee-num}",
                              api_levels=["employees"],
                              parameters=[
-                                 EndpointParameter(name="employee_num",
+                                 EndpointParameter(name="employee-num",
                                                    in_location="path",
                                                    type="string",
                                                    required=True),
@@ -588,8 +588,8 @@ def test_split_endpoint_layers(endpoint, expected):
                      ])
     ),
     (
-            Endpoint("/companies/{company_id}/employees/{employee_num}", definition=openapi_definition),
-            Endpoint(path="/companies/{company_id}/employees/{employee_num}",
+            Endpoint("/companies/{company_id}/employees/{employee-num}", definition=openapi_definition),
+            Endpoint(path="/companies/{company_id}/employees/{employee-num}",
                      definition=openapi_definition,
                      layers=[
                          EndpointLayer(
@@ -603,10 +603,10 @@ def test_split_endpoint_layers(endpoint, expected):
                              ],
                          ),
                          EndpointLayer(
-                             path="/employees/{employee_num}",
+                             path="/employees/{employee-num}",
                              api_levels=["employees"],
                              parameters=[
-                                 EndpointParameter(name="employee_num",
+                                 EndpointParameter(name="employee-num",
                                                    in_location="path",
                                                    type="integer",
                                                    required=True),
@@ -620,7 +620,7 @@ def test_split_endpoint_layers(endpoint, expected):
                                                            in_location="path",
                                                            type="string",
                                                            required=True),
-                                         EndpointParameter(name="employee_num",
+                                         EndpointParameter(name="employee-num",
                                                            in_location="path",
                                                            type="integer",
                                                            required=True),

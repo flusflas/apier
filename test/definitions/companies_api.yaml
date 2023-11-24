@@ -5,8 +5,8 @@ info:
   version: 1.0.0
   x-api-gen:
     equivalent_paths:
-      - source: /companies/{company_id}/departments/{department_name}/employees/{employee_num}
-        target: /companies/{company_id}/employees/{employee_num}
+      - source: /companies/{company_id}/departments/{department_name}/employees/{employee-num}
+        target: /companies/{company_id}/employees/{employee-num}
     templates:
       python:
         raise-response-errors: true
@@ -320,11 +320,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /companies/{company_id}/employees/{employee_num}:
+  /companies/{company_id}/employees/{employee-num}:
     get:
       parameters:
         - $ref: '#/components/parameters/company_id'
-        - $ref: '#/components/parameters/employee_num'
+        - $ref: '#/components/parameters/employee-num'
       tags:
         - Employees
       summary: Get a Employee
@@ -350,12 +350,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /companies/{company_id}/departments/{department_name}/employees/{employee_num}:
+  /companies/{company_id}/departments/{department_name}/employees/{employee-num}:
     get:
       parameters:
         - $ref: '#/components/parameters/company_id'
         - $ref: '#/components/parameters/department_name'
-        - $ref: '#/components/parameters/employee_num'
+        - $ref: '#/components/parameters/employee-num'
       tags:
         - Employees
       summary: Get a Employee by department
@@ -433,7 +433,7 @@ paths:
                 type: object
                 additionalProperties: true
 
-  /tests/echo_array:
+  /tests/echo-array:
     get:
       tags:
         - Tests
@@ -460,9 +460,9 @@ components:
         type: string
         example: mcdonalds
 
-    employee_num:
+    employee-num:
       in: path
-      name: employee_num
+      name: employee-num
       required: true
       schema:
         type: integer

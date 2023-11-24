@@ -300,6 +300,8 @@ def parse_content_schemas(endpoint: Endpoint):
         resp_definition = operation.get('responses', {})
         for resp_code, resp_definition in resp_definition.items():
             resp_code = int(resp_code)
+            if '$ref' in resp_definition:
+                resp_definition = endpoint.definition.solve_ref(resp_definition['$ref'])
             resp_definition = resp_definition.get('content', {})
             for content_type, content_type_definition in resp_definition.items():
                 schema = content_type_definition.get('schema', {})

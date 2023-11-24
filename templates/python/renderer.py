@@ -5,6 +5,7 @@ from jinja2 import Environment, FileSystemLoader
 from openapi import Definition
 from tree import APINode, APITree
 from utils.dicts import get_multi_key
+from utils.strings import to_pascal_case, to_snake_case
 
 from templates.python.functions import get_params_by_location, get_type_hint
 from templates.python.gen_models import generate_models
@@ -46,11 +47,14 @@ def render_api_components(api_tree: APITree):
 
 
 def render_api_component(api_node: APINode):
-    filename = f"_build/{api_node.api}.py"
+    filename = f"_build/{to_snake_case(api_node.api)}.py"
     print(f"Rendering {filename}... ", end="")
 
     environment = Environment(loader=FileSystemLoader("templates/python/"),
                               trim_blocks=True, lstrip_blocks=True)
+
+    environment.filters['to_snake_case'] = to_snake_case
+    environment.filters['to_pascal_case'] = to_pascal_case
 
     template = environment.get_template("node_template.jinja")
 
