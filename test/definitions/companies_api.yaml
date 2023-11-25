@@ -450,6 +450,21 @@ paths:
                 items:
                   type: integer
 
+  /tests/tests:
+    get:
+      tags:
+        - Tests
+      summary: Endpoint with duplicated layer names
+      description: Endpoint with duplicated layer names
+      operationId: GetTestTest
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+
 components:
   parameters:
     company_id:

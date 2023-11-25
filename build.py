@@ -9,10 +9,7 @@ from tree import build_endpoints_tree
 
 
 def build(filename):
-    with open(filename) as f:
-        spec = yaml.safe_load(f.read())
-
-    definition = Definition(spec)
+    definition = Definition.load(filename)
     endpoints = []
     for path in definition.paths:
         endpoints.append(parse_endpoint(path, definition))

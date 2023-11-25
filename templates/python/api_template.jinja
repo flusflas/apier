@@ -4,13 +4,13 @@ import requests
 from pydantic import BaseModel
 
 {% for branch in root_branches -%}
-    from .{{ branch.api }} import _{{ branch.api.capitalize() }}Method
+    from .{{ branch | api_name }} import _{{ branch | api_name | pascal_case }}Method
 {% endfor %}
 
 
 class API(
     {%- for branch in root_branches -%}
-        _{{ branch.api.capitalize() }}Method
+        _{{ branch | api_name | pascal_case }}Method
         {%- if not loop.last %}, {% endif %}
     {%- endfor %}):
     """

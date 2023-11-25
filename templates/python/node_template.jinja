@@ -9,16 +9,16 @@ from .models import primitives
 
 {% for layer in api_node.layers %}
 {% for next_node in layer.next %}
-from .{{ next_node.api | to_snake_case }} import _{{ next_node.api | to_pascal_case }}Method
+from .{{ next_node | api_name | snake_case }} import _{{ next_node | api_name | pascal_case }}Method
 {% endfor %}
 {% endfor %}
 
 {% for layer in api_node.layers %}
 
 @dataclass
-class {{ class_id_name | to_pascal_case }}{{ loop.index }}(APIResource{% for next_node in layer.next %}, _{{ next_node.api | to_pascal_case }}Method{% endfor %}):
+class {{ api_node.api | pascal_case }}{{ loop.index }}(APIResource{% for next_node in layer.next %}, _{{ next_node | api_name | pascal_case }}Method{% endfor %}):
     {% for param in layer.parameters %}
-    {{ param.name | to_snake_case }}: {{ get_type_hint(param.type) }}
+    {{ param.name | snake_case }}: {{ get_type_hint(param.type) }}
     {% endfor %}
 
     {%- for method in layer.methods %}
@@ -54,35 +54,35 @@ class {{ class_id_name | to_pascal_case }}{{ loop.index }}(APIResource{% for nex
     {% endfor %}
 
     def _build_partial_path(self):
-        return f"{% if api_node.api %}/{% endif %}{{ api_node.api }}{% for param in layer.parameters %}/{self.{{ param.name | to_snake_case }}}{% endfor %}"
+        return f"{% if api_node.api %}/{% endif %}{{ api_node.api }}{% for param in layer.parameters %}/{self.{{ param.name | snake_case }}}{% endfor %}"
 
 {% endfor %}
 
-class _{{ api_node.api | to_pascal_case }}Method:
+class _{{ api_node | api_name | pascal_case }}Method:
     """
     This class declares and implements the `{{ api_node.api }}()` method.
     """
     {% for layer in api_node.layers %}
 
     @overload
-    def {{ api_node.api | to_snake_case }}(self{% for param in layer.parameters %}, {{ param.name | to_snake_case }}: {{ get_type_hint(param.type) }}{% endfor %}) -> {{ class_id_name | to_pascal_case }}{{ loop.index }}:
+    def {{ api_node.api | snake_case }}(self{% for param in layer.parameters %}, {{ param.name | snake_case }}: {{ get_type_hint(param.type) }}{% endfor %}) -> {{ api_node.api | pascal_case }}{{ loop.index }}:
         ...
     {% endfor %}
 
-    def {{ api_node.api | to_snake_case }}(self{% for param in api_node.params_set() %}, {{ param.name | to_snake_case }}: {{ get_type_hint(param.type) }}{% if param.name in optional_param_names %} = None{% endif %}{% endfor %}):
+    def {{ api_node.api | snake_case }}(self{% for param in api_node.params_set() %}, {{ param.name | snake_case }}: {{ get_type_hint(param.type) }}{% if param.name in optional_param_names %} = None{% endif %}{% endfor %}):
         {% for layer in api_node.layers %}
         {% if api_node.layers | length > 1 and layer.parameters | length > 1 or (has_layer_without_params and layer.parameters | length == 1) %}
-        if {% for param in layer.param_names() %}{% if param in optional_param_names %}{{ param | to_snake_case }} is not None {% if not loop.last %} and {% endif %}{% endif %}{% endfor %}:
-            return {{ class_id_name | to_pascal_case }}{{ loop.index }}({{ layer.param_names() | map('to_snake_case') | join (", ") }})._child_of(self)
+        if {% for param in layer.param_names() %}{% if param in optional_param_names %}{{ param | snake_case }} is not None {% if not loop.last %} and {% endif %}{% endif %}{% endfor %}:
+            return {{ api_node.api | pascal_case }}{{ loop.index }}({{ layer.param_names() | map('snake_case') | join (", ") }})._child_of(self)
 
         {% elif optional_param_names | length > 0 %}
-        if {{ optional_param_names|map('to_snake_case') | join(" is None and ") }} is None:
-            return {{ class_id_name | to_pascal_case }}{{ loop.index }}({{ layer.param_names() | map('to_snake_case') | join(", ") }})._child_of(self)
+        if {{ optional_param_names|map('snake_case') | join(" is None and ") }} is None:
+            return {{ api_node.api | pascal_case }}{{ loop.index }}({{ layer.param_names() | map('snake_case') | join(", ") }})._child_of(self)
 
         {% else %}
 
         {%- set ns.raise_stmt = False %}
-        return {{ class_id_name | to_pascal_case }}{{ loop.index }}({{ layer.param_names() | join(", ") }})._child_of(self)
+        return {{ api_node.api | pascal_case }}{{ loop.index }}({{ layer.param_names() | join(", ") }})._child_of(self)
 
         {% endif %}
         {% endfor  %}
