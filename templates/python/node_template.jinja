@@ -9,14 +9,14 @@ from .models import primitives
 
 {% for layer in api_node.layers %}
 {% for next_node in layer.next %}
-from .{{ next_node | api_name | snake_case }} import _{{ next_node | api_name | pascal_case }}Method
+from .{{ next_node | api_name | snake_case }} import _{{ next_node | api_name | pascal_case }}Methods
 {% endfor %}
 {% endfor %}
 
 {% for layer in api_node.layers %}
 
 @dataclass
-class {{ api_node.api | pascal_case }}{{ loop.index }}(APIResource{% for next_node in layer.next %}, _{{ next_node | api_name | pascal_case }}Method{% endfor %}):
+class {{ api_node.api | pascal_case }}{{ loop.index }}(APIResource{% for next_node in layer.next %}, _{{ next_node | api_name | pascal_case }}Methods{% endfor %}):
     {% for param in layer.parameters %}
     {{ param.name | snake_case }}: {{ get_type_hint(param.type) }}
     {% endfor %}
@@ -58,7 +58,7 @@ class {{ api_node.api | pascal_case }}{{ loop.index }}(APIResource{% for next_no
 
 {% endfor %}
 
-class _{{ api_node | api_name | pascal_case }}Method:
+class _{{ api_node | api_name | pascal_case }}Methods:
     """
     This class declares and implements the `{{ api_node.api }}()` method.
     """

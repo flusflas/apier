@@ -22,11 +22,9 @@ class Renderer:
     """
 
     def __init__(self):
-        self.nodes_processed = set()
         self.api_names = {}
 
     def render(self, definition: Definition, schemas: dict, api_tree: APITree):
-        self.nodes_processed = set()
         self.api_names = {}
 
         if os.path.exists('_build'):
@@ -60,12 +58,17 @@ class Renderer:
             message.write(content)
 
     def render_api_components(self, api_tree: APITree):
-        for api in api_tree.branches:
-            if api.next is not None:
-                self.render_api_components(api.next)
-            if id(api) not in self.nodes_processed:
-                self.render_api_component(api)
-                self.nodes_processed.add(id(api))
+        nodes_processed = set()
+        stack = [api_tree]
+
+        while stack:
+            current_tree = stack.pop()
+            for api in current_tree.branches:
+                if api.next is not None:
+                    stack.append(api.next)
+                if id(api) not in nodes_processed:
+                    self.render_api_component(api)
+                    nodes_processed.add(id(api))
 
     def get_api_name(self, api_node: APINode) -> str:
         """
