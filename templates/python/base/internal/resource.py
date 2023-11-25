@@ -46,7 +46,7 @@ class APIResource(ABC):
         This method is used when a new `APIResource` instance is created from
         another one.
         """
-        from _build.api import API
+        from ..api import API
         if isinstance(obj, API):
             self._stack = [obj]
         else:
@@ -60,7 +60,7 @@ class APIResource(ABC):
         The first item in the stack must be an `API` instance, and the rest
         must be `APIResource` instances.
         """
-        from _build.api import API
+        from ..api import API
         if len(self._stack) == 0 or not isinstance(self._stack[0], API):
             raise Exception("API instance is missing in the stack")
 
@@ -78,7 +78,7 @@ class APIResource(ABC):
         return path + self._build_partial_path()
 
     def _make_request(self, method="GET", body=None, req_content_types: list = None, **kwargs) -> Response:
-        from _build.api import API
+        from ..api import API
         if len(self._stack) == 0 or not isinstance(self._stack[0], API):
             raise Exception("API instance is missing in the stack")
 

@@ -9,7 +9,8 @@ from endpoints import ContentSchema
 from openapi import Definition
 
 
-def generate_models(definition: Definition, schemas: dict[str, ContentSchema]):
+def generate_models(definition: Definition, schemas: dict[str, ContentSchema],
+                    output_path: str):
     """
     Generate the Pydantic models for all the given schemas.
 
@@ -33,7 +34,7 @@ def generate_models(definition: Definition, schemas: dict[str, ContentSchema]):
         yaml.dump(openapi_output, f)
 
     os.system(f"datamodel-codegen --input {filename} --input-file-type openapi "
-              f"--output _build/models/models.py "
-              f"--base-class _build.models.basemodel.APIBaseModel")
+              f"--output {output_path}/models/models.py "
+              f"--base-class .basemodel.APIBaseModel")
 
     shutil.rmtree('_temp')

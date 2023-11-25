@@ -16,7 +16,7 @@ def build(filename):
 
     schemas = get_schemas()
     api_tree = build_endpoints_tree(endpoints)
-    render_api('python', definition, schemas, api_tree)
+    render_api('python', definition, schemas, api_tree, '_build/')
 
 
 if __name__ == '__main__':

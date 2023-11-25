@@ -21,24 +21,30 @@ class Renderer:
     could be called using `api.companies(company_id).employees(employee_id)`.
     """
 
-    def __init__(self):
+    def __init__(self, definition: Definition, schemas: dict, api_tree: APITree,
+                 output_path: str):
+        self.definition = definition
+        self.schemas = schemas
+        self.api_tree = api_tree
+        self.output_path = output_path.rstrip('/')
         self.api_names = {}
 
-    def render(self, definition: Definition, schemas: dict, api_tree: APITree):
+    def render(self):
         self.api_names = {}
 
-        if os.path.exists('_build'):
-            shutil.rmtree('_build')
-        shutil.copytree('templates/python/base', '_build')
+        if os.path.exists(self.output_path):
+            # TODO: Ask before removing
+            shutil.rmtree(self.output_path)
+        shutil.copytree('templates/python/base', self.output_path)
 
-        generate_models(definition, schemas)
-        self.render_api_components(api_tree)
-        self.render_api_file(definition, api_tree)
+        generate_models(self.definition, self.schemas, self.output_path)
+        self.render_api_components()
+        self.render_api_file()
 
-        format_file("_build/")
+        format_file(self.output_path)
 
-    def render_api_file(self, definition: Definition, api_tree: APITree):
-        filename = "_build/api.py"
+    def render_api_file(self):
+        filename = f"{self.output_path}/api.py"
         environment = Environment(loader=FileSystemLoader("templates/python/"),
                                   trim_blocks=True, lstrip_blocks=True)
 
@@ -48,18 +54,18 @@ class Renderer:
 
         template = environment.get_template("api_template.jinja")
         content = template.render(
-            openapi=definition.definition,
-            server_url=get_multi_key(definition.definition, 'servers.0.url', default=None),
-            root_branches=api_tree.branches,
-            raise_errors=bool(definition.get_value('info.x-api-gen.templates.python.raise-response-errors',
-                                                   default=True)),
+            openapi=self.definition.definition,
+            server_url=get_multi_key(self.definition.definition, 'servers.0.url', default=None),
+            root_branches=self.api_tree.branches,
+            raise_errors=bool(self.definition.get_value('info.x-api-gen.templates.python.raise-response-errors',
+                                                        default=True)),
         )
         with open(filename, mode="w", encoding="utf-8") as message:
             message.write(content)
 
-    def render_api_components(self, api_tree: APITree):
+    def render_api_components(self):
         nodes_processed = set()
-        stack = [api_tree]
+        stack = [self.api_tree]
 
         while stack:
             current_tree = stack.pop()
@@ -89,7 +95,7 @@ class Renderer:
 
     def render_api_component(self, api_node: APINode):
         api_filename = to_snake_case(self.get_api_name(api_node))
-        filename = f"_build/{api_filename}.py"
+        filename = f"{self.output_path}/{api_filename}.py"
         print(f"Rendering {filename}... ", end="")
 
         environment = Environment(loader=FileSystemLoader("templates/python/"),
