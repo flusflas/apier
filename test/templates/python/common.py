@@ -1,13 +1,17 @@
 import json
+from typing import Union
 
 from requests.structures import CaseInsensitiveDict
 from pydantic import BaseModel
-from requests import Response
+from requests import PreparedRequest, Request, Response
 
 
-def make_json_response(status_code: int, body=None) -> Response:
+def make_json_response(status_code: int, body=None, request: Union[PreparedRequest, Request] = None) -> Response:
     resp = Response()
     resp.status_code = status_code
+    if isinstance(request, Request):
+        request = request.prepare()
+    resp.request = request
     if body is not None:
         body = to_dict(body)
         resp._content = json.dumps(body).encode('utf-8')
