@@ -17,6 +17,7 @@ def generate_models(definition: Definition, schemas: dict[str, ContentSchema],
     :param definition:  The OpenAPI definition object.
     :param schemas:     The dictionary of schemas that will be generated to
                         models.
+    :param output_path: The output directory.
     """
     openapi_output = copy.deepcopy(definition.definition)
     definition_schemas = definition.get_value('components.schemas')

@@ -1,11 +1,7 @@
-from typing import List, Union
+from typing import Union
 
 from consts import NO_RESPONSE_ID
-from endpoints import ContentSchema, EndpointParameter
-
-
-def get_params_by_location(parameters: List[EndpointParameter], param_type: str) -> List[EndpointParameter]:
-    return list(filter(lambda p: p.in_location == param_type, parameters))
+from endpoints import ContentSchema
 
 
 def get_type_hint(*args: Union[str, ContentSchema],

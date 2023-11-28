@@ -58,6 +58,9 @@ class EndpointMethod:
     def __hash__(self):
         return hash(repr(self))
 
+    def params_in(self, in_location: str):
+        return [p for p in self.parameters if p.in_location == in_location]
+
 
 @dataclass
 class EndpointLayer:

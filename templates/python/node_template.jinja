@@ -27,8 +27,8 @@ class {{ api_node.api | pascal_case }}{{ loop.index }}(APIResource{% for next_no
             {%- if method.request_schemas -%}, req: {{ get_type_hint(*method.request_schemas, include_primitive_type=True) }}{% endif %}, **kwargs)
             {%- if method.response_schemas | length > 0 %} -> {{ get_type_hint(*method.response_schemas) }}{% endif %}:
         """
-        {{ method.description }}
-        {% set query_params = get_params_by_location(method.parameters, 'query') %}
+        {{ method.description | trim }}
+        {% set query_params = method.params_in('query') %}
         {% if query_params | length > 0 %}
 
         Query parameters:
@@ -37,6 +37,7 @@ class {{ api_node.api | pascal_case }}{{ loop.index }}(APIResource{% for next_no
         {% endfor %}
         {% endif %}
         """
+        {# Add request schemas info #}
         {% if method.request_schemas %}
         req_content_types = [
         {% for schema in method.request_schemas %}
@@ -45,7 +46,25 @@ class {{ api_node.api | pascal_case }}{{ loop.index }}(APIResource{% for next_no
         ]
 
         {% endif %}
+        {# Add information of query and header parameters if present. This will be used to evaluate runtime expressions. #}
+        {% if method.params_in('query') or method.params_in('header') %}
+        params = {
+        {% for param_location in ['query', 'header'] %}
+        {% set params = method.params_in(param_location) %}
+        {% if params %}
+            '{{ param_location }}': [
+        {% for param in params %}
+                ("{{ param.name }}", {{ get_type_hint(param.type) }}),
+        {% endfor %}
+            ],
+        {% endif %}
+        {% endfor %}
+        }
+
+        {% endif %}
+        {# Make request #}
         resp = self._make_request("{{ method.name.upper() }}"{% if method.request_schemas %}, req, req_content_types=req_content_types{% endif %}, **kwargs)
+        {# Process and return response #}
         return self._handle_response(resp, [
         {% for schema in method.response_schemas %}
             ({{ schema.code }}, "{{ schema.content_type }}", {{ get_type_hint(schema) }}),

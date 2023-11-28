@@ -7,7 +7,7 @@ from tree import APINode, APITree
 from utils.dicts import get_multi_key
 from utils.strings import to_pascal_case, to_snake_case
 
-from templates.python.functions import get_params_by_location, get_type_hint
+from templates.python.functions import get_type_hint
 from templates.python.gen_models import generate_models
 
 
@@ -119,7 +119,6 @@ class Renderer:
             optional_param_names=optional_param_names,
             has_layer_without_params=has_layer_without_params,
             get_type_hint=get_type_hint,
-            get_params_by_location=get_params_by_location,
         )
         with open(filename, mode="w", encoding="utf-8") as message:
             message.write(content)
