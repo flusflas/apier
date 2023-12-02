@@ -14,7 +14,7 @@ class RuntimeExpressionError(Exception):
         self.caused_by = caused_by
 
 
-def decode_expression(expression: str, obj: Union[dict, Response]):
+def decode_expression(expression: str, obj: Union[dict, Response], path_values: dict = None):
     """
     Decodes an OpenAPI runtime expression (https://swagger.io/docs/specification/links/).
     It also accepts a dot-separated expression to address an attribute of the
@@ -23,14 +23,17 @@ def decode_expression(expression: str, obj: Union[dict, Response]):
     It raises a RuntimeExpressionError if the expression cannot be evaluated
     successfully.
 
-    :param expression: An OpenAPI runtime expression or a dot-separated expression.
-    :param obj:        The response on which the expression will be applied.
-    :return:           The result of the evaluated expression.
+    :param expression:  An OpenAPI runtime expression or a dot-separated expression.
+    :param obj:         The response on which the expression will be applied.
+    :param path_values: A dictionary with the values of the path parameters of
+                        the request. It is only needed if the runtime expression
+                        needs to access these values.
+    :return:            The result of the evaluated expression.
     """
     try:
         expression = expression.strip()
         if expression.startswith('$'):
-            return _decode_runtime_expression(expression, obj)
+            return _decode_runtime_expression(expression, obj, path_values)
 
         if isinstance(obj, Response):
             obj = obj.json()
@@ -45,7 +48,7 @@ def decode_expression(expression: str, obj: Union[dict, Response]):
         raise RuntimeExpressionError(caused_by=e)
 
 
-def _decode_runtime_expression(expression: str, resp: Response):
+def _decode_runtime_expression(expression: str, resp: Response, path_values: dict = None):
     """
     Decodes the given runtime expression, according to
     https://swagger.io/docs/specification/links/.
@@ -53,22 +56,27 @@ def _decode_runtime_expression(expression: str, resp: Response):
     def to_string(obj):
         return str(obj) if obj is not None else ''
 
-    def get_query_string(param):
+    def get_query_string(name):
         parsed_url = urlparse(resp.request.url)
         query_params = parse_qs(parsed_url.query)
-        value = query_params.get(param, [])
+        value = query_params.get(name, [])
         if len(value) == 0:
-            raise RuntimeExpressionError(f"Query parameter '{param}' not found")
+            raise RuntimeExpressionError(f"Query parameter '{name}' not found")
         elif len(value) == 1:
             return value[0]
         else:
             return value
 
+    def get_path_value(name):
+        if path_values is not None and name in path_values:
+            return path_values[name]
+        raise RuntimeExpressionError(f"Path parameter '{name}' not found")
+
     expression_funcs = {
         '$url': lambda: resp.request.url,
         '$method': lambda: resp.request.method,
         '$request.query.*': lambda x: get_query_string(x),
-        # TODO: '$request.path.*': lambda x: resp,
+        '$request.path.*': lambda x: get_path_value(x),
         '$request.header.*': lambda x: resp.request.headers.get(x),
         '$request.body': lambda: to_string(resp.request.body),
         '$request.body#*': lambda x: _get_from_dict(json.loads(resp.request.body), x, '/'),
