@@ -14,7 +14,8 @@ class RuntimeExpressionError(Exception):
         self.caused_by = caused_by
 
 
-def decode_expression(expression: str, obj: Union[dict, Response], path_values: dict = None):
+def decode_expression(expression: str, obj: Union[dict, Response], path_values: dict = None,
+                      query_param_types: dict = None, header_param_types: dict = None):
     """
     Decodes an OpenAPI runtime expression (https://swagger.io/docs/specification/links/).
     It also accepts a dot-separated expression to address an attribute of the
@@ -28,12 +29,21 @@ def decode_expression(expression: str, obj: Union[dict, Response], path_values: 
     :param path_values: A dictionary with the values of the path parameters of
                         the request. It is only needed if the runtime expression
                         needs to access these values.
+    :param query_param_types: A dictionary with the types of the query parameters of
+                        the request. It is only needed if the values have to be
+                        returned with the appropriate type. Otherwise, a string value
+                        will be returned.
+    :param header_param_types: A dictionary with the types of the header parameters of
+                        the request. It is only needed if the values have to be
+                        returned with the appropriate type. Otherwise, a string value
+                        will be returned.
     :return:            The result of the evaluated expression.
     """
     try:
         expression = expression.strip()
         if expression.startswith('$'):
-            return _decode_runtime_expression(expression, obj, path_values)
+            return _decode_runtime_expression(expression, obj, path_values,
+                                              query_param_types, header_param_types)
 
         if isinstance(obj, Response):
             obj = obj.json()
@@ -48,13 +58,22 @@ def decode_expression(expression: str, obj: Union[dict, Response], path_values: 
         raise RuntimeExpressionError(caused_by=e)
 
 
-def _decode_runtime_expression(expression: str, resp: Response, path_values: dict = None):
+def _decode_runtime_expression(expression: str, resp: Response, path_values: dict = None,
+                               query_param_types: dict = None, header_param_types: dict = None):
     """
     Decodes the given runtime expression, according to
     https://swagger.io/docs/specification/links/.
     """
+    if header_param_types is not None:
+        header_param_types = {k.lower(): v for k, v in header_param_types.items()}
+
     def to_string(obj):
         return str(obj) if obj is not None else ''
+
+    def cast_value(name, value, type_dict):
+        if type_dict is not None and name in type_dict:
+            return type_dict[name](value)
+        return value
 
     def get_query_string(name):
         parsed_url = urlparse(resp.request.url)
@@ -75,9 +94,9 @@ def _decode_runtime_expression(expression: str, resp: Response, path_values: dic
     expression_funcs = {
         '$url': lambda: resp.request.url,
         '$method': lambda: resp.request.method,
-        '$request.query.*': lambda x: get_query_string(x),
+        '$request.query.*': lambda x: cast_value(x, get_query_string(x), query_param_types),
         '$request.path.*': lambda x: get_path_value(x),
-        '$request.header.*': lambda x: resp.request.headers.get(x),
+        '$request.header.*': lambda x: cast_value(x, resp.request.headers.get(x), header_param_types),
         '$request.body': lambda: to_string(resp.request.body),
         '$request.body#*': lambda x: _get_from_dict(json.loads(resp.request.body), x, '/'),
         '$statusCode': lambda: resp.status_code,

@@ -16,7 +16,10 @@ test_dict = {
 }
 
 test_request = Request(url='https://api.test/companies/ibm/department/17/users?foo=bar&limit=10&foo=abc',
-                       headers={'Authorization': 'Bearer abc'},
+                       headers={
+                           'Authorization': 'Bearer abc',
+                           'X-Number': '7.35',
+                       },
                        method='GET').prepare()
 test_response = make_json_response(200, test_dict, test_request)
 
@@ -58,6 +61,20 @@ def test_runtime_expression_path_values(obj: Union[dict, Request, Response], exp
     }
     result = decode_expression(expression, obj, path_values=path_values)
     assert result == expected
+
+
+@pytest.mark.parametrize("obj, expression, expected", [
+    (test_response, '$request.query.limit', 10),
+    (test_response, '$request.header.x-number', 7.35),
+])
+def test_runtime_expression_type_casting(obj: Union[dict, Request, Response], expression: str, expected):
+    query_param_types = {'limit': int}
+    header_param_types = {'X-Number': float}
+    result = decode_expression(expression, obj,
+                               query_param_types=query_param_types,
+                               header_param_types=header_param_types)
+    assert result == expected
+    assert isinstance(result, type(expected))
 
 
 @pytest.mark.parametrize("obj, expression, expected_exception_type", [
