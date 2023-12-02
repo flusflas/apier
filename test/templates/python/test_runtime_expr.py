@@ -44,6 +44,8 @@ test_response = make_json_response(200, test_dict, test_request)
     (test_response, '$response.body', test_response.text),
     (test_response, '$response.body#users/1/name', 'Bob'),
     (test_response, '$response.body#next_offset', 2),
+    (test_response, 'foo{$response.body#next_offset}bar', 'foo2bar'),
+    (test_response, 'Alice: {$response.body#users/0/id}, Bob: {$response.body#users/1/id}', 'Alice: 1, Bob: 2'),
 ])
 def test_runtime_expression(obj: Union[dict, Request, Response], expression: str, expected):
     result = decode_expression(expression, obj)

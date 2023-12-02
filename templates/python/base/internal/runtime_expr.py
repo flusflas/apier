@@ -1,4 +1,5 @@
 import json
+import re
 from functools import reduce
 from typing import Union
 from urllib.parse import urlparse, parse_qs
@@ -41,6 +42,13 @@ def decode_expression(expression: str, obj: Union[dict, Response], path_values: 
     """
     try:
         expression = expression.strip()
+
+        if '{' in expression:
+            def replace_group(match):
+                return str(_decode_runtime_expression(match.group(1), obj, path_values,
+                                                      query_param_types, header_param_types))
+            return re.sub(r'{(\$[^}]+)}', replace_group, expression)
+
         if expression.startswith('$'):
             return _decode_runtime_expression(expression, obj, path_values,
                                               query_param_types, header_param_types)
