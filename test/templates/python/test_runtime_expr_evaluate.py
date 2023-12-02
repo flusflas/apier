@@ -3,7 +3,7 @@ from typing import Union
 import pytest
 from requests import Request, Response
 
-from templates.python.base.internal.runtime_expr import decode_expression, RuntimeExpressionError
+from templates.python.base.internal.runtime_expr import evaluate, RuntimeExpressionError
 from test.templates.python.common import make_json_response
 
 test_dict = {
@@ -24,7 +24,7 @@ test_request = Request(url='https://api.test/companies/ibm/department/17/users?f
 test_response = make_json_response(200, test_dict, test_request)
 
 
-@pytest.mark.parametrize("obj, expression, expected", [
+@pytest.mark.parametrize("resp, expression, expected", [
     (test_dict, 'next_offset', 2),
     (test_dict, 'users', test_dict['users']),
     (test_dict, 'users.0', test_dict['users'][0]),
@@ -47,39 +47,39 @@ test_response = make_json_response(200, test_dict, test_request)
     (test_response, 'foo{$response.body#next_offset}bar', 'foo2bar'),
     (test_response, 'Alice: {$response.body#users/0/id}, Bob: {$response.body#users/1/id}', 'Alice: 1, Bob: 2'),
 ])
-def test_runtime_expression(obj: Union[dict, Request, Response], expression: str, expected):
-    result = decode_expression(expression, obj)
+def test_evaluate(resp: Union[dict, Request, Response], expression: str, expected):
+    result = evaluate(resp, expression)
     assert result == expected
 
 
-@pytest.mark.parametrize("obj, expression, expected", [
+@pytest.mark.parametrize("resp, expression, expected", [
     (test_response, '$request.path.company-id', 'ibm'),
     (test_response, '$request.path.department_num', 17),
 ])
-def test_runtime_expression_path_values(obj: Union[dict, Request, Response], expression: str, expected):
+def test_evaluate_with_path_values(resp: Union[dict, Request, Response], expression: str, expected):
     path_values = {
         'company-id': 'ibm',
         'department_num': 17
     }
-    result = decode_expression(expression, obj, path_values=path_values)
+    result = evaluate(resp, expression, path_values=path_values)
     assert result == expected
 
 
-@pytest.mark.parametrize("obj, expression, expected", [
+@pytest.mark.parametrize("resp, expression, expected", [
     (test_response, '$request.query.limit', 10),
     (test_response, '$request.header.x-number', 7.35),
 ])
-def test_runtime_expression_type_casting(obj: Union[dict, Request, Response], expression: str, expected):
+def test_evaluate_with_type_casting(resp: Union[dict, Request, Response], expression: str, expected):
     query_param_types = {'limit': int}
     header_param_types = {'X-Number': float}
-    result = decode_expression(expression, obj,
-                               query_param_types=query_param_types,
-                               header_param_types=header_param_types)
+    result = evaluate(resp, expression,
+                      query_param_types=query_param_types,
+                      header_param_types=header_param_types)
     assert result == expected
     assert isinstance(result, type(expected))
 
 
-@pytest.mark.parametrize("obj, expression, expected_exception_type", [
+@pytest.mark.parametrize("resp, expression, expected_exception_type", [
     (test_request, 'foo.bar', ValueError),
     (test_response, 'foo.bar', KeyError),
     (test_dict, 'users.2.name', IndexError),
@@ -88,10 +88,10 @@ def test_runtime_expression_type_casting(obj: Union[dict, Request, Response], ex
     (test_response, '$request.query.not_found', RuntimeExpressionError),
     (test_response, '$request.path.foo', RuntimeExpressionError),
 ])
-def test_runtime_expression_errors(obj: Union[dict, Request, Response],
-                                   expression: str, expected_exception_type):
+def test_evaluate_with_errors(resp: Union[dict, Request, Response],
+                              expression: str, expected_exception_type):
     with pytest.raises(RuntimeExpressionError) as e:
-        decode_expression(expression, obj)
+        evaluate(resp, expression)
 
     if expected_exception_type != RuntimeExpressionError:
         assert isinstance(e.value.caused_by, expected_exception_type)

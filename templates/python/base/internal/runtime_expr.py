@@ -4,7 +4,7 @@ from functools import reduce
 from typing import Union
 from urllib.parse import urlparse, parse_qs
 
-from requests import Response
+from requests import Response, Request
 
 
 class RuntimeExpressionError(Exception):
@@ -15,18 +15,18 @@ class RuntimeExpressionError(Exception):
         self.caused_by = caused_by
 
 
-def decode_expression(expression: str, obj: Union[dict, Response], path_values: dict = None,
-                      query_param_types: dict = None, header_param_types: dict = None):
+def evaluate(resp: Union[dict, Response], expression: str, path_values: dict = None,
+             query_param_types: dict = None, header_param_types: dict = None):
     """
-    Decodes an OpenAPI runtime expression (https://swagger.io/docs/specification/links/).
+    Evaluates an OpenAPI runtime expression (https://swagger.io/docs/specification/links/).
     It also accepts a dot-separated expression to address an attribute of the
     response body.
 
     It raises a RuntimeExpressionError if the expression cannot be evaluated
     successfully.
 
+    :param resp:        The response on which the expression will be applied.
     :param expression:  An OpenAPI runtime expression or a dot-separated expression.
-    :param obj:         The response on which the expression will be applied.
     :param path_values: A dictionary with the values of the path parameters of
                         the request. It is only needed if the runtime expression
                         needs to access these values.
@@ -45,29 +45,30 @@ def decode_expression(expression: str, obj: Union[dict, Response], path_values: 
 
         if '{' in expression:
             def replace_group(match):
-                return str(_decode_runtime_expression(match.group(1), obj, path_values,
-                                                      query_param_types, header_param_types))
+                return str(_evaluate(resp, match.group(1), path_values,
+                                     query_param_types, header_param_types))
+
             return re.sub(r'{(\$[^}]+)}', replace_group, expression)
 
         if expression.startswith('$'):
-            return _decode_runtime_expression(expression, obj, path_values,
-                                              query_param_types, header_param_types)
+            return _evaluate(resp, expression, path_values,
+                             query_param_types, header_param_types)
 
-        if isinstance(obj, Response):
-            obj = obj.json()
+        if isinstance(resp, Response):
+            resp = resp.json()
 
-        if not isinstance(obj, dict):
+        if not isinstance(resp, dict):
             raise ValueError("Invalid dict response")
 
-        return _get_from_dict(obj, expression)
+        return _get_from_dict(resp, expression)
     except RuntimeExpressionError as e:
         raise e
     except Exception as e:
         raise RuntimeExpressionError(caused_by=e)
 
 
-def _decode_runtime_expression(expression: str, resp: Response, path_values: dict = None,
-                               query_param_types: dict = None, header_param_types: dict = None):
+def _evaluate(resp: Response, expression: str, path_values: dict = None,
+              query_param_types: dict = None, header_param_types: dict = None):
     """
     Decodes the given runtime expression, according to
     https://swagger.io/docs/specification/links/.
