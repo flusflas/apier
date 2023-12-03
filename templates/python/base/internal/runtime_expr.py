@@ -4,7 +4,7 @@ from functools import reduce
 from typing import Union
 from urllib.parse import urlparse, parse_qs
 
-from requests import Response, Request
+from requests import Response, Request, PreparedRequest
 
 
 class RuntimeExpressionError(Exception):
@@ -45,14 +45,18 @@ def evaluate(resp: Union[dict, Response], expression: str, path_values: dict = N
 
         if '{' in expression:
             def replace_group(match):
-                return str(_evaluate(resp, match.group(1), path_values,
-                                     query_param_types, header_param_types))
+                return str(_evaluate_runtime_expression(resp, match.group(1),
+                                                        path_values=path_values,
+                                                        query_param_types=query_param_types,
+                                                        header_param_types=header_param_types))
 
             return re.sub(r'{(\$[^}]+)}', replace_group, expression)
 
         if expression.startswith('$'):
-            return _evaluate(resp, expression, path_values,
-                             query_param_types, header_param_types)
+            return _evaluate_runtime_expression(resp, expression,
+                                                path_values=path_values,
+                                                query_param_types=query_param_types,
+                                                header_param_types=header_param_types)
 
         if isinstance(resp, Response):
             resp = resp.json()
@@ -67,11 +71,13 @@ def evaluate(resp: Union[dict, Response], expression: str, path_values: dict = N
         raise RuntimeExpressionError(caused_by=e)
 
 
-def _evaluate(resp: Response, expression: str, path_values: dict = None,
-              query_param_types: dict = None, header_param_types: dict = None):
+def _evaluate_runtime_expression(resp: Response, expression: str,
+                                 path_values: dict = None,
+                                 query_param_types: dict = None,
+                                 header_param_types: dict = None):
     """
-    Decodes the given runtime expression, according to
-    https://swagger.io/docs/specification/links/.
+    Decodes the given runtime expression (according to
+    https://swagger.io/docs/specification/links/) and returns the evaluated value.
     """
     if header_param_types is not None:
         header_param_types = {k.lower(): v for k, v in header_param_types.items()}
@@ -125,6 +131,88 @@ def _evaluate(resp: Response, expression: str, path_values: dict = None,
     raise RuntimeExpressionError("invalid runtime expression")
 
 
+def prepare_request(req: Union[PreparedRequest, Request], expression: str, value):
+    """
+    Set the value of a request from an OpenAPI runtime expression
+    (https://swagger.io/docs/specification/links/).
+    The expression can also be a dot-separated expression to address an
+    attribute of the response body.
+
+    It raises a RuntimeExpressionError if the expression cannot be evaluated
+    successfully.
+
+    :param req:         Request to update.
+    :param expression:  An OpenAPI runtime expression or a dot-separated expression.
+                        Only expressions that can be applied to a request are allowed.
+    :param value:       The value to set in the request.
+    """
+    try:
+        expression = expression.strip()
+
+        if isinstance(req, Request):
+            req = req.prepare()
+        elif not isinstance(req, PreparedRequest):
+            raise ValueError(f"Unexpected type '{type(req)}'")
+
+        if expression.startswith('$'):
+            _set_expression_value(req, expression, value)
+            return req
+
+        if expression:
+            if req.body:
+                body = json.loads(req.body)
+            else:
+                body = {}
+
+            _set_in_dict(body, expression, value)
+        else:
+            body = value
+
+        req.prepare_body(None, None, json=body)
+        return req
+
+    except RuntimeExpressionError as e:
+        raise e
+    except Exception as e:
+        raise RuntimeExpressionError(caused_by=e)
+
+
+def _set_expression_value(req: PreparedRequest, expression: str, value):
+    """
+    Decodes the given runtime expression (according to
+    https://swagger.io/docs/specification/links/) and applies the given value
+    to the corresponding field.
+    """
+
+    def set_query_param(name):
+        parsed_url = urlparse(req.url)
+        query_params = parse_qs(parsed_url.query)
+        query_params[name] = value
+        parsed_url = parsed_url._replace(query=None)
+        req.prepare_url(parsed_url.geturl(), query_params)
+
+    expression_funcs = {
+        '$url': lambda: req.prepare_url(value, None),
+        '$method': lambda: req.prepare_method(value),
+        '$request.query.*': lambda x: set_query_param(x),
+        '$request.header.*': lambda x: req.headers.__setitem__(x, value),
+        '$request.body': lambda: req.prepare_body(None, None, value),
+        '$request.body#/*': lambda x: req.prepare_body(None, None,
+                                                       _set_in_dict(json.loads(req.body or '{}'),
+                                                                    x, value, '/')),
+    }
+
+    for expr, fn in expression_funcs.items():
+        if expr.endswith('*'):
+            expr_prefix = expr.rstrip('*')
+            if expression.startswith(expr_prefix):
+                return fn(expression[len(expr_prefix):])
+        if expr == expression:
+            return fn()
+
+    raise RuntimeExpressionError("invalid runtime expression")
+
+
 def _get_from_dict(d: dict, key: str, separator='.'):
     try:
         def get_item(a, b):
@@ -137,3 +225,37 @@ def _get_from_dict(d: dict, key: str, separator='.'):
         raise KeyError(f"Key '{key}' not found")
     except IndexError:
         raise IndexError(f"Index '{key}' out of range")
+
+
+def _set_in_dict(d: dict, key: str, value, separator='.'):
+    temp_dict = d
+
+    def get_next(obj: Union[dict, list], subkey: str, set_value: bool = False):
+        default_value = value if set_value else {}
+
+        if isinstance(obj, dict):
+            next_level = obj.setdefault(subkey, default_value)
+        elif isinstance(obj, list):
+            if subkey == '-':
+                obj.append(default_value)
+                return obj[-1]
+            subkey = int(subkey)
+            next_level = obj[subkey]
+        else:
+            raise ValueError(f"Unexpected type '{type(obj)}'. Expected 'dict' or 'list'")
+
+        if not set_value and not isinstance(next_level, (dict, list)):
+            obj[subkey] = {}
+            return obj[subkey]
+
+        if set_value:
+            obj[subkey] = value
+            return obj[subkey]
+
+        return next_level
+
+    *key, last = key.strip().split(separator)
+    for bit in key:
+        temp_dict = get_next(temp_dict, bit)
+    get_next(temp_dict, last, True)
+    return d
