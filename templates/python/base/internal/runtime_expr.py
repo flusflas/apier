@@ -2,9 +2,9 @@ import json
 import re
 from functools import reduce
 from typing import Union
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import parse_qs, urlparse
 
-from requests import Response, Request, PreparedRequest
+from requests import PreparedRequest, Request, Response
 
 
 class RuntimeExpressionError(Exception):
@@ -113,11 +113,11 @@ def _evaluate_runtime_expression(resp: Response, expression: str,
         '$request.path.*': lambda x: get_path_value(x),
         '$request.header.*': lambda x: cast_value(x, resp.request.headers.get(x), header_param_types),
         '$request.body': lambda: to_string(resp.request.body),
-        '$request.body#*': lambda x: _get_from_dict(json.loads(resp.request.body), x, '/'),
+        '$request.body#/*': lambda x: _get_from_dict(json.loads(resp.request.body), x, '/'),
         '$statusCode': lambda: resp.status_code,
         '$response.header.*': lambda x: resp.headers.get(x),
         '$response.body': lambda: resp.text,
-        '$response.body#*': lambda x: _get_from_dict(resp.json(), x, '/'),
+        '$response.body#/*': lambda x: _get_from_dict(resp.json(), x, '/'),
     }
 
     for expr, fn in expression_funcs.items():

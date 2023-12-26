@@ -42,10 +42,10 @@ test_response = make_json_response(200, test_dict, test_request)
     (test_response, '$statusCode', 200),
     (test_response, '$response.header.Content-Type', 'application/json'),
     (test_response, '$response.body', test_response.text),
-    (test_response, '$response.body#users/1/name', 'Bob'),
-    (test_response, '$response.body#next_offset', 2),
-    (test_response, 'foo{$response.body#next_offset}bar', 'foo2bar'),
-    (test_response, 'Alice: {$response.body#users/0/id}, Bob: {$response.body#users/1/id}', 'Alice: 1, Bob: 2'),
+    (test_response, '$response.body#/users/1/name', 'Bob'),
+    (test_response, '$response.body#/next_offset', 2),
+    (test_response, 'foo{$response.body#/next_offset}bar', 'foo2bar'),
+    (test_response, 'Alice: {$response.body#/users/0/id}, Bob: {$response.body#/users/1/id}', 'Alice: 1, Bob: 2'),
 ])
 def test_evaluate(resp: Union[dict, Request, Response], expression: str, expected):
     result = evaluate(resp, expression)
@@ -83,7 +83,7 @@ def test_evaluate_with_type_casting(resp: Union[dict, Request, Response], expres
     (test_request, 'foo.bar', ValueError),
     (test_response, 'foo.bar', KeyError),
     (test_dict, 'users.2.name', IndexError),
-    (test_response, '$request.body#foo', TypeError),
+    (test_response, '$request.body#/foo', TypeError),
     (test_response, '$my_request.body', RuntimeExpressionError),
     (test_response, '$request.query.not_found', RuntimeExpressionError),
     (test_response, '$request.path.foo', RuntimeExpressionError),
