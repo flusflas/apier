@@ -1,0 +1,136 @@
+openapi: 3.0.3
+info:
+  title: Pagination API
+  description: An OpenAPI definition for pagination testing.
+  version: 1.0.0
+servers:
+  - url: 'https://pagination.test'
+    description: Testing server
+tags:
+  - name: Pagination
+    description: Pagination API
+paths:
+  /pagination/cursor:
+    get:
+      tags:
+        - Pagination
+      summary: Cursor pagination
+      description: Returns a cursor-paginated list of responses.
+      operationId: GetPaginationCursor
+      parameters:
+        - name: next
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageCursor'
+        '500':
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      x-pagination:
+        next:
+          reuse-previous-request: true
+          modifiers:
+            - param: "$request.query.next"
+              value: "$response.body#/cursors/next"
+          result: "results"
+          has_more: "$response.body#/cursors/next"
+
+  /pagination/next_page_url:
+    get:
+      tags:
+        - Pagination
+      summary: Next page URL pagination
+      description: |
+        Returns a paginated list of responses with an URL to the next page.
+      operationId: GetPaginationNextPageURL
+      parameters:
+        - name: next_page
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageNextUrl'
+        '500':
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      x-pagination:
+        next:
+          reuse-previous-request: true
+          url: "$response.body#/next_page_url"
+          result: "results"
+          has_more: "$response.body#/next_page_url"
+
+components:
+  schemas:
+    ErrorResponse:
+      title: Error Response
+      type: object
+      required:
+        - status
+        - message
+      properties:
+        status:
+          type: integer
+          example: 400
+        message:
+          type: string
+          example: Oh, no!
+
+    Result:
+      title: Result
+      type: object
+      properties:
+        value:
+          description: Value.
+
+    PageCursor:
+      title: PageCursor
+      type: object
+      properties:
+        results:
+          type: array
+        cursors:
+          type: object
+          properties:
+            next:
+              type: string
+            previous:
+              type: string
+
+    PageNextUrl:
+      title: PageNextURL
+      type: object
+      properties:
+        results:
+          type: array
+        next_page_url:
+            type: string

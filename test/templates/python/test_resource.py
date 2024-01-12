@@ -171,7 +171,7 @@ def test__validate_request_payload(data, expected):
                 ],
                 'headers': {},
             },
-            ExceptionList('nooo', [
+            ExceptionList('Unexpected data format', [
                 ValueError('Value type "bool" cannot be converted to JSON'),
                 ValueError('Value type "bool" cannot be converted to XML'),
             ])
@@ -185,7 +185,7 @@ def test__validate_request_payload(data, expected):
                 ],
                 'headers': {},
             },
-            ExceptionList('nooo', [
+            ExceptionList('Unexpected data format', [
                 ValueError('Value type "bool" cannot be converted to XML'),
                 ValueError('Value type "bool" cannot be converted to JSON'),
             ])

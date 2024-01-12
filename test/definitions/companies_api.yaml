@@ -85,6 +85,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      x-pagination:
+        next:
+          reuse-previous-request: true
+          modifiers:
+            - param: "$request.query.next_cursor"
+              value: "$response.body#/cursors/next"
+          result: "results"
+          has_more: "$response.body#/cursors/next"
 
   /companies/{company_id}:
     parameters:
@@ -319,6 +327,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      x-pagination:
+        next:
+          reuse-previous-request: true
+          modifiers:
+            - param: "$request.query.next_cursor"
+              value: "$response.body#/cursors/next"
+          result: "results"
+          has_more: "$response.body#/cursors/next"
 
   /companies/{company_id}/employees/{employee-num}:
     get:
@@ -562,20 +578,38 @@ components:
 
     CompanyList:
       title: Company List
-      type: array
-      items:
-        $ref: '#/components/schemas/Company'
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Company'
+        cursors:
+          type: object
+          properties:
+            next:
+              type: string
+              nullable: true
+              example: ''
+            previous:
+              type: string
+              nullable: true
+              example: ''
       example:
-        - id: shiny_stickers
-          name: Shiny Stickers Corporation
-          category: stickers
-          created: "2023-06-19T21:00:00Z"
-          modified: "2023-06-19T21:30:00Z"
-        - id: happy_pharma
-          name: Happy Pharmaceutical Corp.
-          category: evil
-          created: "2017-10-08T10:30:00Z"
-          modified: "2021-08-30T12:15:00Z"
+        results:
+          - id: shiny_stickers
+            name: Shiny Stickers Corporation
+            category: stickers
+            created: "2023-06-19T21:00:00Z"
+            modified: "2023-06-19T21:30:00Z"
+          - id: happy_pharma
+            name: Happy Pharmaceutical Corp.
+            category: evil
+            created: "2017-10-08T10:30:00Z"
+            modified: "2021-08-30T12:15:00Z"
+        cursors:
+          next: null
+          previous: null
 
     EmployeeBase:
       title: Employee Base
@@ -604,6 +638,20 @@ components:
 
     EmployeeList:
       title: Employee List
-      type: array
-      items:
-        $ref: '#/components/schemas/Employee'
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Employee'
+        cursors:
+          type: object
+          properties:
+            next:
+              type: string
+              nullable: true
+              example: ''
+            previous:
+              type: string
+              nullable: true
+              example: ''

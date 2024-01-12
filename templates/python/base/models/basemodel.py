@@ -1,7 +1,10 @@
+from functools import reduce
 from typing import Optional, Union
 
 import requests
 from pydantic import BaseModel, PrivateAttr, typing
+
+from .pagination import Paginator, _PaginationHelper
 
 
 class IterBaseModel(BaseModel):
@@ -43,7 +46,23 @@ class IterBaseModel(BaseModel):
         else:
             super().__setattr__(attribute, value)
 
+    def _nested_item(self, key: str, separator='.'):
+        try:
+            def get_item(a, b):
+                if isinstance(a, list):
+                    b = int(b)
+                return a[b]
+
+            return reduce(get_item, key.split(separator), self)
+        except KeyError:
+            raise KeyError(f"Key '{key}' not found")
+        except IndexError:
+            raise IndexError(f"Index '{key}' out of range")
+
     def __getitem__(self, key):
+        if isinstance(key, str) and '.' in key:
+            return self._nested_item(key)
+
         if self._has_root((dict, list)):
             return self.__root__.__getitem__(key)
         else:
@@ -124,7 +143,31 @@ class HTTPResponseModel(BaseModel):
         return self._http_response
 
 
-class APIBaseModel(IterBaseModel, HTTPResponseModel):
+class PaginatorBaseModel(IterBaseModel, HTTPResponseModel, Paginator):
+    """
+    This class allows to paginate the results of an API response instance.
+    """
+    _pagination: _PaginationHelper = PrivateAttr(default_factory=_PaginationHelper)
+
+    def _enable_pagination(self, data_attribute: str):
+        self._pagination.supported = True
+        self._pagination.results_attribute = data_attribute
+
+    def __iter__(self):
+        if self._pagination.supported:
+            return Paginator.__iter__(self)
+        else:
+            return IterBaseModel.__iter__(self)
+
+    def __next__(self):
+        if self._pagination.supported:
+            self._pagination.results = self[self._pagination.results_attribute]
+            return Paginator.__next__(self)
+        else:
+            return IterBaseModel.__next__(self)
+
+
+class APIBaseModel(PaginatorBaseModel):
     """
     The Pydantic base model used for API schema models.
     """

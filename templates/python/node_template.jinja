@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Union, overload
 
 from .internal.resource import APIResource
+from .models.pagination import PaginationDescription
 from .models import models
 from .models import primitives
 
@@ -46,17 +47,24 @@ class {{ api_node.api | pascal_case }}{{ loop.index }}(APIResource{% for next_no
         ]
 
         {% endif %}
+        {# Pagination description #}
+        {% set has_pagination = method.extensions and method.extensions.pagination and method.extensions.pagination.next %}
+        {% if has_pagination %}
+        pagination_info = PaginationDescription.parse_obj({{ method.extensions.pagination.next.dict() }})
+
+        {% endif %}
         {# Add information of query and header parameters if present. This will be used to evaluate runtime expressions. #}
-        {% if method.params_in('query') or method.params_in('header') %}
-        params = {
+        {% set has_params_info = method.params_in('query') or method.params_in('header') %}
+        {% if has_pagination and has_params_info %}
+        param_types = {
         {% for param_location in ['query', 'header'] %}
         {% set params = method.params_in(param_location) %}
         {% if params %}
-            '{{ param_location }}': [
+            '{{ param_location }}': {
         {% for param in params %}
-                ("{{ param.name }}", {{ get_type_hint(param.type) }}),
+                '{{ param.name }}': {{ get_type_hint(param.type) }},
         {% endfor %}
-            ],
+            },
         {% endif %}
         {% endfor %}
         }
@@ -69,7 +77,7 @@ class {{ api_node.api | pascal_case }}{{ loop.index }}(APIResource{% for next_no
         {% for schema in method.response_schemas %}
             ({{ schema.code }}, "{{ schema.content_type }}", {{ get_type_hint(schema) }}),
         {% endfor %}
-        ])
+        ]{% if has_pagination %}, pagination_info=pagination_info{% if has_params_info %}, param_types=param_types{% endif %}{% endif %})
     {% endfor %}
 
     def _build_partial_path(self):

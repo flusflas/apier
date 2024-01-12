@@ -80,13 +80,15 @@ class Renderer:
         """
         Returns a unique name for the given API node.
         """
+        reserved_names = ['models', 'internal']
+
         api_name = self.api_names.get(id(api_node))
         if api_name:
             return api_name
 
         api_name = api_node.api
         i = 0
-        while api_name in self.api_names.values():
+        while api_name in list(self.api_names.values()) + reserved_names:
             i += 1
             api_name = api_node.api + str(i)
 

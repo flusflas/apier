@@ -1,9 +1,12 @@
+import copy
+
 import pytest
 
 from consts import NO_RESPONSE_ID
 from endpoints import (Endpoint, EndpointLayer, EndpointParameter,
                        parse_endpoint, split_endpoint_layers, parse_parameters, EndpointMethod, ContentSchema,
                        parse_content_schemas)
+from extensions import Extensions
 from openapi import Definition
 
 openapi_definition = Definition.load('definitions/companies_api.yaml')
@@ -255,7 +258,22 @@ expected_endpoints = {
                                           content_type='application/json',
                                           definition=ERROR_RESPONSE_DEFINITION,
                                           code=500)
-                        ]
+                        ],
+                        extensions=Extensions.parse_obj({
+                            "x-pagination": {
+                                "next": {
+                                    "reuse-previous-request": True,
+                                    "modifiers": [
+                                        {
+                                            "param": "$request.query.next_cursor",
+                                            "value": "$response.body#/cursors/next"
+                                        }
+                                    ],
+                                    "result": "results",
+                                    "has_more": "$response.body#/cursors/next"
+                                }
+                            }
+                        }),
                     ),
                 ],
             ),
@@ -440,6 +458,10 @@ def test_endpoint_layer_param_functions(layer: EndpointLayer, expected_param_nam
             "/companies/{company_id}/employees/{employee-num}",
             expected_endpoints["/companies/{company_id}/employees/{employee-num}"]
     ),
+    (
+            "/companies/{company_id}/employees",
+            expected_endpoints["/companies/{company_id}/employees"],
+    )
 ])
 def test_parse_endpoint(path, expected):
     """ Tests parsing an endpoint. """
@@ -657,6 +679,10 @@ def test_process_endpoint_config(endpoint, expected_methods):
     Tests processing an Endpoint to fill their content schemas for request and
     responses.
     """
+    expected_methods = copy.deepcopy(expected_methods)
+    for m in expected_methods:
+        m.extensions = None
+
     split_endpoint_layers(endpoint)
     parse_parameters(endpoint)
 

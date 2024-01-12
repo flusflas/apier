@@ -4,10 +4,10 @@ import pytest
 
 from _build.api import API
 from _build.models.exceptions import ResponseError
-from test.templates.python.common import make_json_response, to_dict, to_json
 from _build.models.models import (CompanyCreate, Company, CompanyList,
                                   CompanyUpdate, ErrorResponse)
 from _build.models.primitives import NoResponse
+from ..common import make_json_response, to_dict, to_json
 
 test_req_create01 = CompanyCreate(
     id="shiny_stickers",
@@ -33,6 +33,22 @@ test_resp_company02 = Company(
     id="happy_pharma",
     name="Happy Pharmaceutical Corp.",
     category="evil",
+    created="2017-10-08T10:30:00Z",
+    modified="2021-08-30T12:15:00Z",
+)
+
+test_resp_company03 = Company(
+    id="company_03",
+    name="Company 3",
+    category="technology",
+    created="2023-06-19T21:00:00Z",
+    modified="2023-06-19T21:30:00Z",
+)
+
+test_resp_company04 = Company(
+    id="company_04",
+    name="Company 3",
+    category="clothing",
     created="2017-10-08T10:30:00Z",
     modified="2021-08-30T12:15:00Z",
 )
@@ -97,10 +113,18 @@ def test_list():
     """
     Tests a successful request to get the list of Companies.
     """
-    expected_list = CompanyList.parse_obj([
-        test_resp_company01,
-        test_resp_company02,
-    ])
+    expected_list = CompanyList(
+        results=[
+            test_resp_company01,
+            test_resp_company02,
+            test_resp_company03,
+            test_resp_company04,
+        ],
+        cursors={
+            'next': None,
+            'previous': None,
+        }
+    )
     expected_resp = make_json_response(200, expected_list)
 
     with mock.patch("_build.api.requests.request", return_value=expected_resp) as m:
