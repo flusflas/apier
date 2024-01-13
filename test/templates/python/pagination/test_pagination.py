@@ -124,3 +124,6 @@ def test_next_page_url_pagination():
                           lambda response: response.results,
                           "https://pagination.test/pagination/next_page_url",
                           expected_results, limit, Result)
+
+# TODO: test_page_pagination
+# TODO: test_offset_pagination

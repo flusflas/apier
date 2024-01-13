@@ -9,7 +9,7 @@ from requests.structures import CaseInsensitiveDict
 
 from ..models.basemodel import APIBaseModel
 from ..models.exceptions import ExceptionList, ResponseError
-from ..models.pagination import PaginationDescription
+from ..models.extensions.pagination import PaginationDescription
 from .content_type import SUPPORTED_REQUEST_CONTENT_TYPES, content_types_match
 from .runtime_expr import evaluate, prepare_request
 

@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from templates.python.base.models.pagination import PaginationDescription
+from templates.python.base.models.extensions.pagination import PaginationDescription
 
 if TYPE_CHECKING:
     from endpoints import Endpoint
