@@ -5,6 +5,7 @@ from jinja2 import Environment, FileSystemLoader
 from openapi import Definition
 from tree import APINode, APITree
 from utils.dicts import get_multi_key
+from utils.path import abs_path_from_current_script as abs_path
 from utils.strings import to_pascal_case, to_snake_case
 
 from templates.python.functions import get_type_hint
@@ -35,7 +36,7 @@ class Renderer:
         if os.path.exists(self.output_path):
             # TODO: Ask before removing
             shutil.rmtree(self.output_path)
-        shutil.copytree('templates/python/base', self.output_path)
+        shutil.copytree(abs_path('./base'), self.output_path)
 
         generate_models(self.definition, self.schemas, self.output_path)
         self.render_api_components()
@@ -45,14 +46,14 @@ class Renderer:
 
     def render_api_file(self):
         filename = f"{self.output_path}/api.py"
-        environment = Environment(loader=FileSystemLoader("templates/python/"),
+        environment = Environment(loader=FileSystemLoader(abs_path('./')),
                                   trim_blocks=True, lstrip_blocks=True)
 
         environment.filters['snake_case'] = to_snake_case
         environment.filters['pascal_case'] = to_pascal_case
         environment.filters['api_name'] = self.get_api_name
 
-        template = environment.get_template("api_template.jinja")
+        template = environment.get_template('api_template.jinja')
         content = template.render(
             openapi=self.definition.definition,
             server_url=get_multi_key(self.definition.definition, 'servers.0.url', default=None),
@@ -100,14 +101,14 @@ class Renderer:
         filename = f"{self.output_path}/{api_filename}.py"
         print(f"Rendering {filename}... ", end="")
 
-        environment = Environment(loader=FileSystemLoader("templates/python/"),
+        environment = Environment(loader=FileSystemLoader(abs_path('./')),
                                   trim_blocks=True, lstrip_blocks=True)
 
         environment.filters['snake_case'] = to_snake_case
         environment.filters['pascal_case'] = to_pascal_case
         environment.filters['api_name'] = self.get_api_name
 
-        template = environment.get_template("node_template.jinja")
+        template = environment.get_template('node_template.jinja')
 
         # Sort layers by number of parameters
         api_node.layers.sort(key=lambda p: len(p.parameters), reverse=True)
