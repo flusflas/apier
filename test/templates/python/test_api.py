@@ -1,7 +1,11 @@
 from unittest import mock
 
-from _build.api import API
 from .common import make_json_response, to_json
+from .setup import build_client
+
+build_client()
+if True:
+    from ._build.api import API
 
 
 def test_create_successfully():

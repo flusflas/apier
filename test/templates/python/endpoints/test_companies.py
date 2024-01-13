@@ -2,12 +2,17 @@ from unittest import mock
 
 import pytest
 
-from _build.api import API
-from _build.models.exceptions import ResponseError
-from _build.models.models import (CompanyCreate, Company, CompanyList,
-                                  CompanyUpdate, ErrorResponse)
-from _build.models.primitives import NoResponse
+from .setup import build_client
 from ..common import make_json_response, to_dict, to_json
+
+build_client()
+request_mock_pkg = 'test.templates.python.endpoints._build.api.requests.request'
+if True:
+    from ._build.api import API
+    from ._build.models.exceptions import ResponseError
+    from ._build.models.models import (CompanyCreate, Company, CompanyList,
+                                       CompanyUpdate, ErrorResponse)
+    from ._build.models.primitives import NoResponse
 
 test_req_create01 = CompanyCreate(
     id="shiny_stickers",
@@ -67,9 +72,11 @@ def test_create(req, expected_resp):
     """
     Tests a successful request to create a Company.
     """
+    from ._build.api import API
+
     expected_raw_resp = make_json_response(201, expected_resp)
 
-    with mock.patch("_build.api.requests.request", return_value=expected_raw_resp) as m:
+    with mock.patch(request_mock_pkg, return_value=expected_raw_resp) as m:
         resp = (API(host="test-api.com").
                 companies().
                 post(req, params={'foo': 'bar'}))
@@ -92,7 +99,7 @@ def test_get():
     """
     expected_resp = make_json_response(200, test_resp_company01)
 
-    with mock.patch("_build.api.requests.request", return_value=expected_resp) as m:
+    with mock.patch(request_mock_pkg, return_value=expected_resp) as m:
         resp = (API(host="test-api.com").
                 companies("shiny_stickers").
                 get(params={'foo': 'bar'}))
@@ -127,7 +134,7 @@ def test_list():
     )
     expected_resp = make_json_response(200, expected_list)
 
-    with mock.patch("_build.api.requests.request", return_value=expected_resp) as m:
+    with mock.patch(request_mock_pkg, return_value=expected_resp) as m:
         resp = (API(host="test-api.com").
                 companies().
                 get(params={'foo': 'bar'}))
@@ -154,7 +161,7 @@ def test_update(req, expected_resp):
     """
     expected_raw_resp = make_json_response(200, expected_resp)
 
-    with mock.patch("_build.api.requests.request", return_value=expected_raw_resp) as m:
+    with mock.patch(request_mock_pkg, return_value=expected_raw_resp) as m:
         resp = (API(host="test-api.com").
                 companies('shiny_stickers').
                 put(req, params={'foo': 'bar'}))
@@ -177,7 +184,7 @@ def test_delete():
     """
     expected_resp = make_json_response(204)
 
-    with mock.patch("_build.api.requests.request", return_value=expected_resp) as m:
+    with mock.patch(request_mock_pkg, return_value=expected_resp) as m:
         resp = (API(host="test-api.com").
                 companies("shiny_stickers").
                 delete(params={'foo': 'bar'}, timeout=5.5))
@@ -201,7 +208,7 @@ def test_get_multi_param():
     """
     expected_resp = make_json_response(200, test_resp_company01)
 
-    with mock.patch("_build.api.requests.request", return_value=expected_resp) as m:
+    with mock.patch(request_mock_pkg, return_value=expected_resp) as m:
         resp = (API(host="test-api.com").
                 companies("shiny_stickers", 7).
                 get(params={'foo': 'bar'}))
@@ -224,7 +231,7 @@ def test_get_error():
     """
     expected_resp = make_json_response(404, test_company_not_found)
 
-    with mock.patch("_build.api.requests.request", return_value=expected_resp) as m:
+    with mock.patch(request_mock_pkg, return_value=expected_resp) as m:
         with pytest.raises(ResponseError) as e:
             API(host="test-api.com").companies("shiny_stickers").get()
 

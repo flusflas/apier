@@ -2,9 +2,13 @@ import json
 
 from httpretty.core import HTTPrettyRequest
 
-from _build.api import API
-from _build.models.models import Result
 from .common import assert_pagination
+from .setup import build_client
+
+build_client()
+if True:
+    from ._build.api import API
+    from ._build.models.models import Result
 
 expected_results = [
     {"value": 0},
@@ -26,7 +30,7 @@ def test_cursor_pagination():
     """
     pagination_function = API().pagination().cursor().get
 
-    for limit in range(4, 5):
+    for limit in range(1, 10):
         def request_handler(req: HTTPrettyRequest, uri, response_headers):
             assert 'foo' in req.querystring
             assert 'limit' in req.querystring
@@ -80,7 +84,7 @@ def test_next_page_url_pagination():
     """
     pagination_function = API().pagination().next_page_url().get
 
-    for limit in range(4, 5):
+    for limit in range(1, 10):
         def request_handler(req: HTTPrettyRequest, uri, response_headers):
             # assert 'foo' in req.querystring
             assert 'limit' in req.querystring
