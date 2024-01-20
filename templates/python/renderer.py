@@ -8,7 +8,7 @@ from utils.dicts import get_multi_key
 from utils.path import abs_path_from_current_script as abs_path
 from utils.strings import to_pascal_case, to_snake_case
 
-from templates.python.functions import get_type_hint, payload_from_input_parameters
+from templates.python.functions import get_type_hint, payload_from_input_parameters, get_method_name
 from templates.python.gen_models import generate_models
 
 
@@ -107,6 +107,7 @@ class Renderer:
         environment.filters['snake_case'] = to_snake_case
         environment.filters['pascal_case'] = to_pascal_case
         environment.filters['api_name'] = self.get_api_name
+        environment.filters['method_name'] = get_method_name
 
         template = environment.get_template('node_template.jinja')
 

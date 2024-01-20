@@ -79,7 +79,7 @@ def test_create(req, expected_resp):
     with mock.patch(request_mock_pkg, return_value=expected_raw_resp) as m:
         resp = (API(host="test-api.com").
                 companies().
-                post(req, params={'foo': 'bar'}))
+                create(req, params={'foo': 'bar'}))
 
     m.assert_called_once_with("POST",
                               "https://test-api.com/companies",
@@ -137,7 +137,7 @@ def test_list():
     with mock.patch(request_mock_pkg, return_value=expected_resp) as m:
         resp = (API(host="test-api.com").
                 companies().
-                get(params={'foo': 'bar'}))
+                list_companies(params={'foo': 'bar'}))
 
     m.assert_called_once_with("GET",
                               "https://test-api.com/companies",

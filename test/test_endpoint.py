@@ -7,6 +7,7 @@ from endpoints import (Endpoint, EndpointLayer, EndpointParameter,
                        parse_endpoint, split_endpoint_layers, parse_parameters, EndpointMethod, ContentSchema,
                        parse_content_schemas)
 from extensions.extensions import Extensions
+from extensions.method_name import MethodNameDescription
 from openapi import Definition
 
 openapi_definition = Definition.load('definitions/companies_api.yaml')
@@ -79,7 +80,11 @@ expected_endpoints = {
                                           content_type='application/json',
                                           definition=ERROR_RESPONSE_DEFINITION,
                                           code=500)
-                        ]
+                        ],
+                        extensions=Extensions(method_name=MethodNameDescription(
+                            default='',
+                            templates={'go': 'Get'})
+                        ),
                     ),
                     EndpointMethod(
                         name='put',

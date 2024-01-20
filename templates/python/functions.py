@@ -64,7 +64,7 @@ def get_type_hint(*args: Union[str, ContentSchema],
         return f"Union[{', '.join(types)}]"
 
 
-def payload_from_input_parameters(endpoint_method: EndpointMethod):
+def payload_from_input_parameters(endpoint_method: EndpointMethod) -> str:
     """
     Returns the code to dynamically generate the payload of an endpoint that
     uses the input-parameters extension.
@@ -87,3 +87,21 @@ def payload_from_input_parameters(endpoint_method: EndpointMethod):
 
     except ValueError as e:
         raise ValueError(f"Error building payload from input-parameters extension: {e}")
+
+
+def get_method_name(endpoint_method: EndpointMethod) -> str:
+    """
+    Returns the name of the function used in the client for the given endpoint
+    method. By default, the name will be the HTTP method name, but this may
+    change if the method-name extension is defined.
+    """
+    if endpoint_method.extensions and endpoint_method.extensions.method_name:
+        extension_info = endpoint_method.extensions.method_name
+
+        if 'python' in extension_info.templates:
+            return to_snake_case(extension_info.templates['python'])
+
+        if extension_info.default:
+            return to_snake_case(extension_info.default)
+
+    return to_snake_case(endpoint_method.name)

@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 
 from .input_parameters import InputParametersDescription
 from templates.python.base.models.extensions.pagination import PaginationDescription
+from .method_name import MethodNameDescription
 
 if TYPE_CHECKING:
     from endpoints import Endpoint
@@ -17,6 +18,7 @@ class Extensions(BaseModel):
 
     pagination: Pagination = Field(default=None, alias='x-pagination')
     input_parameters: InputParametersDescription = Field(default=None, alias='x-input-parameters')
+    method_name: MethodNameDescription = Field(default=None, alias='x-method-name')
 
 
 class Pagination(BaseModel):

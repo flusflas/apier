@@ -1,5 +1,5 @@
 """
-This module defines an extension that allows overwriting the function arguments
+This module defines an extension that allows overriding the function arguments
 of an endpoint with others, allowing customization or simplification of the way
 to interact with that endpoint.
 

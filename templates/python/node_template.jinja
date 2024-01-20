@@ -24,7 +24,7 @@ class {{ api_node.api | pascal_case }}{{ loop.index }}(APIResource{% for next_no
 
     {%- for method in layer.methods %}
 
-    def {{ method.name }}(self
+    def {{ method | method_name }}(self
             {%- if method.extensions.input_parameters -%}
             {%- for param in method.extensions.input_parameters.parameters %}, {{ param.name | snake_case }}{% if param.schema_ %}: {{ get_type_hint(param.schema_.type) }}{% endif %}{% endfor %}
             {%- elif method.request_schemas -%}, req: {{ get_type_hint(*method.request_schemas, include_primitive_type=True) }}{% endif %}, **kwargs)

@@ -23,6 +23,11 @@ paths:
     post:
       tags:
         - Companies
+      x-method-name:
+        default: create company
+        templates:
+          python: create
+          go: Create
       summary: Create a new Company
       description: Creates a new Company and expands your capitalist empire.
       operationId: CreateCompany
@@ -61,6 +66,10 @@ paths:
     get:
       tags:
         - Companies
+      x-method-name:
+        default: list companies
+        templates:
+          go: List
       summary: List Companies
       description: Returns all your companies.
       parameters:
@@ -103,6 +112,9 @@ paths:
         - $ref: '#/components/parameters/company_id'
       tags:
         - Companies
+      x-method-name:
+        templates:
+          go: Get
       summary: Get a Company
       description: Returns a company by its ID.
       operationId: GetCompany
