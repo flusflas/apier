@@ -82,7 +82,20 @@ class APIResource(ABC):
 
         return path + self._build_partial_path()
 
-    def path_values(self) -> dict:
+    def _path_value(self, path_param_name: str):
+        """
+        Returns the value of the given path parameter.
+        """
+        if hasattr(self, path_param_name):
+            return getattr(self, path_param_name)
+
+        for r in self._stack[1:]:
+            if hasattr(r, path_param_name):
+                return getattr(r, path_param_name)
+
+        return None
+
+    def _path_values(self) -> dict:
         """
         Returns a dictionary with the values of all the path parameters of the
         current stack.
@@ -121,7 +134,7 @@ class APIResource(ABC):
 
                 ret._http_response = response
                 self._handle_pagination(ret, response, pagination_info,
-                                        self.path_values(), param_types,
+                                        self._path_values(), param_types,
                                         expected_responses)
 
                 return self._handle_error(ret)
@@ -138,7 +151,7 @@ class APIResource(ABC):
 
                 ret._http_response = response
                 self._handle_pagination(ret, response, pagination_info,
-                                        self.path_values(), param_types,
+                                        self._path_values(), param_types,
                                         expected_responses)
 
                 return self._handle_error(ret)

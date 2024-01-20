@@ -8,7 +8,7 @@ from utils.dicts import get_multi_key
 from utils.path import abs_path_from_current_script as abs_path
 from utils.strings import to_pascal_case, to_snake_case
 
-from templates.python.functions import get_type_hint
+from templates.python.functions import get_type_hint, payload_from_input_parameters
 from templates.python.gen_models import generate_models
 
 
@@ -122,6 +122,7 @@ class Renderer:
             optional_param_names=optional_param_names,
             has_layer_without_params=has_layer_without_params,
             get_type_hint=get_type_hint,
+            payload_from_input_parameters=payload_from_input_parameters,
         )
         with open(filename, mode="w", encoding="utf-8") as message:
             message.write(content)

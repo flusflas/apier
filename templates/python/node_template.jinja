@@ -25,7 +25,9 @@ class {{ api_node.api | pascal_case }}{{ loop.index }}(APIResource{% for next_no
     {%- for method in layer.methods %}
 
     def {{ method.name }}(self
-            {%- if method.request_schemas -%}, req: {{ get_type_hint(*method.request_schemas, include_primitive_type=True) }}{% endif %}, **kwargs)
+            {%- if method.extensions.input_parameters -%}
+            {%- for param in method.extensions.input_parameters.parameters %}, {{ param.name | snake_case }}{% if param.schema_ %}: {{ get_type_hint(param.schema_.type) }}{% endif %}{% endfor %}
+            {%- elif method.request_schemas -%}, req: {{ get_type_hint(*method.request_schemas, include_primitive_type=True) }}{% endif %}, **kwargs)
             {%- if method.response_schemas | length > 0 %} -> {{ get_type_hint(*method.response_schemas) }}{% endif %}:
         """
         {{ method.description | trim }}
@@ -38,6 +40,19 @@ class {{ api_node.api | pascal_case }}{{ loop.index }}(APIResource{% for next_no
         {% endfor %}
         {% endif %}
         """
+        {% if method.extensions.input_parameters %}
+{#        input_params = {#}
+{#            {% for input_param in method.extensions.input_parameters.parameters %}"{{ input_param.name }}": {{ input_param.name | snake_case }},{% endfor %}#}
+{#        }#}
+        req = {{ payload_from_input_parameters(method) }}
+{#        import json#}
+{#        payload = '{{ method.extensions.input_parameters.payload }}'#}
+{#        {% for param in method.extensions.input_parameters.parameters %}#}
+{#        payload = payload.replace('{{ '{{' }}{{ param.name }}{{ '}}' }}', json.dumps({{ param.name }}))#}
+{#        {% endfor %}#}
+{#        req = json.loads(payload)#}
+
+        {% endif %}
         {# Add request schemas info #}
         {% if method.request_schemas %}
         req_content_types = [

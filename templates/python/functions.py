@@ -1,7 +1,10 @@
 from typing import Union
 
+from jinja2 import Template
+
 from consts import NO_RESPONSE_ID
-from endpoints import ContentSchema
+from endpoints import ContentSchema, EndpointMethod
+from utils.strings import to_snake_case
 
 
 def get_type_hint(*args: Union[str, ContentSchema],
@@ -59,3 +62,28 @@ def get_type_hint(*args: Union[str, ContentSchema],
         return types[0]
     else:
         return f"Union[{', '.join(types)}]"
+
+
+def payload_from_input_parameters(endpoint_method: EndpointMethod):
+    """
+    Returns the code to dynamically generate the payload of an endpoint that
+    uses the input-parameters extension.
+    """
+    try:
+        params = {}
+        for method_param in endpoint_method.parameters:
+            if method_param.in_location == 'path':
+                params[method_param.name] = f"self._path_value('{to_snake_case(method_param.name)}')"
+            elif method_param.in_location in ['query', 'header']:
+                params[method_param.name] = f"params[{method_param.name}]"
+
+        for input_param in endpoint_method.extensions.input_parameters.parameters:
+            params[input_param.name] = to_snake_case(input_param.name)
+
+        payload_str = endpoint_method.extensions.input_parameters.payload
+
+        template = Template(payload_str)
+        return template.render(params)
+
+    except ValueError as e:
+        raise ValueError(f"Error building payload from input-parameters extension: {e}")
