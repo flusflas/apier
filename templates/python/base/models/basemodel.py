@@ -36,7 +36,7 @@ class IterBaseModel(BaseModel):
 
     def __getattr__(self, attribute):
         if self._has_root(dict):
-            return self.__root__.get(attribute)
+            return self.__root__[attribute]
         else:
             return super().__getattribute__(attribute)
 
@@ -60,8 +60,8 @@ class IterBaseModel(BaseModel):
             raise IndexError(f"Index '{key}' out of range")
 
     def __getitem__(self, key):
-        if isinstance(key, str) and '.' in key:
-            return self._nested_item(key)
+        # if isinstance(key, str) and '.' in key:
+        #     return self._nested_item(key)
 
         if self._has_root((dict, list)):
             return self.__root__.__getitem__(key)
