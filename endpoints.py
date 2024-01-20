@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, List, Tuple
 
 from consts import NO_RESPONSE_ID
-from extensions import Extensions, parse_extensions
+from extensions.extensions import Extensions, parse_extensions
 from openapi import Definition
 from utils.dicts import get_multi_key
 from utils.strings import to_pascal_case

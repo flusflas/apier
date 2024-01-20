@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
+from .input_parameters import InputParametersDescription
 from templates.python.base.models.extensions.pagination import PaginationDescription
 
 if TYPE_CHECKING:
@@ -15,6 +16,7 @@ class Extensions(BaseModel):
         allow_population_by_field_name = True
 
     pagination: Pagination = Field(default=None, alias='x-pagination')
+    input_parameters: InputParametersDescription = Field(default=None, alias='x-input-parameters')
 
 
 class Pagination(BaseModel):

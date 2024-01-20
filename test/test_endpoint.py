@@ -6,7 +6,7 @@ from consts import NO_RESPONSE_ID
 from endpoints import (Endpoint, EndpointLayer, EndpointParameter,
                        parse_endpoint, split_endpoint_layers, parse_parameters, EndpointMethod, ContentSchema,
                        parse_content_schemas)
-from extensions import Extensions
+from extensions.extensions import Extensions
 from openapi import Definition
 
 openapi_definition = Definition.load('definitions/companies_api.yaml')
