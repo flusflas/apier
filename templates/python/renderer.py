@@ -37,6 +37,7 @@ class Renderer:
             # TODO: Ask before removing
             shutil.rmtree(self.output_path)
         shutil.copytree(abs_path('./base'), self.output_path)
+        os.makedirs(self.output_path + '/apis')
 
         generate_models(self.definition, self.schemas, self.output_path)
         self.render_api_components()
@@ -98,7 +99,7 @@ class Renderer:
 
     def render_api_component(self, api_node: APINode):
         api_filename = to_snake_case(self.get_api_name(api_node))
-        filename = f"{self.output_path}/{api_filename}.py"
+        filename = f"{self.output_path}/apis/{api_filename}.py"
         print(f"Rendering {filename}... ", end="")
 
         environment = Environment(loader=FileSystemLoader(abs_path('./')),

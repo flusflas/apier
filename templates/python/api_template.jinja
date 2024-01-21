@@ -4,7 +4,7 @@ import requests
 from pydantic import BaseModel
 
 {% for branch in root_branches -%}
-    from .{{ branch | api_name }} import _{{ branch | api_name | pascal_case }}Methods
+    from .apis.{{ branch | api_name }} import _{{ branch | api_name | pascal_case }}Methods
 {% endfor %}
 
 
