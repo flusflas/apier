@@ -134,6 +134,31 @@ def test_list():
     assert isinstance(resp, EmployeeList)
 
 
+def test_get_from_department():
+    """
+    Tests a successful request to get a Employee from a department.
+    """
+    expected_resp = make_json_response(200, test_resp_employee02)
+
+    with mock.patch(request_mock_pkg, return_value=expected_resp) as m:
+        resp = (API(host="test-api.com").
+                companies("shiny_stickers").
+                departments("marketing").
+                employees(1001).
+                get(params={'foo': 'bar'}))
+
+    m.assert_called_once_with("GET",
+                              "https://test-api.com/companies/shiny_stickers/departments/marketing/employees/1001",
+                              params={'foo': 'bar'},
+                              headers={},
+                              data=None,
+                              timeout=3)
+
+    assert resp.http_response().status_code == 200
+    assert resp == test_resp_employee02
+    assert isinstance(resp, Employee)
+
+
 def test_get_error():
     """
     Tests a request to get a Employee that returns a 404 error response.

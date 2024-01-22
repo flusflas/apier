@@ -124,7 +124,7 @@ class _{{ api_node | api_name | pascal_case }}Methods:
         {% else %}
 
         {%- set ns.raise_stmt = False %}
-        return {{ api_node.api | pascal_case }}{{ loop.index }}({{ layer.param_names() | join(", ") }})._child_of(self)
+        return {{ api_node.api | pascal_case }}{{ loop.index }}({{ layer.param_names() | map('snake_case') | join(", ") }})._child_of(self)
 
         {% endif %}
         {% endfor  %}

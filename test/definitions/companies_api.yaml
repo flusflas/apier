@@ -5,7 +5,7 @@ info:
   version: 1.0.0
   x-api-gen:
     equivalent_paths:
-      - source: /companies/{company_id}/departments/{department_name}/employees/{employee-num}
+      - source: /companies/{company_id}/departments/{department-name}/employees/{employee-num}
         target: /companies/{company_id}/employees/{employee-num}
     templates:
       python:
@@ -378,11 +378,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /companies/{company_id}/departments/{department_name}/employees/{employee-num}:
+  /companies/{company_id}/departments/{department-name}/employees/{employee-num}:
     get:
       parameters:
         - $ref: '#/components/parameters/company_id'
-        - $ref: '#/components/parameters/department_name'
+        - $ref: '#/components/parameters/department-name'
         - $ref: '#/components/parameters/employee-num'
       tags:
         - Employees
@@ -561,9 +561,9 @@ components:
         type: integer
         example: 17
 
-    department_name:
+    department-name:
       in: path
-      name: department_name
+      name: department-name
       required: true
       schema:
         type: string
