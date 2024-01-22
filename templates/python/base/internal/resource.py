@@ -178,6 +178,9 @@ class APIResource(ABC):
         if pagination_info is None:
             return None
 
+        if params_info is None:
+            params_info = {}
+
         ret._enable_pagination(pagination_info.result)
         ret._pagination.iter_func = None
 
