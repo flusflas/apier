@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 import uuid
+import warnings
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, List, Tuple
 
@@ -305,7 +306,7 @@ def parse_content_schemas(endpoint: Endpoint):
         resp_schemas = []
         resp_definition = operation.get('responses', {})
         for resp_code, resp_definition in resp_definition.items():
-            resp_code = int(resp_code)
+            resp_code = int(resp_code if resp_code != 'default' else 0)
             if '$ref' in resp_definition:
                 resp_definition = endpoint.definition.solve_ref(resp_definition['$ref'])
             resp_definition = resp_definition.get('content', {})
@@ -346,6 +347,10 @@ def parse_schema(endpoint: Endpoint, operation_name: str,
     :param resp_code: Response code returned (omitted for requests).
     :return: A ContentSchema with the content schema information.
     """
+    supported_content_types = ['application/json', 'application/xml', 'text/plain']
+    if content_type not in supported_content_types:
+        warnings.warn(f"Unsupported Content-Type: {content_type}")
+
     if not _schemas:
         init_schemas(endpoint.definition)
 

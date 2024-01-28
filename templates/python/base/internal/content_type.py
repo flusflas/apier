@@ -9,6 +9,9 @@ def content_types_match(type1: str, type2: str) -> bool:
     """
     Returns whether the given Content-Types match.
     """
+    t1, t2 = type1.lower().split(';')[0], type2.lower().split(';')[0]
+    if '*/*' in [t1, t2]:
+        return True
     return type1.lower().split(';')[0] == type2.lower().split(';')[0]
 
 

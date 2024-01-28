@@ -121,8 +121,14 @@ class APIResource(ABC):
     def _handle_response(self, response: requests.Response, expected_responses: list,
                          param_types: dict = None,
                          pagination_info: PaginationDescription = None):
+        default_status_code = 0
+
+        # Send default expected response to the end of the list
+        expected_responses = sorted(expected_responses, key=lambda x: x[0] == 0)
+
         expected_status_codes = set([r[0] for r in expected_responses])
-        if response.status_code not in expected_status_codes:
+        if (response.status_code not in expected_status_codes
+                and default_status_code not in expected_status_codes):
             raise Exception(f"Unexpected response status code ({response.status_code})")
 
         resp_content_type = response.headers.get('content-type')
@@ -139,13 +145,16 @@ class APIResource(ABC):
 
                 return self._handle_error(ret)
 
-            if response.status_code == code and resp_content_type.startswith(content_type):
+            if (code in [response.status_code, default_status_code]
+                    and content_types_match(resp_content_type, content_type)):
                 resp_payload = response.content
                 if resp_content_type.startswith('application/json'):
                     resp_payload = response.json()
                 elif resp_content_type.startswith('application/xml'):
                     import xmltodict
                     resp_payload = xmltodict.parse(response.content)['root']
+                elif resp_content_type.startswith('text/plain'):
+                    resp_payload = resp_payload.decode('utf-8')
 
                 ret = resp_class.parse_obj(resp_payload)
 

@@ -38,6 +38,9 @@ paths:
             schema:
               $ref: '#/components/schemas/CompanyCreate'
       responses:
+        default:
+          $ref: '#/components/responses/Unexpected'
+
         '201':
           description: Created
           content:
@@ -569,10 +572,18 @@ components:
         type: string
         example: accounting
 
+  responses:
+    Unexpected:
+      description: Unexpected error
+      content:
+        '*/*':
+          schema:
+            $ref: '#/components/schemas/AnyValue'
 
   schemas:
-#    AnyValue:
-#      description: "Can be any value - string, number, boolean, array or object."
+    AnyValue:
+      nullable: true
+      description: "Can be any value - string, number, boolean, array, object or null."
 
     ErrorResponse:
       title: Error Response

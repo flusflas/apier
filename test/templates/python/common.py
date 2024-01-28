@@ -13,9 +13,13 @@ def make_json_response(status_code: int, body=None, request: Union[PreparedReque
         request = request.prepare()
     resp.request = request
     if body is not None:
-        body = to_dict(body)
-        resp._content = json.dumps(body).encode('utf-8')
-        resp.headers = CaseInsensitiveDict({'Content-Type': 'application/json'})
+        if isinstance(body, (dict, BaseModel)):
+            body = to_dict(body)
+            resp._content = json.dumps(body).encode('utf-8')
+            resp.headers = CaseInsensitiveDict({'Content-Type': 'application/json'})
+        elif isinstance(body, str):
+            resp._content = body.encode('utf-8')
+            resp.headers = CaseInsensitiveDict({'Content-Type': 'text/plain'})
     return resp
 
 

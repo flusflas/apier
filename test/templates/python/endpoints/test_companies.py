@@ -11,7 +11,7 @@ if True:
     from ._build.api import API
     from ._build.models.exceptions import ResponseError
     from ._build.models.models import (CompanyCreate, Company, CompanyList,
-                                       CompanyUpdate, ErrorResponse)
+                                       CompanyUpdate, ErrorResponse, AnyValue)
     from ._build.models.primitives import NoResponse
 
 test_req_create01 = CompanyCreate(
@@ -91,6 +91,31 @@ def test_create(req, expected_resp):
     assert resp.http_response().status_code == 201
     assert resp == expected_resp
     assert isinstance(resp, Company)
+
+
+def test_create_default_status_code():
+    """
+    Tests a request to create a Company that returns an undefined status code.
+    """
+    from ._build.api import API
+
+    expected_raw_resp = make_json_response(200, "OK")
+
+    with mock.patch(request_mock_pkg, return_value=expected_raw_resp) as m:
+        resp = (API(host="test-api.com").
+                companies().
+                create(test_req_create01, params={'foo': 'bar'}))
+
+    m.assert_called_once_with("POST",
+                              "https://test-api.com/companies",
+                              params={'foo': 'bar'},
+                              headers={'Content-Type': 'application/json'},
+                              data=to_json(test_req_create01),
+                              timeout=3)
+
+    assert resp.http_response().status_code == 200
+    assert resp == AnyValue.parse_obj("OK")
+    assert isinstance(resp, AnyValue)
 
 
 def test_get():
