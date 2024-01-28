@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from requests import PreparedRequest, Request, Response
 
 
-def make_json_response(status_code: int, body=None, request: Union[PreparedRequest, Request] = None) -> Response:
+def make_response(status_code: int, body=None, request: Union[PreparedRequest, Request] = None) -> Response:
     resp = Response()
     resp.status_code = status_code
     if isinstance(request, Request):

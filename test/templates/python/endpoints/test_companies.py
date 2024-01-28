@@ -3,7 +3,7 @@ from unittest import mock
 import pytest
 
 from .setup import build_client
-from ..common import make_json_response, to_dict, to_json
+from ..common import make_response, to_dict, to_json
 
 build_client()
 request_mock_pkg = 'test.templates.python.endpoints._build.api.requests.request'
@@ -74,7 +74,7 @@ def test_create(req, expected_resp):
     """
     from ._build.api import API
 
-    expected_raw_resp = make_json_response(201, expected_resp)
+    expected_raw_resp = make_response(201, expected_resp)
 
     with mock.patch(request_mock_pkg, return_value=expected_raw_resp) as m:
         resp = (API(host="test-api.com").
@@ -99,7 +99,7 @@ def test_create_default_status_code():
     """
     from ._build.api import API
 
-    expected_raw_resp = make_json_response(200, "OK")
+    expected_raw_resp = make_response(200, "OK")
 
     with mock.patch(request_mock_pkg, return_value=expected_raw_resp) as m:
         resp = (API(host="test-api.com").
@@ -122,7 +122,7 @@ def test_get():
     """
     Tests a successful request to get a Company.
     """
-    expected_resp = make_json_response(200, test_resp_company01)
+    expected_resp = make_response(200, test_resp_company01)
 
     with mock.patch(request_mock_pkg, return_value=expected_resp) as m:
         resp = (API(host="test-api.com").
@@ -157,7 +157,7 @@ def test_list():
             'previous': None,
         }
     )
-    expected_resp = make_json_response(200, expected_list)
+    expected_resp = make_response(200, expected_list)
 
     with mock.patch(request_mock_pkg, return_value=expected_resp) as m:
         resp = (API(host="test-api.com").
@@ -184,7 +184,7 @@ def test_update(req, expected_resp):
     """
     Tests a successful request to update a Company.
     """
-    expected_raw_resp = make_json_response(200, expected_resp)
+    expected_raw_resp = make_response(200, expected_resp)
 
     with mock.patch(request_mock_pkg, return_value=expected_raw_resp) as m:
         resp = (API(host="test-api.com").
@@ -207,7 +207,7 @@ def test_delete():
     """
     Tests a successful request to delete a Company.
     """
-    expected_resp = make_json_response(204)
+    expected_resp = make_response(204)
 
     with mock.patch(request_mock_pkg, return_value=expected_resp) as m:
         resp = (API(host="test-api.com").
@@ -231,7 +231,7 @@ def test_get_multi_param():
     Tests a successful request to get a Company using two URL parameters in
     the same layer.
     """
-    expected_resp = make_json_response(200, test_resp_company01)
+    expected_resp = make_response(200, test_resp_company01)
 
     with mock.patch(request_mock_pkg, return_value=expected_resp) as m:
         resp = (API(host="test-api.com").
@@ -254,7 +254,7 @@ def test_get_error():
     """
     Tests a request to get a Company that returns a 404 error response.
     """
-    expected_resp = make_json_response(404, test_company_not_found)
+    expected_resp = make_response(404, test_company_not_found)
 
     with mock.patch(request_mock_pkg, return_value=expected_resp) as m:
         with pytest.raises(ResponseError) as e:

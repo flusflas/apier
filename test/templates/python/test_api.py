@@ -1,6 +1,6 @@
 from unittest import mock
 
-from .common import make_json_response, to_json
+from .common import make_response, to_json
 from .setup import build_client
 
 build_client()
@@ -24,7 +24,7 @@ def test_make_request():
         "key2": "hey!"
     }
 
-    expected_resp = make_json_response(200, expected_resp_payload)
+    expected_resp = make_response(200, expected_resp_payload)
 
     with mock.patch("requests.request", return_value=expected_resp) as m:
         resp = (API(host="test-api.com").

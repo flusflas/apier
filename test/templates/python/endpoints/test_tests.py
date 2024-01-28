@@ -1,7 +1,7 @@
 from unittest import mock
 
 from .setup import build_client
-from ..common import make_json_response, to_json
+from ..common import make_response, to_json
 
 build_client()
 request_mock_pkg = 'test.templates.python.endpoints._build.api.requests.request'
@@ -28,7 +28,7 @@ def test_post_employee_input_parameters():
         "Johny": "shiny_stickers"
     }
 
-    expected_raw_resp = make_json_response(201, test_resp_employee01)
+    expected_raw_resp = make_response(201, test_resp_employee01)
 
     with mock.patch(request_mock_pkg, return_value=expected_raw_resp) as m:
         resp = (API(host="test-api.com").

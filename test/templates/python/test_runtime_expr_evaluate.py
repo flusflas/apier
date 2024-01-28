@@ -4,7 +4,7 @@ import pytest
 from requests import Request, Response
 
 from templates.python.base.internal.runtime_expr import evaluate, RuntimeExpressionError
-from test.templates.python.common import make_json_response
+from test.templates.python.common import make_response
 
 test_dict = {
     "prev_offset": 0,
@@ -21,7 +21,7 @@ test_request = Request(url='https://api.test/companies/ibm/department/17/users?f
                            'X-Number': '7.35',
                        },
                        method='GET').prepare()
-test_response = make_json_response(200, test_dict, test_request)
+test_response = make_response(200, test_dict, test_request)
 
 
 @pytest.mark.parametrize("resp, expression, expected", [
