@@ -2,7 +2,7 @@ from typing import List
 
 import pytest
 
-from endpoints import Endpoint, parse_endpoint
+from endpoints import Endpoint, EndpointsParser
 from openapi import Definition
 from tree import build_endpoints_tree
 
@@ -11,9 +11,10 @@ openapi_definition = Definition.load('definitions/companies_api.yaml')
 
 @pytest.fixture
 def endpoints() -> List[Endpoint]:
+    parser = EndpointsParser(openapi_definition)
     ee = []
     for path in openapi_definition.paths:
-        ee.append(parse_endpoint(path, openapi_definition))
+        ee.append(parser.parse_endpoint(path))
     return ee
 
 

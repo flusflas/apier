@@ -1,6 +1,6 @@
 import sys
 
-from endpoints import parse_endpoint, get_schemas
+from endpoints import EndpointsParser
 from openapi import Definition
 from renderer import render_api
 from tree import build_endpoints_tree
@@ -8,13 +8,15 @@ from tree import build_endpoints_tree
 
 def build(filename, output_path='_build/'):
     definition = Definition.load(filename)
+
+    parser = EndpointsParser(definition)
+
     endpoints = []
     for path in definition.paths:
-        endpoints.append(parse_endpoint(path, definition))
+        endpoints.append(parser.parse_endpoint(path))
 
-    schemas = get_schemas()
     api_tree = build_endpoints_tree(endpoints)
-    render_api('python', definition, schemas, api_tree, output_path)
+    render_api('python', definition, parser.schemas, api_tree, output_path)
 
 
 if __name__ == '__main__':

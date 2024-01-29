@@ -108,78 +108,176 @@ class Endpoint:
         return self.layers[-1].methods
 
 
-_schemas = {}
+class EndpointsParser:
 
+    def __init__(self, definition: Definition = None):
+        self.definition = definition
+        self._schemas = {}
+        if definition:
+            self._init_schemas()
 
-def init_schemas(definition: Definition):
-    """
-    Initializes the dictionary of schemas with the ones defined in the given
-    OpenAPI definition under the 'components.schemas' section.
-    """
-    clear_schemas()
-    schemas = definition.get_value('components.schemas', default={})
-    for schema_name, schema_def in schemas.items():
-        _schemas[schema_name] = ContentSchema(
-            name=schema_name,
-            definition=schema_def,
-        )
+    @property
+    def schemas(self):
+        """
+        Returns the dictionary of schemas.
+        """
+        return self._schemas
 
+    def _init_schemas(self):
+        """
+        Initializes the dictionary of schemas with the ones defined in the given
+        OpenAPI definition under the 'components.schemas' section.
+        """
+        self._schemas = {}
+        schemas = self.definition.get_value('components.schemas', default={})
+        for schema_name, schema_def in schemas.items():
+            self._schemas[schema_name] = ContentSchema(
+                name=schema_name,
+                definition=schema_def,
+            )
 
-def get_schemas():
-    """
-    Returns the dictionary of schemas.
-    """
-    return _schemas
+    def parse_endpoint(self, path: str) -> Endpoint:
+        endpoint = Endpoint(path=path, definition=self.definition)
+        self.split_endpoint_layers(endpoint)
+        if self.definition is not None:
+            parse_parameters(endpoint)
+            self.parse_content_schemas(endpoint)
+            parse_extensions(endpoint)
+        return endpoint
 
+    def split_endpoint_layers(self, endpoint: Endpoint):
+        """
+        Splits the path of the given Endpoint into all their layers and adds them
+        to the instance.
+        """
+        path_levels = endpoint.path.split("/")
 
-def clear_schemas():
-    """
-    Clears the dictionary of schemas.
-    """
-    global _schemas
-    _schemas = {}
+        # TODO: Review special cases (e.g. empty endpoints, trailing slash...)
+        path_levels = path_levels[1:]
 
+        endpoint_layer = EndpointLayer(path='')
 
-def parse_endpoint(path: str, definition: Definition = None) -> Endpoint:
-    endpoint = Endpoint(path=path, definition=definition)
-    split_endpoint_layers(endpoint)
-    if definition is not None:
-        parse_parameters(endpoint)
-        parse_content_schemas(endpoint)
-        parse_extensions(endpoint)
-    return endpoint
+        for i, p in enumerate(path_levels):
+            if len(p) == 0:
+                continue
+            elif re.match(r'^{.+}$', p):
+                param_name = p[1:len(p) - 1]
+                endpoint_layer.path += f"/{p}"
+                param, _ = get_first_endpoint_param(endpoint, param_name, 'path')
+                endpoint_layer.parameters.append(param)
+            elif p.startswith("{") or p.endswith("}"):
+                raise Exception("wrong parameter format in path")
+            else:
+                if i > 0:
+                    endpoint.layers.append(endpoint_layer)
+                endpoint_layer = EndpointLayer(path='')
+                endpoint_layer.path += f"/{p}"
+                endpoint_layer.api_levels.append(p)
 
+        endpoint.layers.append(endpoint_layer)
 
-def split_endpoint_layers(endpoint: Endpoint):
-    """
-    Splits the path of the given Endpoint into all their layers and adds them
-    to the instance.
-    """
-    path_levels = endpoint.path.split("/")
+    def parse_content_schemas(self, endpoint: Endpoint):
+        """
+        Parses the content schemas of the given Endpoint and adds them
+        to the instance.
+        """
+        path_config = endpoint.definition.paths[endpoint.path]
 
-    # TODO: Review special cases (e.g. empty endpoints, trailing slash...)
-    path_levels = path_levels[1:]
+        for operation_name, operation in path_config.items():
+            if operation_name.lower() not in _ALLOWED_OPERATIONS:
+                continue
 
-    endpoint_layer = EndpointLayer(path='')
+            endpoint_method = endpoint.layers[-1].get_method(operation_name)
 
-    for i, p in enumerate(path_levels):
-        if len(p) == 0:
-            continue
-        elif re.match(r'^{.+}$', p):
-            param_name = p[1:len(p) - 1]
-            endpoint_layer.path += f"/{p}"
-            param, _ = get_first_endpoint_param(endpoint, param_name, 'path')
-            endpoint_layer.parameters.append(param)
-        elif p.startswith("{") or p.endswith("}"):
-            raise Exception("wrong parameter format in path")
+            req_schemas = []
+            req_definition = get_multi_key(operation, 'requestBody.content', '.', {})
+            for content_type, content_type_definition in req_definition.items():
+                schema = content_type_definition.get('schema', {})
+                req_schemas.append(self.parse_schema(endpoint, endpoint_method,
+                                                     schema, content_type))
+
+            resp_schemas = []
+            resp_definition = operation.get('responses', {})
+            for resp_code, resp_definition in resp_definition.items():
+                resp_code = int(resp_code if resp_code != 'default' else 0)
+                if '$ref' in resp_definition:
+                    resp_definition = endpoint.definition.solve_ref(resp_definition['$ref'])
+                resp_definition = resp_definition.get('content', {})
+                for content_type, content_type_definition in resp_definition.items():
+                    schema = content_type_definition.get('schema', {})
+                    resp_schemas.append(self.parse_schema(endpoint, endpoint_method, schema,
+                                                          content_type, resp_code))
+
+                if len(resp_definition) == 0:
+                    resp_schemas.append(ContentSchema(
+                        name=NO_RESPONSE_ID,
+                        code=resp_code,
+                        content_type='',
+                        definition=resp_definition,
+                        is_inline=True,
+                    ))
+
+            method = endpoint.layers[-1].get_method(operation_name)
+            method.request_schemas = req_schemas
+            method.response_schemas = resp_schemas
+
+    def parse_schema(self, endpoint: Endpoint, endpoint_method: EndpointMethod,
+                     schema_def: dict, content_type: str,
+                     resp_code: int = -1) -> ContentSchema:
+        """
+        Parses a content schema and inserts it to the global dictionary of schemas
+        if it's missing.
+
+        If the given schema is defined inline, the name will be taken from the
+        'title' attribute. Otherwise, the name will be generated based on the
+        'type' attribute.
+
+        :param endpoint: The Endpoint where the schema is used.
+        :param endpoint_method: The EndpointMethod instance of the schema.
+        :param schema_def: Schema definition.
+        :param content_type: Content type of the request/response.
+        :param resp_code: Response code returned (omitted for requests).
+        :return: A ContentSchema with the content schema information.
+        """
+        supported_content_types = ['application/json', 'application/xml',
+                                   'text/plain', '*/*']
+        if content_type not in supported_content_types:
+            warnings.warn(f"Unsupported Content-Type: {content_type}")
+
+        is_inline = False
+        if '$ref' in schema_def:
+            schema_name = schema_def['$ref'].split('/')[-1]
+            schema_def = endpoint.definition.solve_ref(schema_def['$ref'])
         else:
-            if i > 0:
-                endpoint.layers.append(endpoint_layer)
-            endpoint_layer = EndpointLayer(path='')
-            endpoint_layer.path += f"/{p}"
-            endpoint_layer.api_levels.append(p)
+            is_inline = True
+            schema_name = schema_def.get('title')
+            if schema_name:
+                if schema_name in self._schemas:
+                    raise Exception(f"Schema name '{schema_name}' is already taken")
+            else:
+                schema_name = endpoint_method.method_definition.get('operationId', endpoint.path)
+                if resp_code >= 0:
+                    schema_name += "Response" + str(resp_code) if resp_code > 0 else 'Default'
+                else:
+                    schema_name += "Request"
 
-    endpoint.layers.append(endpoint_layer)
+        schema_name = to_pascal_case(schema_name)
+
+        # Generate a new schema name if the current is already taken
+        i = 1
+        original_schema_name = schema_name
+        while is_inline and schema_name in self._schemas:
+            i += 1
+            schema_name = to_pascal_case(original_schema_name + str(i))
+
+        self._schemas[schema_name] = ContentSchema(
+            name=schema_name,
+            code=resp_code,
+            content_type=content_type,
+            definition=schema_def,
+            is_inline=is_inline,
+        )
+        return self._schemas[schema_name]
 
 
 def get_first_endpoint_param(endpoint: Endpoint, param_name: str,
@@ -285,111 +383,3 @@ def parse_parameter(definition: Definition, parameter_info: dict) -> EndpointPar
         required=info.get('required', False) if info['in'] != 'path' else True,
         format=info.get('format', ''),
     )
-
-
-def parse_content_schemas(endpoint: Endpoint):
-    """
-    Parses the content schemas of the given Endpoint and adds them
-    to the instance.
-    """
-    path_config = endpoint.definition.paths[endpoint.path]
-
-    for operation_name, operation in path_config.items():
-        if operation_name.lower() not in _ALLOWED_OPERATIONS:
-            continue
-
-        endpoint_method = endpoint.layers[-1].get_method(operation_name)
-
-        req_schemas = []
-        req_definition = get_multi_key(operation, 'requestBody.content', '.', {})
-        for content_type, content_type_definition in req_definition.items():
-            schema = content_type_definition.get('schema', {})
-            req_schemas.append(parse_schema(endpoint, endpoint_method,
-                                            schema, content_type))
-
-        resp_schemas = []
-        resp_definition = operation.get('responses', {})
-        for resp_code, resp_definition in resp_definition.items():
-            resp_code = int(resp_code if resp_code != 'default' else 0)
-            if '$ref' in resp_definition:
-                resp_definition = endpoint.definition.solve_ref(resp_definition['$ref'])
-            resp_definition = resp_definition.get('content', {})
-            for content_type, content_type_definition in resp_definition.items():
-                schema = content_type_definition.get('schema', {})
-                resp_schemas.append(parse_schema(endpoint, endpoint_method, schema,
-                                                 content_type, resp_code))
-
-            if len(resp_definition) == 0:
-                resp_schemas.append(ContentSchema(
-                    name=NO_RESPONSE_ID,
-                    code=resp_code,
-                    content_type='',
-                    definition=resp_definition,
-                    is_inline=True,
-                ))
-
-        method = endpoint.layers[-1].get_method(operation_name)
-        method.request_schemas = req_schemas
-        method.response_schemas = resp_schemas
-
-
-def parse_schema(endpoint: Endpoint, endpoint_method: EndpointMethod,
-                 schema_def: dict, content_type: str,
-                 resp_code: int = -1) -> ContentSchema:
-    """
-    Parses a content schema and inserts it to the global dictionary of schemas
-    if it's missing.
-
-    If the given schema is defined inline, the name will be taken from the
-    'title' attribute. Otherwise, the name will be generated based on the
-    'type' attribute.
-
-    :param endpoint: The Endpoint where the schema is used.
-    :param endpoint_method: The EndpointMethod instance of the schema.
-    :param schema_def: Schema definition.
-    :param content_type: Content type of the request/response.
-    :param resp_code: Response code returned (omitted for requests).
-    :return: A ContentSchema with the content schema information.
-    """
-    supported_content_types = ['application/json', 'application/xml',
-                               'text/plain', '*/*']
-    if content_type not in supported_content_types:
-        warnings.warn(f"Unsupported Content-Type: {content_type}")
-
-    if not _schemas:
-        init_schemas(endpoint.definition)
-
-    is_inline = False
-    if '$ref' in schema_def:
-        schema_name = schema_def['$ref'].split('/')[-1]
-        schema_def = endpoint.definition.solve_ref(schema_def['$ref'])
-    else:
-        is_inline = True
-        schema_name = schema_def.get('title')
-        if schema_name:
-            if schema_name in _schemas:
-                raise Exception(f"Schema name '{schema_name}' is already taken")
-        else:
-            schema_name = endpoint_method.method_definition.get('operationId', endpoint.path)
-            if resp_code >= 0:
-                schema_name += "Response" + str(resp_code) if resp_code > 0 else 'Default'
-            else:
-                schema_name += "Request"
-
-    schema_name = to_pascal_case(schema_name)
-
-    # Generate a new schema name if the current is already taken
-    i = 1
-    original_schema_name = schema_name
-    while is_inline and schema_name in _schemas:
-        i += 1
-        schema_name = to_pascal_case(original_schema_name + str(i))
-
-    _schemas[schema_name] = ContentSchema(
-        name=schema_name,
-        code=resp_code,
-        content_type=content_type,
-        definition=schema_def,
-        is_inline=is_inline,
-    )
-    return _schemas[schema_name]

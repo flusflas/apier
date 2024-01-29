@@ -3,9 +3,8 @@ import copy
 import pytest
 
 from consts import NO_RESPONSE_ID
-from endpoints import (Endpoint, EndpointLayer, EndpointParameter,
-                       parse_endpoint, split_endpoint_layers, parse_parameters, EndpointMethod, ContentSchema,
-                       parse_content_schemas)
+from endpoints import (EndpointsParser, Endpoint, EndpointLayer, EndpointParameter,
+                       parse_parameters, EndpointMethod, ContentSchema)
 from extensions.extensions import Extensions
 from extensions.method_name import MethodNameDescription
 from openapi import Definition
@@ -312,7 +311,8 @@ expected_endpoints = {
                 methods=[
                     EndpointMethod(
                         name='get',
-                        method_definition=openapi_definition.paths['/companies/{company_id}/employees/{employee-num}']['get'],
+                        method_definition=openapi_definition.paths['/companies/{company_id}/employees/{employee-num}'][
+                            'get'],
                         description='Returns one of your company employees',
                         parameters=[
                             EndpointParameter(name='company_id',
@@ -477,7 +477,8 @@ def test_endpoint_layer_param_functions(layer: EndpointLayer, expected_param_nam
 ])
 def test_parse_endpoint(path, expected):
     """ Tests parsing an endpoint. """
-    assert parse_endpoint(path, openapi_definition) == expected
+    parser = EndpointsParser(openapi_definition)
+    assert parser.parse_endpoint(path) == expected
 
 
 @pytest.mark.parametrize("endpoint, expected", [
@@ -543,7 +544,8 @@ def test_parse_endpoint(path, expected):
 ])
 def test_split_endpoint_layers(endpoint, expected):
     """ Tests splitting an endpoint into its layers. """
-    split_endpoint_layers(endpoint)
+    parser = EndpointsParser(openapi_definition)
+    parser.split_endpoint_layers(endpoint)
     assert endpoint == expected
 
 
@@ -563,7 +565,8 @@ def test_split_endpoint_layers(endpoint, expected):
                              methods=[
                                  EndpointMethod(
                                      name="get",
-                                     method_definition=openapi_definition.paths['/companies/{company_id}/{number}']['get'],
+                                     method_definition=openapi_definition.paths['/companies/{company_id}/{number}'][
+                                         'get'],
                                      description='An endpoint used to test multiple path parameters in the same layer.',
                                      parameters=[
                                          EndpointParameter(
@@ -676,7 +679,8 @@ def test_parse_parameters(endpoint, expected):
     Tests processing an OpenAPI definition to fill the endpoint parameters
     information.
     """
-    split_endpoint_layers(endpoint)
+    parser = EndpointsParser(openapi_definition)
+    parser.split_endpoint_layers(endpoint)
 
     parse_parameters(endpoint)
     assert endpoint == expected
@@ -701,8 +705,10 @@ def test_process_endpoint_config(endpoint, expected_methods):
     for m in expected_methods:
         m.extensions = None
 
-    split_endpoint_layers(endpoint)
+    parser = EndpointsParser(openapi_definition)
+
+    parser.split_endpoint_layers(endpoint)
     parse_parameters(endpoint)
 
-    parse_content_schemas(endpoint)
+    parser.parse_content_schemas(endpoint)
     assert endpoint.methods == expected_methods

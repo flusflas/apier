@@ -6,7 +6,7 @@ from collections import OrderedDict
 from dataclasses import dataclass, field
 from typing import List
 
-from endpoints import EndpointLayer, parse_endpoint, Endpoint
+from endpoints import EndpointLayer, Endpoint, EndpointsParser
 
 
 class PathNotFoundException(Exception):
@@ -44,7 +44,7 @@ class APITree:
         :raises PathNotFoundException: The path was not found in the tree.
         :return: The tree, node and endpoint layer found in the tree.
         """
-        search_endpoint = parse_endpoint(search_path)
+        search_endpoint = EndpointsParser().parse_endpoint(search_path)
 
         accumulated_path = ""
         tree = self
