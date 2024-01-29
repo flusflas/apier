@@ -53,6 +53,7 @@ class EndpointMethod:
     """
     name: str
     description: str
+    method_definition: dict
     parameters: List[EndpointParameter] = field(default_factory=list)
     request_schemas: List[ContentSchema] = field(default_factory=list)
     response_schemas: List[ContentSchema] = field(default_factory=list)
@@ -256,6 +257,7 @@ def parse_parameters(endpoint: Endpoint):
 
         endpoint.methods.append(EndpointMethod(
             name=operation_name.lower(),
+            method_definition=operation,
             description=operation.get("description"),
             parameters=list(op_parameters.values())
         ))
@@ -296,11 +298,13 @@ def parse_content_schemas(endpoint: Endpoint):
         if operation_name.lower() not in _ALLOWED_OPERATIONS:
             continue
 
+        endpoint_method = endpoint.layers[-1].get_method(operation_name)
+
         req_schemas = []
         req_definition = get_multi_key(operation, 'requestBody.content', '.', {})
         for content_type, content_type_definition in req_definition.items():
             schema = content_type_definition.get('schema', {})
-            req_schemas.append(parse_schema(endpoint, operation_name,
+            req_schemas.append(parse_schema(endpoint, endpoint_method,
                                             schema, content_type))
 
         resp_schemas = []
@@ -312,7 +316,7 @@ def parse_content_schemas(endpoint: Endpoint):
             resp_definition = resp_definition.get('content', {})
             for content_type, content_type_definition in resp_definition.items():
                 schema = content_type_definition.get('schema', {})
-                resp_schemas.append(parse_schema(endpoint, operation_name, schema,
+                resp_schemas.append(parse_schema(endpoint, endpoint_method, schema,
                                                  content_type, resp_code))
 
             if len(resp_definition) == 0:
@@ -329,9 +333,9 @@ def parse_content_schemas(endpoint: Endpoint):
         method.response_schemas = resp_schemas
 
 
-def parse_schema(endpoint: Endpoint, operation_name: str,
+def parse_schema(endpoint: Endpoint, endpoint_method: EndpointMethod,
                  schema_def: dict, content_type: str,
-                 resp_code: int = 0) -> ContentSchema:
+                 resp_code: int = -1) -> ContentSchema:
     """
     Parses a content schema and inserts it to the global dictionary of schemas
     if it's missing.
@@ -341,13 +345,14 @@ def parse_schema(endpoint: Endpoint, operation_name: str,
     'type' attribute.
 
     :param endpoint: The Endpoint where the schema is used.
-    :param operation_name: Name of the endpoint operation.
+    :param endpoint_method: The EndpointMethod instance of the schema.
     :param schema_def: Schema definition.
     :param content_type: Content type of the request/response.
     :param resp_code: Response code returned (omitted for requests).
     :return: A ContentSchema with the content schema information.
     """
-    supported_content_types = ['application/json', 'application/xml', 'text/plain']
+    supported_content_types = ['application/json', 'application/xml',
+                               'text/plain', '*/*']
     if content_type not in supported_content_types:
         warnings.warn(f"Unsupported Content-Type: {content_type}")
 
@@ -365,7 +370,11 @@ def parse_schema(endpoint: Endpoint, operation_name: str,
             if schema_name in _schemas:
                 raise Exception(f"Schema name '{schema_name}' is already taken")
         else:
-            schema_name = schema_def.get('type', 'string')
+            schema_name = endpoint_method.method_definition.get('operationId', endpoint.path)
+            if resp_code >= 0:
+                schema_name += "Response" + str(resp_code) if resp_code > 0 else 'Default'
+            else:
+                schema_name += "Request"
 
     schema_name = to_pascal_case(schema_name)
 
@@ -373,20 +382,6 @@ def parse_schema(endpoint: Endpoint, operation_name: str,
     i = 1
     original_schema_name = schema_name
     while is_inline and schema_name in _schemas:
-        # An identical schema already exists
-        if _schemas[schema_name].definition == schema_def:
-            if content_type == _schemas[schema_name].content_type:
-                return _schemas[schema_name]
-            else:
-                return ContentSchema(
-                    name=schema_name,
-                    code=resp_code,
-                    content_type=content_type,
-                    definition=schema_def,
-                    is_inline=is_inline,
-                )
-
-        # Rename schema
         i += 1
         schema_name = to_pascal_case(original_schema_name + str(i))
 

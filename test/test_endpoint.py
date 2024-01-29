@@ -46,6 +46,7 @@ expected_endpoints = {
                 methods=[
                     EndpointMethod(
                         name='get',
+                        method_definition=openapi_definition.paths['/companies/{company_id}']['get'],
                         description='Returns a company by its ID.',
                         parameters=[
                             EndpointParameter(name='company_id',
@@ -88,6 +89,7 @@ expected_endpoints = {
                     ),
                     EndpointMethod(
                         name='put',
+                        method_definition=openapi_definition.paths['/companies/{company_id}']['put'],
                         description='Updates an exising company.',
                         parameters=[
                             EndpointParameter(name='company_id',
@@ -103,7 +105,7 @@ expected_endpoints = {
                                               {'$ref': '#/components/schemas/CompanyBase'}],
                                               'title': 'Company Update Request',
                                               'type': 'object'},
-                                          code=0)
+                                          code=-1)
                         ],
                         response_schemas=[
                             ContentSchema(name='Company',
@@ -144,6 +146,7 @@ expected_endpoints = {
                         ]
                     ),
                     EndpointMethod(name='delete',
+                                   method_definition=openapi_definition.paths['/companies/{company_id}']['delete'],
                                    description='Deletes a company :(',
                                    parameters=[
                                        EndpointParameter(name='company_id',
@@ -198,6 +201,7 @@ expected_endpoints = {
                 methods=[
                     EndpointMethod(
                         name="post",
+                        method_definition=openapi_definition.paths['/companies/{company_id}/employees']['post'],
                         description='Hires a new employee!',
                         parameters=[
                             EndpointParameter(name="company_id",
@@ -208,7 +212,7 @@ expected_endpoints = {
                         request_schemas=[
                             ContentSchema(
                                 name="EmployeeCreate",
-                                code=0,
+                                code=-1,
                                 content_type="application/json",
                                 definition=openapi_definition.definition['components']['schemas']['EmployeeCreate'],
                             ),
@@ -236,6 +240,7 @@ expected_endpoints = {
                     ),
                     EndpointMethod(
                         name="get",
+                        method_definition=openapi_definition.paths['/companies/{company_id}/employees']['get'],
                         description='Returns all your employees.',
                         parameters=[
                             EndpointParameter(name="company_id",
@@ -307,6 +312,7 @@ expected_endpoints = {
                 methods=[
                     EndpointMethod(
                         name='get',
+                        method_definition=openapi_definition.paths['/companies/{company_id}/employees/{employee-num}']['get'],
                         description='Returns one of your company employees',
                         parameters=[
                             EndpointParameter(name='company_id',
@@ -373,6 +379,7 @@ expected_endpoints = {
                 methods=[
                     EndpointMethod(
                         name="get",
+                        method_definition=openapi_definition.paths['/companies/{company_id}/{number}']['get'],
                         description='An endpoint used to test multiple path parameters in the same layer.',
                         parameters=[
                             EndpointParameter(name="company_id", in_location="path",
@@ -556,6 +563,7 @@ def test_split_endpoint_layers(endpoint, expected):
                              methods=[
                                  EndpointMethod(
                                      name="get",
+                                     method_definition=openapi_definition.paths['/companies/{company_id}/{number}']['get'],
                                      description='An endpoint used to test multiple path parameters in the same layer.',
                                      parameters=[
                                          EndpointParameter(
@@ -588,6 +596,7 @@ def test_split_endpoint_layers(endpoint, expected):
                              methods=[
                                  EndpointMethod(
                                      name="get",
+                                     method_definition=openapi_definition.paths['/companies/{company_id}']['get'],
                                      description='Returns a company by its ID.',
                                      parameters=[
                                          EndpointParameter(name="company_id", in_location="path",
@@ -596,6 +605,7 @@ def test_split_endpoint_layers(endpoint, expected):
                                  ),
                                  EndpointMethod(
                                      name="put",
+                                     method_definition=openapi_definition.paths['/companies/{company_id}']['put'],
                                      description='Updates an exising company.',
                                      parameters=[
                                          EndpointParameter(name="company_id", in_location="path",
@@ -604,6 +614,7 @@ def test_split_endpoint_layers(endpoint, expected):
                                  ),
                                  EndpointMethod(
                                      name="delete",
+                                     method_definition=openapi_definition.paths['/companies/{company_id}']['delete'],
                                      description='Deletes a company :(',
                                      parameters=[
                                          EndpointParameter(name="company_id", in_location="path",
@@ -641,6 +652,8 @@ def test_split_endpoint_layers(endpoint, expected):
                              methods=[
                                  EndpointMethod(
                                      name="get",
+                                     method_definition=openapi_definition.paths['/companies/{company_id}'
+                                                                                '/employees/{employee-num}']['get'],
                                      description='Returns one of your company employees',
                                      parameters=[
                                          EndpointParameter(name="company_id",

@@ -546,6 +546,29 @@ paths:
               schema:
                 type: object
 
+  /tests/oneOf:
+    post:
+      tags:
+        - Tests
+      summary: Send request with multiple possible schemas
+      description: Send request with multiple possible schemas
+      operationId: PostTestsOneOf
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/Company'
+                - $ref: '#/components/schemas/Employee'
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+
 components:
   parameters:
     company_id:
