@@ -9,25 +9,19 @@ from endpoints import ContentSchema
 from openapi import Definition
 
 
-def generate_models(definition: Definition, schemas: dict[str, ContentSchema],
+def generate_models(definition: Definition, schemas: dict[str, dict],
                     output_path: str):
     """
     Generate the Pydantic models for all the given schemas.
 
     :param definition:  The OpenAPI definition object.
-    :param schemas:     The dictionary of schemas that will be generated to
+    :param schemas:     The dictionary of schemas that will be generated as
                         models.
     :param output_path: The output directory.
     """
     openapi_output = copy.deepcopy(definition.definition)
-    definition_schemas = definition.get_value('components.schemas')
-
-    for key, schema in schemas.items():
-        definition_schemas[key] = schema.definition
-
-    openapi_output['components'] = {'schemas': definition_schemas}
-
-    filename = "_temp/schemas.yaml"
+    openapi_output['components'] = {'schemas': schemas}
+    filename = f"{output_path}/_temp/schemas.yaml"
 
     file = Path(filename)
     file.parent.mkdir(parents=True, exist_ok=True)
@@ -38,4 +32,4 @@ def generate_models(definition: Definition, schemas: dict[str, ContentSchema],
               f"--output {output_path}/models/models.py "
               f"--base-class .basemodel.APIBaseModel")
 
-    shutil.rmtree('_temp')
+    shutil.rmtree(f'{output_path}/_temp')

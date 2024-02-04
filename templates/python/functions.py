@@ -52,8 +52,8 @@ def get_type_hint(*args: Union[str, ContentSchema],
                 types.append('primitives.NoResponse')
                 break
             types.append("models." + t.name)
-            if include_primitive_type and 'type' in t.definition:
-                types.append(types_map[t.definition['type']])
+            if include_primitive_type and 'type' in t.schema:
+                types.append(types_map[t.schema['type']])
         else:
             raise ValueError("Invalid type")
 

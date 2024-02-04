@@ -3,8 +3,9 @@ import copy
 import pytest
 
 from consts import NO_RESPONSE_ID
-from endpoints import (EndpointsParser, Endpoint, EndpointLayer, EndpointParameter,
-                       parse_parameters, EndpointMethod, ContentSchema)
+from endpoints import (EndpointsParser, Endpoint, EndpointLayer, EndpointMethod,
+                       EndpointParameter, ContentSchema, parse_parameters,
+                       split_endpoint_layers)
 from extensions.extensions import Extensions
 from extensions.method_name import MethodNameDescription
 from openapi import Definition
@@ -58,7 +59,7 @@ expected_endpoints = {
                         response_schemas=[
                             ContentSchema(name='Company',
                                           content_type='application/json',
-                                          definition={'allOf': [
+                                          schema={'allOf': [
                                               {'$ref': '#/components/schemas/CompanyBase'},
                                               {'properties': {'created': {
                                                   'example': '2023-06-19T21:00:00Z',
@@ -74,11 +75,11 @@ expected_endpoints = {
                                           code=200),
                             ContentSchema(name='ErrorResponse',
                                           content_type='application/json',
-                                          definition=ERROR_RESPONSE_DEFINITION,
+                                          schema=ERROR_RESPONSE_DEFINITION,
                                           code=404),
                             ContentSchema(name='ErrorResponse',
                                           content_type='application/json',
-                                          definition=ERROR_RESPONSE_DEFINITION,
+                                          schema=ERROR_RESPONSE_DEFINITION,
                                           code=500)
                         ],
                         extensions=Extensions(method_name=MethodNameDescription(
@@ -100,7 +101,7 @@ expected_endpoints = {
                         request_schemas=[
                             ContentSchema(name='CompanyUpdate',
                                           content_type='application/json',
-                                          definition={'allOf': [
+                                          schema={'allOf': [
                                               {'$ref': '#/components/schemas/CompanyBase'}],
                                               'title': 'Company Update Request',
                                               'type': 'object'},
@@ -109,7 +110,7 @@ expected_endpoints = {
                         response_schemas=[
                             ContentSchema(name='Company',
                                           content_type='application/json',
-                                          definition={
+                                          schema={
                                               'allOf': [
                                                   {'$ref': '#/components/schemas/CompanyBase'},
                                                   {
@@ -132,15 +133,15 @@ expected_endpoints = {
                                           code=200),
                             ContentSchema(name='ErrorResponse',
                                           content_type='application/json',
-                                          definition=ERROR_RESPONSE_DEFINITION,
+                                          schema=ERROR_RESPONSE_DEFINITION,
                                           code=400),
                             ContentSchema(name='ErrorResponse',
                                           content_type='application/json',
-                                          definition=ERROR_RESPONSE_DEFINITION,
+                                          schema=ERROR_RESPONSE_DEFINITION,
                                           code=409),
                             ContentSchema(name='ErrorResponse',
                                           content_type='application/json',
-                                          definition=ERROR_RESPONSE_DEFINITION,
+                                          schema=ERROR_RESPONSE_DEFINITION,
                                           code=500),
                         ]
                     ),
@@ -158,16 +159,16 @@ expected_endpoints = {
                                    response_schemas=[
                                        ContentSchema(name=NO_RESPONSE_ID,
                                                      content_type='',
-                                                     definition={},
+                                                     schema={},
                                                      code=204,
                                                      is_inline=True),
                                        ContentSchema(name='ErrorResponse',
                                                      content_type='application/json',
-                                                     definition=ERROR_RESPONSE_DEFINITION,
+                                                     schema=ERROR_RESPONSE_DEFINITION,
                                                      code=404),
                                        ContentSchema(name='ErrorResponse',
                                                      content_type='application/json',
-                                                     definition=ERROR_RESPONSE_DEFINITION,
+                                                     schema=ERROR_RESPONSE_DEFINITION,
                                                      code=500),
                                    ])
                 ],
@@ -213,27 +214,26 @@ expected_endpoints = {
                                 name="EmployeeCreate",
                                 code=-1,
                                 content_type="application/json",
-                                definition=openapi_definition.definition['components']['schemas']['EmployeeCreate'],
+                                schema=openapi_definition.definition['components']['schemas']['EmployeeCreate'],
                             ),
                         ],
                         response_schemas=[
-                            ContentSchema(
-                                name="Employee",
-                                code=201,
-                                content_type="application/json",
-                                definition=openapi_definition.definition['components']['schemas']['Employee'],
-                            ),
+                            ContentSchema(name="Employee",
+                                          code=201,
+                                          content_type="application/json",
+                                          schema=openapi_definition.definition['components']['schemas']['Employee'],
+                                          ),
                             ContentSchema(name='ErrorResponse',
                                           content_type='application/json',
-                                          definition=ERROR_RESPONSE_DEFINITION,
+                                          schema=ERROR_RESPONSE_DEFINITION,
                                           code=400),
                             ContentSchema(name='ErrorResponse',
                                           content_type='application/json',
-                                          definition=ERROR_RESPONSE_DEFINITION,
+                                          schema=ERROR_RESPONSE_DEFINITION,
                                           code=409),
                             ContentSchema(name='ErrorResponse',
                                           content_type='application/json',
-                                          definition=ERROR_RESPONSE_DEFINITION,
+                                          schema=ERROR_RESPONSE_DEFINITION,
                                           code=500)
                         ]
                     ),
@@ -253,19 +253,19 @@ expected_endpoints = {
                                 name="EmployeeList",
                                 code=200,
                                 content_type="application/json",
-                                definition=openapi_definition.definition['components']['schemas']['EmployeeList'],
+                                schema=openapi_definition.definition['components']['schemas']['EmployeeList'],
                             ),
                             ContentSchema(name='ErrorResponse',
                                           content_type='application/json',
-                                          definition=ERROR_RESPONSE_DEFINITION,
+                                          schema=ERROR_RESPONSE_DEFINITION,
                                           code=400),
                             ContentSchema(name='ErrorResponse',
                                           content_type='application/json',
-                                          definition=ERROR_RESPONSE_DEFINITION,
+                                          schema=ERROR_RESPONSE_DEFINITION,
                                           code=409),
                             ContentSchema(name='ErrorResponse',
                                           content_type='application/json',
-                                          definition=ERROR_RESPONSE_DEFINITION,
+                                          schema=ERROR_RESPONSE_DEFINITION,
                                           code=500)
                         ],
                         extensions=Extensions.parse_obj({
@@ -330,7 +330,7 @@ expected_endpoints = {
                             ContentSchema(
                                 name='Employee',
                                 content_type='application/json',
-                                definition={
+                                schema={
                                     'allOf': [
                                         {'$ref': '#/components/schemas/EmployeeBase'}
                                     ],
@@ -340,11 +340,11 @@ expected_endpoints = {
                                 code=200),
                             ContentSchema(name='ErrorResponse',
                                           content_type='application/json',
-                                          definition=ERROR_RESPONSE_DEFINITION,
+                                          schema=ERROR_RESPONSE_DEFINITION,
                                           code=404),
                             ContentSchema(name='ErrorResponse',
                                           content_type='application/json',
-                                          definition=ERROR_RESPONSE_DEFINITION,
+                                          schema=ERROR_RESPONSE_DEFINITION,
                                           code=500)
                         ]
                     )
@@ -393,23 +393,23 @@ expected_endpoints = {
                                 name="Company",
                                 code=200,
                                 content_type="application/json",
-                                definition=openapi_definition.definition['components']['schemas']['Company'],
+                                schema=openapi_definition.definition['components']['schemas']['Company'],
                             ),
                             ContentSchema(
                                 name="Company",
                                 code=200,
                                 content_type="application/xml",
-                                definition=openapi_definition.definition['components']['schemas']['Company'],
+                                schema=openapi_definition.definition['components']['schemas']['Company'],
                             ),
                             ContentSchema(
                                 name='ErrorResponse',
                                 content_type='application/json',
-                                definition=ERROR_RESPONSE_DEFINITION,
+                                schema=ERROR_RESPONSE_DEFINITION,
                                 code=404
                             ),
                             ContentSchema(name='ErrorResponse',
                                           content_type='application/json',
-                                          definition=ERROR_RESPONSE_DEFINITION,
+                                          schema=ERROR_RESPONSE_DEFINITION,
                                           code=500)
                         ]
                     )
@@ -544,8 +544,7 @@ def test_parse_endpoint(path, expected):
 ])
 def test_split_endpoint_layers(endpoint, expected):
     """ Tests splitting an endpoint into its layers. """
-    parser = EndpointsParser(openapi_definition)
-    parser.split_endpoint_layers(endpoint)
+    split_endpoint_layers(endpoint)
     assert endpoint == expected
 
 
@@ -680,7 +679,7 @@ def test_parse_parameters(endpoint, expected):
     information.
     """
     parser = EndpointsParser(openapi_definition)
-    parser.split_endpoint_layers(endpoint)
+    split_endpoint_layers(endpoint)
 
     parse_parameters(endpoint)
     assert endpoint == expected
@@ -707,7 +706,7 @@ def test_process_endpoint_config(endpoint, expected_methods):
 
     parser = EndpointsParser(openapi_definition)
 
-    parser.split_endpoint_layers(endpoint)
+    split_endpoint_layers(endpoint)
     parse_parameters(endpoint)
 
     parser.parse_content_schemas(endpoint)

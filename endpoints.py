@@ -41,7 +41,7 @@ class ContentSchema:
     """
     name: str
     content_type: str = ''
-    definition: dict = None
+    schema: dict = None
     code: int = 0
     is_inline: bool = False
 
@@ -131,50 +131,16 @@ class EndpointsParser:
         self._schemas = {}
         schemas = self.definition.get_value('components.schemas', default={})
         for schema_name, schema_def in schemas.items():
-            self._schemas[schema_name] = ContentSchema(
-                name=schema_name,
-                definition=schema_def,
-            )
+            self._schemas[schema_name] = schema_def
 
     def parse_endpoint(self, path: str) -> Endpoint:
         endpoint = Endpoint(path=path, definition=self.definition)
-        self.split_endpoint_layers(endpoint)
+        split_endpoint_layers(endpoint)
         if self.definition is not None:
             parse_parameters(endpoint)
             self.parse_content_schemas(endpoint)
             parse_extensions(endpoint)
         return endpoint
-
-    def split_endpoint_layers(self, endpoint: Endpoint):
-        """
-        Splits the path of the given Endpoint into all their layers and adds them
-        to the instance.
-        """
-        path_levels = endpoint.path.split("/")
-
-        # TODO: Review special cases (e.g. empty endpoints, trailing slash...)
-        path_levels = path_levels[1:]
-
-        endpoint_layer = EndpointLayer(path='')
-
-        for i, p in enumerate(path_levels):
-            if len(p) == 0:
-                continue
-            elif re.match(r'^{.+}$', p):
-                param_name = p[1:len(p) - 1]
-                endpoint_layer.path += f"/{p}"
-                param, _ = get_first_endpoint_param(endpoint, param_name, 'path')
-                endpoint_layer.parameters.append(param)
-            elif p.startswith("{") or p.endswith("}"):
-                raise Exception("wrong parameter format in path")
-            else:
-                if i > 0:
-                    endpoint.layers.append(endpoint_layer)
-                endpoint_layer = EndpointLayer(path='')
-                endpoint_layer.path += f"/{p}"
-                endpoint_layer.api_levels.append(p)
-
-        endpoint.layers.append(endpoint_layer)
 
     def parse_content_schemas(self, endpoint: Endpoint):
         """
@@ -213,7 +179,7 @@ class EndpointsParser:
                         name=NO_RESPONSE_ID,
                         code=resp_code,
                         content_type='',
-                        definition=resp_definition,
+                        schema=resp_definition,
                         is_inline=True,
                     ))
 
@@ -229,8 +195,7 @@ class EndpointsParser:
         if it's missing.
 
         If the given schema is defined inline, the name will be taken from the
-        'title' attribute. Otherwise, the name will be generated based on the
-        'type' attribute.
+        'title' attribute. Otherwise, the name will be generated automatically.
 
         :param endpoint: The Endpoint where the schema is used.
         :param endpoint_method: The EndpointMethod instance of the schema.
@@ -270,14 +235,46 @@ class EndpointsParser:
             i += 1
             schema_name = to_pascal_case(original_schema_name + str(i))
 
-        self._schemas[schema_name] = ContentSchema(
+        self._schemas[schema_name] = schema_def
+        return ContentSchema(
             name=schema_name,
             code=resp_code,
             content_type=content_type,
-            definition=schema_def,
+            schema=schema_def,
             is_inline=is_inline,
         )
-        return self._schemas[schema_name]
+
+
+def split_endpoint_layers(endpoint: Endpoint):
+    """
+    Splits the path of the given Endpoint into all their layers and adds them
+    to the instance.
+    """
+    path_levels = endpoint.path.split("/")
+
+    # TODO: Review special cases (e.g. empty endpoints, trailing slash...)
+    path_levels = path_levels[1:]
+
+    endpoint_layer = EndpointLayer(path='')
+
+    for i, p in enumerate(path_levels):
+        if len(p) == 0:
+            continue
+        elif re.match(r'^{.+}$', p):
+            param_name = p[1:len(p) - 1]
+            endpoint_layer.path += f"/{p}"
+            param, _ = get_first_endpoint_param(endpoint, param_name, 'path')
+            endpoint_layer.parameters.append(param)
+        elif p.startswith("{") or p.endswith("}"):
+            raise Exception("wrong parameter format in path")
+        else:
+            if i > 0:
+                endpoint.layers.append(endpoint_layer)
+            endpoint_layer = EndpointLayer(path='')
+            endpoint_layer.path += f"/{p}"
+            endpoint_layer.api_levels.append(p)
+
+    endpoint.layers.append(endpoint_layer)
 
 
 def get_first_endpoint_param(endpoint: Endpoint, param_name: str,
