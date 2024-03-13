@@ -135,10 +135,12 @@ class HTTPResponseModel(BaseModel):
     """
     _http_response: requests.Response = PrivateAttr(None)
 
+    def _set_http_response(self, response):
+        object.__setattr__(self, '_http_response', response)
+
     def http_response(self):
         """
         Returns the HTTP response of this model instance.
-        :return:
         """
         return self._http_response
 

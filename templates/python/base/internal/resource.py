@@ -138,7 +138,7 @@ class APIResource(ABC):
             if not content_type:
                 ret = resp_class()
 
-                ret._http_response = response
+                ret._set_http_response(response)
                 self._handle_pagination(ret, response, pagination_info,
                                         self._path_values(), param_types,
                                         expected_responses)
@@ -158,7 +158,7 @@ class APIResource(ABC):
 
                 ret = resp_class.parse_obj(resp_payload)
 
-                ret._http_response = response
+                ret._set_http_response(response)
                 self._handle_pagination(ret, response, pagination_info,
                                         self._path_values(), param_types,
                                         expected_responses)
