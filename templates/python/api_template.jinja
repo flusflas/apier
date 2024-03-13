@@ -1,7 +1,12 @@
 import json
+from typing import Union
 
 import requests
 from pydantic import BaseModel
+
+{% if security_scheme_names %}
+from .security import SecurityStrategy, SecurityStrategyWithTokenExchange, {{ security_scheme_names | join(',') }}
+{% endif %}
 
 {% for branch in root_branches -%}
     from .apis.{{ branch | api_name }} import _{{ branch | api_name | pascal_case }}Methods
@@ -17,7 +22,9 @@ class API(
     The top-level class used as an abstraction of the {{ openapi.info.title }}.
     """
 
-    def __init__(self, host: str{% if server_url %} = "{{ server_url }}"{% endif %}):
+    def __init__(self, host: str{% if server_url %} = "{{ server_url }}"{% endif %}
+            {% if security_scheme_names %},
+                 security_strategy: {{ get_type_hint(*security_scheme_names) }} = None{% endif %}):
         """
         Creates a new API instance.
 
@@ -29,6 +36,21 @@ class API(
         self.host = host
         self.headers = {}
         self._raise_errors = {{ raise_errors }}
+
+    {% if security_scheme_names %}
+        self._security_strategy = security_strategy
+        if self._security_strategy:
+            self.with_security(self._security_strategy)
+
+    def with_security(self, security_strategy: {{ get_type_hint(*security_scheme_names) }}):
+        self._security_strategy = security_strategy
+
+        if isinstance(self._security_strategy, SecurityStrategyWithTokenExchange):
+            self._security_strategy.set_token_url_host(self.host)
+            self._security_strategy.setup()
+
+        return self
+    {% endif %}
 
     def make_request(self, method: str, url: str, body=None, params=None,
                      headers: dict = None, timeout: float = 3) -> requests.Response:
@@ -62,5 +84,14 @@ class API(
             headers['Content-Type'] = 'application/json'
             body = body.json()
 
-        return requests.request(method, self.host + url, params=params,
-                                headers=headers, data=body, timeout=timeout)
+        req = requests.Request(method, self.host + url, params=params,
+                               headers=headers, data=body)
+
+        {% if security_scheme_names %}
+        if self._security_strategy:
+            self._security_strategy.apply(req)
+        {% endif %}
+
+        return requests.request(req.method, req.url, params=req.params,
+                                headers=req.headers, data=req.data, timeout=timeout)
+

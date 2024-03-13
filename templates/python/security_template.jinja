@@ -1,0 +1,112 @@
+import time
+from abc import ABC, abstractmethod
+
+import requests
+from requests import Request
+
+
+class SecurityStrategy(ABC):
+    @abstractmethod
+    def apply(self, request: Request):
+        pass
+
+
+class SecurityStrategyWithTokenExchange(SecurityStrategy):
+    def __init__(self, token: str):
+        self.token_url_host = token
+
+    @abstractmethod
+    def set_token_url_host(self, token_url_host: str):
+        pass
+
+    @abstractmethod
+    def setup(self):
+        pass
+
+
+{% for name, security_scheme in security_schemes.items() -%}
+
+{# Basic strategy #}
+{% if security_scheme.type.lower() == 'http' and security_scheme.scheme.lower() == 'basic' %}
+class {{ name | pascal_case }}(SecurityStrategy):
+    def __init__(self, username: str, password: str):
+        import base64
+        credentials = username + ":" + password
+        self._encoded_credentials = base64.b64encode(credentials.encode('utf-8')).decode('utf-8')
+
+    def apply(self, request: Request):
+        request.headers['Authorization'] = f'Basic {self._encoded_credentials}'
+{% endif -%}
+
+
+{# Bearer strategy #}
+{% if security_scheme.type.lower() == 'http' and security_scheme.scheme.lower() == 'bearer' -%}
+class {{ name | pascal_case }}(SecurityStrategy):
+    def __init__(self, token: str):
+        self._token = token
+
+    def apply(self, request: Request):
+        request.headers['Authorization'] = f'Bearer {self._token}'
+{% endif -%}
+
+
+{# OAuth2 strategy #}
+{% if security_scheme.type.lower() == 'oauth2' %}
+{% for flow_name, flow in security_scheme.flows.items() %}
+{% if flow_name == 'clientCredentials' %}
+class {{ name | pascal_case }}(SecurityStrategy):
+    def __init__(self, client_id: str, client_secret: str,
+                 scopes: list[str],
+                 token_url: str = '{{ flow.tokenUrl }}',
+                 refresh_threshold: int = 10,
+                 fetch_token_immediately: bool = True):
+        super().__init__()
+        self.token = ''
+        self.client_id = client_id
+        self._client_secret = client_secret
+        self.token_url_host = ''
+        self.token_url = token_url
+        self.scopes = scopes
+        self.expires_in = 0
+        self.expires_at = 0
+        self.refresh_threshold = refresh_threshold
+        self.fetch_token_immediately = fetch_token_immediately
+
+    def set_token_url_host(self, token_url_host: str):
+        self.token_url_host = token_url_host.rstrip('/')
+
+    def setup(self):
+        if self.fetch_token_immediately:
+            self.refresh_token()
+
+    def refresh_token(self):
+        data = {
+            'grant_type': 'client_credentials',
+            'client_id': self.client_id,
+            'client_secret': self._client_secret
+        }
+        if self.scopes:
+            data['scope'] = ' '.join(self.scopes)
+
+        token_url = self.token_url
+        if token_url.startswith('/'):
+            token_url = self.token_url_host.rstrip('/') + token_url
+
+        response = requests.post(token_url, data=data)
+        response_json = response.json()
+        if 'access_token' in response_json:
+            self.token = response_json['access_token']
+            self.expires_in = response_json.get('expires_in', 3600)
+            self.expires_at = time.time() + self.expires_in
+        else:
+            raise Exception("Failed to refresh token")
+
+    def apply(self, request: Request):
+        if not self.token or time.time() + self.refresh_threshold >= self.expires_at:
+            self.refresh_token()
+        request.headers['Authorization'] = f'Bearer {self.token}'
+{% endif -%}
+{% endfor -%}
+{% endif -%}
+
+{% endfor -%}

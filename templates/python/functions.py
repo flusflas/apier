@@ -1,6 +1,5 @@
+import re
 from typing import Union
-
-from jinja2 import Template
 
 from consts import NO_RESPONSE_ID
 from endpoints import ContentSchema, EndpointMethod
@@ -46,7 +45,10 @@ def get_type_hint(*args: Union[str, ContentSchema],
     types = []
     for i, t in enumerate(args):
         if isinstance(t, str):
-            types.append(types_map.get(t.lower(), t))
+            if t in types_map:
+                types.append(types_map.get(t.lower(), t))
+            else:
+                types.append(t)
         elif isinstance(t, ContentSchema):
             if t.name in [NO_RESPONSE_ID, '']:
                 types.append('primitives.NoResponse')
@@ -82,8 +84,22 @@ def payload_from_input_parameters(endpoint_method: EndpointMethod) -> str:
 
         payload_str = endpoint_method.extensions.input_parameters.payload
 
-        template = Template(payload_str)
-        return template.render(params)
+        escaped_expression = payload_str.replace('"', '\\"')
+
+        # Find and replace the variables in the expression
+        variables = re.findall(r'{{([^{].*?[^}])}}', escaped_expression)
+        for var in variables:
+            param_name = params[var.strip()]
+            escaped_expression = escaped_expression.replace('{{' + var + '}}', '" + str(' + param_name + ') + "')
+
+        escaped_expression = f'"{escaped_expression}"'
+
+        if escaped_expression.startswith('"" +'):
+            escaped_expression = escaped_expression[len('"" +'):]
+        if escaped_expression.endswith('+ ""'):
+            escaped_expression = escaped_expression[:-len('+ ""'):]
+
+        return escaped_expression
 
     except ValueError as e:
         raise ValueError(f"Error building payload from input-parameters extension: {e}")

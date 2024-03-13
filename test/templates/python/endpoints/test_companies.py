@@ -133,7 +133,7 @@ def test_get():
                               "https://test-api.com/companies/shiny_stickers",
                               params={'foo': 'bar'},
                               headers={},
-                              data=None,
+                              data=[],
                               timeout=3)
 
     assert resp.http_response().status_code == 200
@@ -168,7 +168,7 @@ def test_list():
                               "https://test-api.com/companies",
                               params={'foo': 'bar'},
                               headers={},
-                              data=None,
+                              data=[],
                               timeout=3)
 
     assert resp.http_response().status_code == 200
@@ -218,7 +218,7 @@ def test_delete():
                               "https://test-api.com/companies/shiny_stickers",
                               params={'foo': 'bar'},
                               headers={},
-                              data=None,
+                              data=[],
                               timeout=5.5)
 
     assert resp.http_response().status_code == 204
@@ -242,7 +242,7 @@ def test_get_multi_param():
                               "https://test-api.com/companies/shiny_stickers/7",
                               params={'foo': 'bar'},
                               headers={},
-                              data=None,
+                              data=[],
                               timeout=3)
 
     assert resp.http_response().status_code == 200
@@ -262,9 +262,9 @@ def test_get_error():
 
     m.assert_called_once_with("GET",
                               "https://test-api.com/companies/shiny_stickers",
-                              params=None,
+                              params={},
                               headers={},
-                              data=None,
+                              data=[],
                               timeout=3)
 
     exc = e.value

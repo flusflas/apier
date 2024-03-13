@@ -429,7 +429,7 @@ paths:
           - name: employee_name
             schema:
               type: string
-        payload: '{"number": {{employee_id}}, "name": {{employee_name}}, {{employee_name}}: {{ company_id }}}'
+        payload: '{"number": {{employee_id}}, "name": "{{employee_name}}", "{{employee_name}}": "{{ company_id }}"}'
       requestBody:
         required: true
         content:
@@ -570,6 +570,31 @@ paths:
                 type: string
 
 components:
+  securitySchemes:
+    BearerToken:
+      type: http
+      scheme: bearer
+      description: "Use an already exchanged bearer token."
+    OAuth2ClientCredentials:
+      type: oauth2
+      description: "Use OAuth2 Client Credentials flow."
+      flows:
+        clientCredentials:
+          tokenUrl: /token
+          scopes:
+            foo: Foo scope
+            bar: Bar scope
+    OAuth2AuthorizationCode:
+      type: oauth2
+      description: "Use OAuth2 Authorization Code flow."
+      flows:
+        authorizationCode:
+          authorizationUrl: /auth
+          tokenUrl: /token
+          scopes:
+            foo: Foo scope
+            bar: Bar scope
+
   parameters:
     company_id:
       in: path
