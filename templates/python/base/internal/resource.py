@@ -67,7 +67,7 @@ class APIResource(ABC):
         must be `APIResource` instances.
         """
         if len(self._stack) == 0 or not _is_api(self._stack[0]):
-            raise Exception("API instance is missing in the stack")
+            raise RuntimeError("API instance is missing in the stack")
 
         return self._stack[0].host.rstrip("/") + self._build_path()
 
@@ -108,7 +108,7 @@ class APIResource(ABC):
 
     def _make_request(self, method="GET", body=None, req_content_types: list = None, **kwargs) -> Response:
         if len(self._stack) == 0 or not _is_api(self._stack[0]):
-            raise Exception("API instance is missing in the stack")
+            raise RuntimeError("API instance is missing in the stack")
 
         body, headers = _validate_request_payload(body, req_content_types, kwargs.get('headers'))
         kwargs['headers'] = headers
@@ -129,7 +129,7 @@ class APIResource(ABC):
         expected_status_codes = set([r[0] for r in expected_responses])
         if (response.status_code not in expected_status_codes
                 and default_status_code not in expected_status_codes):
-            raise Exception(f"Unexpected response status code ({response.status_code})")
+            raise ResponseError(response, f"Unexpected response status code ({response.status_code})")
 
         resp_content_type = response.headers.get('content-type')
         for r in expected_responses:
@@ -165,7 +165,7 @@ class APIResource(ABC):
 
                 return self._handle_error(ret)
 
-        raise Exception(f"Unexpected response content type ({resp_content_type})")
+        raise ResponseError(response, f"Unexpected response content type ({resp_content_type})")
 
     def _handle_error(self, ret):
         api = self._stack[0]

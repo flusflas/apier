@@ -4,6 +4,8 @@ from abc import ABC, abstractmethod
 import requests
 from requests import Request
 
+from .models.exceptions import ResponseError
+
 
 class SecurityStrategy(ABC):
     @abstractmethod
@@ -99,7 +101,7 @@ class {{ name | pascal_case }}(SecurityStrategy):
             self.expires_in = response_json.get('expires_in', 3600)
             self.expires_at = time.time() + self.expires_in
         else:
-            raise Exception("Failed to refresh token")
+            raise ResponseError(response, "Failed to refresh token")
 
     def apply(self, request: Request):
         if not self.token or time.time() + self.refresh_threshold >= self.expires_at:

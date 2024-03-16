@@ -130,5 +130,5 @@ class _{{ api_node | api_name | pascal_case }}Methods:
         {% endfor  %}
 
         {%- if ns.raise_stmt is not defined %}
-        raise Exception("Invalid parameters")
+        raise ValueError("Invalid parameters")
         {% endif %}
