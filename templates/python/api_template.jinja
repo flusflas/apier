@@ -47,7 +47,7 @@ class API(
 
         if isinstance(self._security_strategy, SecurityStrategyWithTokenExchange):
             self._security_strategy.set_token_url_host(self.host)
-            self._security_strategy.setup()
+            self._security_strategy.get_token()
 
         return self
     {% endif %}
