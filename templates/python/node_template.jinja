@@ -41,16 +41,7 @@ class {{ api_node.api | pascal_case }}{{ loop.index }}(APIResource{% for next_no
         {% endif %}
         """
         {% if method.extensions.input_parameters %}
-{#        input_params = {#}
-{#            {% for input_param in method.extensions.input_parameters.parameters %}"{{ input_param.name }}": {{ input_param.name | snake_case }},{% endfor %}#}
-{#        }#}
         req = {{ payload_from_input_parameters(method) }}
-{#        import json#}
-{#        payload = '{{ method.extensions.input_parameters.payload }}'#}
-{#        {% for param in method.extensions.input_parameters.parameters %}#}
-{#        payload = payload.replace('{{ '{{' }}{{ param.name }}{{ '}}' }}', json.dumps({{ param.name }}))#}
-{#        {% endfor %}#}
-{#        req = json.loads(payload)#}
 
         {% endif %}
         {# Add request schemas info #}

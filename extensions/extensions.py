@@ -34,4 +34,9 @@ def parse_extensions(endpoint: Endpoint):
         extensions_def = {k: v for k, v in endpoint_def.items() if k.lower().startswith('x-')}
         if not extensions_def:
             continue
+
+        for extension_name, extension_def in extensions_def.items():
+            if '$ref' in extension_def:
+                extensions_def[extension_name] = endpoint.definition.solve_ref(extension_def['$ref'])
+
         method.extensions = Extensions.parse_obj(extensions_def)

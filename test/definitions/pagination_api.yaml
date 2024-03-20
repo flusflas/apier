@@ -83,13 +83,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
       x-pagination:
-        next:
-          reuse-previous-request: true
-          url: "$response.body#/next_page_url"
-          result: "results"
-          has_more: "$response.body#/next_page_url"
+        $ref: '#/components/x-pagination/PagePagination'
 
 components:
+  x-pagination:
+    PagePagination:
+      next:
+        reuse-previous-request: true
+        url: "$response.body#/next_page_url"
+        result: "results"
+        has_more: "$response.body#/next_page_url"
+
   schemas:
     ErrorResponse:
       title: Error Response
