@@ -95,3 +95,10 @@ class API(
         return requests.request(req.method, req.url, params=req.params,
                                 headers=req.headers, data=req.data, timeout=timeout)
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        if self._security_strategy:
+            self._security_strategy.clean()
+
