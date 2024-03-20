@@ -4,8 +4,9 @@ from typing import Union
 import requests
 from pydantic import BaseModel
 
+from .models.exceptions import APIException
 {% if security_scheme_names %}
-from .security import SecurityStrategy, SecurityStrategyWithTokenExchange, {{ security_scheme_names | join(',') }}
+from .security import SecurityStrategy, SecurityStrategyWithTokenExchange, {{ security_scheme_names | join(',') }}, SecurityStrategyNotSetError
 {% endif %}
 
 {% for branch in root_branches -%}
@@ -53,7 +54,7 @@ class API(
     {% endif %}
 
     def make_request(self, method: str, url: str, body=None, params=None,
-                     headers: dict = None, timeout: float = 3) -> requests.Response:
+                     headers: dict = None, timeout: float = 3{% if security_scheme_names %}, auth: bool = True{% endif %}) -> requests.Response:
         """
         Makes a request to the API server.
 
@@ -69,6 +70,10 @@ class API(
         :param timeout: (optional) How many seconds to wait for the server to
             send data before giving up, as a float, or a :ref:`(connect timeout,
             read timeout) <timeouts>` tuple.
+        {% if security_scheme_names %}
+        :param auth: (optional) If True (default), the authentication token will
+            be sent in the request. An exception will be raised if no token is set.
+        {% endif %}
         :return: An instance of :class:`request.Response`.
         """
         if headers is None:
@@ -88,7 +93,9 @@ class API(
                                headers=headers, data=body)
 
         {% if security_scheme_names %}
-        if self._security_strategy:
+        if auth:
+            if not self._security_strategy:
+                raise APIException("No security strategy has been set")
             self._security_strategy.apply(req)
         {% endif %}
 

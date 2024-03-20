@@ -29,7 +29,7 @@ def test_make_request():
 
     with mock.patch("requests.request", return_value=expected_resp) as m:
         resp = (API(host="test-api.com").
-                make_request("POST", "/info", body=req_payload))
+                make_request("POST", "/info", body=req_payload, auth=False))
 
     m.assert_called_once_with("POST",
                               "https://test-api.com/info",
