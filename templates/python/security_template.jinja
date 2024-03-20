@@ -12,6 +12,10 @@ class SecurityStrategy(ABC):
     def apply(self, request: Request):
         pass
 
+    @abstractmethod
+    def clean(self):
+        pass
+
 
 class SecurityStrategyWithTokenExchange(SecurityStrategy):
     @abstractmethod
@@ -37,7 +41,11 @@ class {{ name | pascal_case }}(SecurityStrategy):
         self._encoded_credentials = base64.b64encode(credentials.encode('utf-8')).decode('utf-8')
 
     def apply(self, request: Request):
-        request.headers['Authorization'] = f'Basic {self._encoded_credentials}'
+        if self._encoded_credentials:
+            request.headers['Authorization'] = f'Basic {self._encoded_credentials}'
+
+    def clean(self):
+        self._encoded_credentials = ''
 {% endif -%}
 
 
@@ -48,7 +56,11 @@ class {{ name | pascal_case }}(SecurityStrategy):
         self._token = token
 
     def apply(self, request: Request):
-        request.headers['Authorization'] = f'Bearer {self._token}'
+        if self._token:
+            request.headers['Authorization'] = f'Bearer {self._token}'
+
+    def clean(self):
+        self._token = ''
 {% endif -%}
 
 
@@ -60,26 +72,25 @@ class {{ name | pascal_case }}(SecurityStrategyWithTokenExchange):
     def __init__(self, client_id: str, client_secret: str,
                  scopes: list[str],
                  token_url: str = '{{ flow.tokenUrl }}',
-                 refresh_threshold: int = 10,
-                 fetch_token_immediately: bool = True):
+                 revoke_token_url: str = '',
+                 refresh_threshold: int = 10):
         super().__init__()
-        self.token = ''
+        self._token = ''
         self.client_id = client_id
         self._client_secret = client_secret
         self.token_url_host = ''
         self.token_url = token_url
+        self.revoke_token_url = revoke_token_url
         self.scopes = scopes
         self.expires_in = 0
         self.expires_at = 0
         self.refresh_threshold = refresh_threshold
-        self.fetch_token_immediately = fetch_token_immediately
 
     def set_token_url_host(self, token_url_host: str):
         self.token_url_host = token_url_host.rstrip('/')
 
     def get_token(self):
-        if self.fetch_token_immediately:
-            self.refresh_token()
+        self.refresh_token()
 
     def refresh_token(self):
         data = {
@@ -94,19 +105,42 @@ class {{ name | pascal_case }}(SecurityStrategyWithTokenExchange):
         if token_url.startswith('/'):
             token_url = self.token_url_host.rstrip('/') + token_url
 
-        response = requests.post(token_url, data=data)
+        response = requests.request('POST', token_url, data=data)
         response_json = response.json()
         if 'access_token' in response_json:
-            self.token = response_json['access_token']
+            self._token = response_json['access_token']
             self.expires_in = response_json.get('expires_in', 3600)
             self.expires_at = time.time() + self.expires_in
         else:
             raise ResponseError(response, "Failed to refresh token")
 
+    def revoke_token(self):
+        if self._token and self.revoke_token_url:
+            data = {
+                'token': self._token,
+                'client_id': self.client_id,
+                'client_secret': self._client_secret
+            }
+
+            revoke_token_url = self.revoke_token_url
+            if revoke_token_url.startswith('/'):
+                revoke_token_url = self.token_url_host.rstrip('/') + revoke_token_url
+
+            response = requests.request('POST', revoke_token_url, data=data)
+            if response.status_code == 200:
+                self._token = ''
+                self.expires_in = 0
+                self.expires_at = 0
+            else:
+                raise ResponseError(response, "Failed to revoke token")
+
     def apply(self, request: Request):
-        if not self.token or time.time() + self.refresh_threshold >= self.expires_at:
+        if not self._token or time.time() + self.refresh_threshold >= self.expires_at:
             self.refresh_token()
-        request.headers['Authorization'] = f'Bearer {self.token}'
+        request.headers['Authorization'] = f'Bearer {self._token}'
+
+    def clean(self):
+        self.revoke_token()
 {% endif -%}
 {% endfor -%}
 {% endif -%}
