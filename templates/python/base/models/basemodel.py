@@ -35,7 +35,7 @@ class IterBaseModel(BaseModel):
             return super().__repr__()
 
     def __getattr__(self, attribute):
-        if self._has_root(dict):
+        if self._has_root(dict) and not (attribute.startswith('__') and attribute.endswith('__')):
             return self.__root__[attribute]
         else:
             return super().__getattribute__(attribute)
