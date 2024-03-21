@@ -133,6 +133,8 @@ class {{ name | pascal_case }}(SecurityStrategyWithTokenExchange):
                 self.expires_at = 0
             else:
                 raise ResponseError(response, "Failed to revoke token")
+        else:
+            self._token = ''
 
     def apply(self, request: Request):
         if not self._token or time.time() + self.refresh_threshold >= self.expires_at:

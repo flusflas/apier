@@ -571,6 +571,10 @@ paths:
 
 components:
   securitySchemes:
+    BasicToken:
+      type: http
+      scheme: basic
+      description: "Use basic authentication."
     BearerToken:
       type: http
       scheme: bearer
