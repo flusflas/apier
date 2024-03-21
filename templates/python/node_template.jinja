@@ -30,13 +30,13 @@ class {{ api_node.api | pascal_case }}{{ loop.index }}(APIResource{% for next_no
             {%- elif method.request_schemas -%}, req: {{ get_type_hint(*method.request_schemas, include_primitive_type=True) }}{% endif %}, **kwargs)
             {%- if method.response_schemas | length > 0 %} -> {{ get_type_hint(*method.response_schemas) }}{% endif %}:
         """
-        {{ method.description | trim }}
+        {{ method.description | trim | indent(8) }}
         {% set query_params = method.params_in('query') %}
         {% if query_params | length > 0 %}
 
         Query parameters:
         {% for param in query_params %}
-         - {{ param.name }}: {{ param.description }}
+         - `{{ param.name }}`: {{ param.description | indent(11) }}
         {% endfor %}
         {% endif %}
         """

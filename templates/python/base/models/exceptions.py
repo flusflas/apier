@@ -1,3 +1,5 @@
+from typing import List
+
 from requests import Response
 
 
@@ -21,6 +23,6 @@ class ResponseError(APIException):
 
 
 class ExceptionList(APIException):
-    def __init__(self, msg: str, exceptions: list[Exception], *attr):
+    def __init__(self, msg: str, exceptions: List[Exception], *attr):
         super().__init__(msg, *attr)
         self.exceptions = exceptions
