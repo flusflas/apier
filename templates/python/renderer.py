@@ -39,6 +39,7 @@ class Renderer:
             shutil.rmtree(self.output_path)
         shutil.copytree(abs_path('./base'), self.output_path)
         os.makedirs(self.output_path + '/apis')
+        open(self.output_path + '/apis/__init__.py', 'w').close()
 
         generate_models(self.definition, self.schemas, self.output_path)
 
