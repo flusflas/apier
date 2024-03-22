@@ -9,6 +9,7 @@ build_client()
 request_mock_pkg = 'test.templates.python.endpoints._build.api.requests.request'
 if True:
     from ._build.api import API
+    from ._build.security import BearerToken
     from ._build.models.exceptions import ResponseError
     from ._build.models.models import (EmployeeCreate, Employee, EmployeeList,
                                        ErrorResponse)
@@ -58,6 +59,7 @@ def test_create(req, expected_resp):
 
     with mock.patch(request_mock_pkg, return_value=expected_raw_resp) as m:
         resp = (API(host="test-api.com").
+                with_security(BearerToken("token")).
                 companies("shiny_stickers").
                 employees().
                 post(req, params={'foo': 'bar'}))
@@ -65,7 +67,10 @@ def test_create(req, expected_resp):
     m.assert_called_once_with("POST",
                               "https://test-api.com/companies/shiny_stickers/employees",
                               params={'foo': 'bar'},
-                              headers={'Content-Type': 'application/json'},
+                              headers={
+                                  'Authorization': 'Bearer token',
+                                  'Content-Type': 'application/json'
+                              },
                               data=to_json(req),
                               timeout=3)
 
@@ -82,6 +87,7 @@ def test_get():
 
     with mock.patch(request_mock_pkg, return_value=expected_resp) as m:
         resp = (API(host="test-api.com").
+                with_security(BearerToken("token")).
                 companies("shiny_stickers").
                 employees(1000).
                 get(params={'foo': 'bar'}))
@@ -89,7 +95,7 @@ def test_get():
     m.assert_called_once_with("GET",
                               "https://test-api.com/companies/shiny_stickers/employees/1000",
                               params={'foo': 'bar'},
-                              headers={},
+                              headers={'Authorization': 'Bearer token'},
                               data=[],
                               timeout=3)
 
@@ -118,6 +124,7 @@ def test_list():
 
     with mock.patch(request_mock_pkg, return_value=expected_resp) as m:
         resp = (API(host="test-api.com").
+                with_security(BearerToken("token")).
                 companies("shiny_stickers").
                 employees().
                 get(params={'foo': 'bar'}))
@@ -125,7 +132,7 @@ def test_list():
     m.assert_called_once_with("GET",
                               "https://test-api.com/companies/shiny_stickers/employees",
                               params={'foo': 'bar'},
-                              headers={},
+                              headers={'Authorization': 'Bearer token'},
                               data=[],
                               timeout=3)
 
@@ -142,6 +149,7 @@ def test_get_from_department():
 
     with mock.patch(request_mock_pkg, return_value=expected_resp) as m:
         resp = (API(host="test-api.com").
+                with_security(BearerToken("token")).
                 companies("shiny_stickers").
                 departments("marketing").
                 employees(1001).
@@ -150,7 +158,7 @@ def test_get_from_department():
     m.assert_called_once_with("GET",
                               "https://test-api.com/companies/shiny_stickers/departments/marketing/employees/1001",
                               params={'foo': 'bar'},
-                              headers={},
+                              headers={'Authorization': 'Bearer token'},
                               data=[],
                               timeout=3)
 
@@ -167,12 +175,14 @@ def test_get_error():
 
     with mock.patch(request_mock_pkg, return_value=expected_resp) as m:
         with pytest.raises(ResponseError) as e:
-            API(host="test-api.com").companies("shiny_stickers").get()
+            (API(host="test-api.com").
+             with_security(BearerToken("token")).
+             companies("shiny_stickers").get())
 
     m.assert_called_once_with("GET",
                               "https://test-api.com/companies/shiny_stickers",
                               params={},
-                              headers={},
+                              headers={'Authorization': 'Bearer token'},
                               data=[],
                               timeout=3)
 

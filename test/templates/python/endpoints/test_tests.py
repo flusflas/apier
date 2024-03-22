@@ -9,6 +9,7 @@ build_client()
 request_mock_pkg = 'test.templates.python.endpoints._build.api.requests.request'
 if True:
     from ._build.api import API
+    from ._build.security import BearerToken
     from ._build.models.models import (Employee, Company, PostTestsOneOfRequest,
                                        PostTestsOneOfResponse200)
 
@@ -43,6 +44,7 @@ def test_post_employee_input_parameters():
 
     with mock.patch(request_mock_pkg, return_value=expected_raw_resp) as m:
         resp = (API(host="test-api.com").
+                with_security(BearerToken("token")).
                 tests("shiny_stickers").
                 employees().
                 post(123, "Johny", params={'foo': 'bar'}))
@@ -50,7 +52,10 @@ def test_post_employee_input_parameters():
     m.assert_called_once_with("POST",
                               "https://test-api.com/tests/shiny_stickers/employees",
                               params={'foo': 'bar'},
-                              headers={'Content-Type': 'application/json'},
+                              headers={
+                                  'Authorization': 'Bearer token',
+                                  'Content-Type': 'application/json'
+                              },
                               data=to_json(expected_req),
                               timeout=3)
 
@@ -75,13 +80,17 @@ def test_one_of(req, expected_resp):
 
     with mock.patch(request_mock_pkg, return_value=expected_raw_resp) as m:
         resp = (API(host="test-api.com").
+                with_security(BearerToken("token")).
                 tests().one_of().
                 post(PostTestsOneOfRequest.parse_obj(req), params={'foo': 'bar'}))
 
     m.assert_called_once_with("POST",
                               "https://test-api.com/tests/oneOf",
                               params={'foo': 'bar'},
-                              headers={'Content-Type': 'application/json'},
+                              headers={
+                                  'Authorization': 'Bearer token',
+                                  'Content-Type': 'application/json'
+                              },
                               data=to_json(expected_req),
                               timeout=3)
 
