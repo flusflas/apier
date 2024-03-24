@@ -81,6 +81,9 @@ class EndpointLayer:
     methods: List[EndpointMethod] = field(default_factory=list)
     _id: uuid.UUID = field(default_factory=uuid.uuid4, compare=False)
 
+    def params_in(self, in_location: str):
+        return [p for p in self.parameters if p.in_location == in_location]
+
     def param_names(self):
         return [p.name for p in self.parameters]
 

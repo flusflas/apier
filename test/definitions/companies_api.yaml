@@ -424,6 +424,7 @@ paths:
       x-input-parameters:
         parameters:
           - name: employee_id
+            description: ID of the employee.
             schema:
               type: integer
           - name: employee_name
@@ -603,6 +604,7 @@ components:
     company_id:
       in: path
       name: company_id
+      description: Company!!!
       required: true
       schema:
         type: string

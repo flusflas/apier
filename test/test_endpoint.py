@@ -38,6 +38,7 @@ expected_endpoints = {
                 api_levels=["companies"],
                 parameters=[
                     EndpointParameter(name="company_id",
+                                      description='Company!!!',
                                       in_location="path",
                                       type="string",
                                       required=True),
@@ -50,6 +51,7 @@ expected_endpoints = {
                         description='Returns a company by its ID.',
                         parameters=[
                             EndpointParameter(name='company_id',
+                                              description='Company!!!',
                                               in_location='path',
                                               type='string',
                                               required=True,
@@ -93,6 +95,7 @@ expected_endpoints = {
                         description='Updates an exising company.',
                         parameters=[
                             EndpointParameter(name='company_id',
+                                              description='Company!!!',
                                               in_location='path',
                                               type='string',
                                               required=True,
@@ -150,6 +153,7 @@ expected_endpoints = {
                                    description='Deletes a company :(',
                                    parameters=[
                                        EndpointParameter(name='company_id',
+                                                         description='Company!!!',
                                                          in_location='path',
                                                          type='string',
                                                          required=True,
@@ -185,6 +189,7 @@ expected_endpoints = {
                 parameters=[
                     EndpointParameter(
                         name='company_id',
+                        description='Company!!!',
                         in_location='path',
                         type='string',
                         required=True,
@@ -205,6 +210,7 @@ expected_endpoints = {
                         description='Hires a new employee!',
                         parameters=[
                             EndpointParameter(name="company_id",
+                                              description='Company!!!',
                                               in_location="path",
                                               type="string",
                                               required=True),
@@ -243,6 +249,7 @@ expected_endpoints = {
                         description='Returns all your employees.',
                         parameters=[
                             EndpointParameter(name="company_id",
+                                              description='Company!!!',
                                               in_location="path",
                                               type="string",
                                               required=True),
@@ -296,7 +303,8 @@ expected_endpoints = {
                 path="/companies/{company_id}",
                 api_levels=["companies"],
                 parameters=[
-                    EndpointParameter(name="company_id", in_location="path", type="string", required=True),
+                    EndpointParameter(name="company_id", description='Company!!!', in_location="path", type="string",
+                                      required=True),
                 ],
                 next=[],
                 methods=[],
@@ -316,6 +324,7 @@ expected_endpoints = {
                         description='Returns one of your company employees',
                         parameters=[
                             EndpointParameter(name='company_id',
+                                              description='Company!!!',
                                               in_location='path',
                                               type='string',
                                               required=True,
@@ -362,6 +371,7 @@ expected_endpoints = {
                 parameters=[
                     EndpointParameter(
                         name='company_id',
+                        description='Company!!!',
                         in_location='path',
                         type='string',
                         required=True,
@@ -382,8 +392,8 @@ expected_endpoints = {
                         method_definition=openapi_definition.paths['/companies/{company_id}/{number}']['get'],
                         description='An endpoint used to test multiple path parameters in the same layer.',
                         parameters=[
-                            EndpointParameter(name="company_id", in_location="path",
-                                              type="string", required=True),
+                            EndpointParameter(name="company_id", description='Company!!!',
+                                              in_location="path", type="string", required=True),
                             EndpointParameter(name="number", in_location="path",
                                               type="integer", required=True),
                         ],
@@ -425,7 +435,8 @@ expected_endpoints = {
             EndpointLayer(
                 path="/companies/{company_id}",
                 parameters=[
-                    EndpointParameter(name="company_id", in_location="path", type="string", required=True),
+                    EndpointParameter(name="company_id", description='Company!!!',
+                                      in_location="path", type="string", required=True),
                 ]),
             ["company_id"],
             ["string"]
@@ -558,7 +569,8 @@ def test_split_endpoint_layers(endpoint, expected):
                              path="/companies/{company_id}/{number}",
                              api_levels=["companies"],
                              parameters=[
-                                 EndpointParameter(name="company_id", in_location="path", type="string", required=True),
+                                 EndpointParameter(name="company_id", description='Company!!!',
+                                                   in_location="path", type="string", required=True),
                                  EndpointParameter(name="number", in_location="path", type="integer", required=True),
                              ],
                              methods=[
@@ -570,6 +582,7 @@ def test_split_endpoint_layers(endpoint, expected):
                                      parameters=[
                                          EndpointParameter(
                                              name="company_id",
+                                             description='Company!!!',
                                              in_location="path",
                                              type="string",
                                              required=True),
@@ -593,7 +606,8 @@ def test_split_endpoint_layers(endpoint, expected):
                              path="/companies/{company_id}",
                              api_levels=["companies"],
                              parameters=[
-                                 EndpointParameter(name="company_id", in_location="path", type="string", required=True),
+                                 EndpointParameter(name="company_id", description='Company!!!', in_location="path",
+                                                   type="string", required=True),
                              ],
                              methods=[
                                  EndpointMethod(
@@ -601,8 +615,8 @@ def test_split_endpoint_layers(endpoint, expected):
                                      method_definition=openapi_definition.paths['/companies/{company_id}']['get'],
                                      description='Returns a company by its ID.',
                                      parameters=[
-                                         EndpointParameter(name="company_id", in_location="path",
-                                                           type="string", required=True),
+                                         EndpointParameter(name="company_id", description='Company!!!',
+                                                           in_location="path", type="string", required=True),
                                      ]
                                  ),
                                  EndpointMethod(
@@ -610,8 +624,8 @@ def test_split_endpoint_layers(endpoint, expected):
                                      method_definition=openapi_definition.paths['/companies/{company_id}']['put'],
                                      description='Updates an exising company.',
                                      parameters=[
-                                         EndpointParameter(name="company_id", in_location="path",
-                                                           type="string", required=True),
+                                         EndpointParameter(name="company_id", description='Company!!!',
+                                                           in_location="path", type="string", required=True),
                                      ]
                                  ),
                                  EndpointMethod(
@@ -619,8 +633,8 @@ def test_split_endpoint_layers(endpoint, expected):
                                      method_definition=openapi_definition.paths['/companies/{company_id}']['delete'],
                                      description='Deletes a company :(',
                                      parameters=[
-                                         EndpointParameter(name="company_id", in_location="path",
-                                                           type="string", required=True),
+                                         EndpointParameter(name="company_id", description='Company!!!',
+                                                           in_location="path", type="string", required=True),
                                      ]
                                  )
                              ]
@@ -637,6 +651,7 @@ def test_split_endpoint_layers(endpoint, expected):
                              api_levels=["companies"],
                              parameters=[
                                  EndpointParameter(name="company_id",
+                                                   description='Company!!!',
                                                    in_location="path",
                                                    type="string",
                                                    required=True),
@@ -659,6 +674,7 @@ def test_split_endpoint_layers(endpoint, expected):
                                      description='Returns one of your company employees',
                                      parameters=[
                                          EndpointParameter(name="company_id",
+                                                           description='Company!!!',
                                                            in_location="path",
                                                            type="string",
                                                            required=True),
