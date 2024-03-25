@@ -3,10 +3,11 @@ import shutil
 
 from jinja2 import Environment, FileSystemLoader
 
+from endpoints import Endpoint
 from openapi import Definition
 from templates.python.functions import get_type_hint, payload_from_input_parameters, get_method_name
 from templates.python.gen_models import generate_models
-from tree import APINode, APITree
+from tree import APINode, build_endpoints_tree
 from utils.path import abs_path_from_current_script as abs_path
 from utils.strings import to_pascal_case, to_snake_case
 from .security import parse_security_schemes
@@ -22,11 +23,12 @@ class Renderer:
     could be called using `api.companies(company_id).employees(employee_id)`.
     """
 
-    def __init__(self, definition: Definition, schemas: dict, api_tree: APITree,
-                 output_path: str):
+    def __init__(self, definition: Definition, schemas: dict,
+                 endpoints: list[Endpoint], output_path: str):
         self.definition = definition
         self.schemas = schemas
-        self.api_tree = api_tree
+        self.endpoints = endpoints
+        self.api_tree = build_endpoints_tree(endpoints)
         self.output_path = output_path.rstrip('/')
         self.api_names = {}
         self.security_scheme_names = parse_security_schemes(self.definition)

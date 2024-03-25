@@ -15,8 +15,7 @@ def build(filename, output_path='_build/'):
     for path in definition.paths:
         endpoints.append(parser.parse_endpoint(path))
 
-    api_tree = build_endpoints_tree(endpoints)
-    render_api('python', definition, parser.schemas, api_tree, output_path)
+    render_api('python', definition, parser.schemas, endpoints, output_path)
 
 
 if __name__ == '__main__':
