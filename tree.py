@@ -35,7 +35,7 @@ class APITree:
                 return node
         return None
 
-    def search_path(self, search_path: str) -> (APITree, APINode, EndpointLayer):
+    def search_path(self, search_path: str) -> (APITree, APINode, list[EndpointLayer]):
         """
         Searches in the tree for the branch that matches the given path, and
         returns the tree, node and endpoint layer of the match.
@@ -45,6 +45,7 @@ class APITree:
         :return: The tree, node and endpoint layer found in the tree.
         """
         search_endpoint = EndpointsParser().parse_endpoint(search_path)
+        layers = []
 
         accumulated_path = ""
         tree = self
@@ -56,8 +57,10 @@ class APITree:
                     break
                 for layer in node.layers:
                     if layer.path == search_layer.path:
+                        if layer not in layers:
+                            layers.append(layer)
                         if accumulated_path.startswith(search_path):
-                            return tree, node, layer
+                            return tree, node, layers
                         tree = node.next
                         node_matched = True
                         break
