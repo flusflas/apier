@@ -50,6 +50,14 @@ class Renderer:
         self.render_api_components()
 
         format_file(self.output_path)
+        self.create_init_files()
+
+    def create_init_files(self):
+        with open(self.output_path + '/__init__.py', 'w') as f:
+            f.write('from .api import API\n')
+
+        with open(self.output_path + '/models/__init__.py', 'w') as f:
+            f.write('from .models import *\n')
 
     def render_api_file(self):
         filename = f"{self.output_path}/api.py"
