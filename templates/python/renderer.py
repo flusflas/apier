@@ -68,7 +68,7 @@ class Renderer:
         environment.filters['pascal_case'] = to_pascal_case
         environment.filters['api_name'] = self.get_api_name
 
-        template = environment.get_template('api_template.jinja')
+        template = environment.get_template('templates/api.jinja')
         content = template.render(
             openapi=self.definition.definition,
             get_type_hint=get_type_hint,
@@ -92,7 +92,7 @@ class Renderer:
         # environment.filters['snake_case'] = to_snake_case
         environment.filters['pascal_case'] = to_pascal_case
 
-        template = environment.get_template('security_template.jinja')
+        template = environment.get_template('templates/security.jinja')
         content = template.render(
             openapi=self.definition.definition,
             security_schemes=self.definition.get_value('components.securitySchemes', default=None),
@@ -145,7 +145,7 @@ class Renderer:
         environment.filters['api_name'] = self.get_api_name
         environment.filters['method_name'] = get_method_name
 
-        template = environment.get_template('node_template.jinja')
+        template = environment.get_template('templates/node.jinja')
 
         # Sort layers by number of parameters
         api_node.layers.sort(key=lambda p: len(p.parameters), reverse=True)

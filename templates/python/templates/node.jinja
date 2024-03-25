@@ -30,7 +30,7 @@ class {{ api_node.api | pascal_case }}{{ loop.index }}(APIResource{% for next_no
             {%- elif method.request_schemas -%}, req: {{ get_type_hint(*method.request_schemas, include_primitive_type=True) }}{% endif %}, **kwargs)
             {%- if method.response_schemas | length > 0 %} -> {{ get_type_hint(*method.response_schemas) }}{% endif %}:
         """
-        {% with ignore_path_params = True %}{% include 'method_docstring_template.jinja' %}{% endwith %}
+        {% with ignore_path_params = True %}{% include 'templates/method_docstring.jinja' %}{% endwith %}
         """
         {% if method.extensions.input_parameters %}
         req = {{ payload_from_input_parameters(method) }}
