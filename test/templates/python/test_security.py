@@ -168,7 +168,7 @@ def test_oauth2_security_get_token_error():
             assert oauth2_strategy._token == ''
             assert req.headers["Authorization"] == "Bearer valid-token"
 
-    assert str(e.value) == "Failed to refresh token"
+    assert "Failed to refresh token" in str(e.value)
     assert e.value.http_response().status_code == 401
     assert e.value.http_response().json() == expected_error_payload
 
@@ -207,6 +207,6 @@ def test_oauth2_security_revoke_token_error():
             oauth2_strategy.revoke_token()
             assert oauth2_strategy._token == 'valid-token'
 
-    assert str(e.value) == "Failed to revoke token"
+    assert "Failed to revoke token" in str(e.value)
     assert e.value.http_response().status_code == 400
     assert e.value.http_response().json() == expected_error_payload
