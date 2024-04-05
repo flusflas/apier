@@ -44,6 +44,15 @@ class API(
             self.with_security(self._security_strategy)
 
     def with_security(self, security_strategy: {{ get_type_hint(*security_scheme_names) }}):
+        """
+        Sets the security strategy for the API client. If the provided security
+        strategy requires token exchange and retrieval, the method will retrieve
+        the access token automatically.
+
+        :param security_strategy: The security strategy to be set for the API client.
+        :type security_strategy: {{ get_type_hint(*security_scheme_names) }}
+        :return: The modified API client with the specified security strategy.
+        """
         self._security_strategy = security_strategy
 
         if isinstance(self._security_strategy, SecurityStrategyWithTokenExchange):
