@@ -82,6 +82,11 @@ def payload_from_input_parameters(endpoint_method: EndpointMethod) -> str:
         for input_param in endpoint_method.extensions.input_parameters.parameters:
             params[input_param.name] = to_snake_case(input_param.name)
 
+        supported_filters = {
+            'str': lambda x: f"str({x})",
+            'json': lambda x: f"json.dumps({x})",
+        }
+
         payload_str = endpoint_method.extensions.input_parameters.payload
 
         escaped_expression = payload_str.replace('"', '\\"')
@@ -89,8 +94,24 @@ def payload_from_input_parameters(endpoint_method: EndpointMethod) -> str:
         # Find and replace the variables in the expression
         variables = re.findall(r'{{([^{].*?[^}])}}', escaped_expression)
         for var in variables:
-            param_name = params[var.strip()]
-            escaped_expression = escaped_expression.replace('{{' + var + '}}', '" + str(' + param_name + ') + "')
+            var_name, *filters = var.split('|')
+            param_name = params[var_name.strip()]
+
+            partial_escaped_expression = param_name
+
+            # Apply filters
+            if not filters:
+                filters.append('str')
+
+            for f in filters:
+                f = f.strip()
+                if f not in supported_filters:
+                    raise ValueError(f"Unknown function {filters}")
+
+                partial_escaped_expression = supported_filters[f](partial_escaped_expression)
+
+            escaped_expression = escaped_expression.replace('{{' + var + '}}',
+                                                            '" + ' + partial_escaped_expression + ' + "')
 
         escaped_expression = f'"{escaped_expression}"'
 

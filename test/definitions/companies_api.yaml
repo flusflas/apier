@@ -430,7 +430,8 @@ paths:
           - name: employee_name
             schema:
               type: string
-        payload: '{"number": {{employee_id}}, "name": "{{employee_name}}", "{{employee_name}}": "{{ company_id }}"}'
+          - name: extra_info
+        payload: '{"number": {{employee_id}}, "name": "{{employee_name}}", "{{employee_name}}": "{{ company_id }}", "extra": {{extra_info | json}}}'
       requestBody:
         required: true
         content:

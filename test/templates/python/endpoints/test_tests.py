@@ -1,3 +1,4 @@
+import json
 from unittest import mock
 
 import pytest
@@ -27,7 +28,11 @@ test_resp_employee01 = Employee(
 )
 
 
-def test_post_employee_input_parameters():
+@pytest.mark.parametrize("employee_id, name, extra_info", [
+    (123, 'Johny', 1000),
+    (17, 'Alice', 'Lorem ipsum dolor'),
+])
+def test_post_employee_input_parameters(employee_id, name, extra_info):
     """
     Tests a successful request to create a new employee using a test endpoint
     that uses the input-parameters extension.
@@ -35,9 +40,10 @@ def test_post_employee_input_parameters():
     from ._build.api import API
 
     expected_req = {
-        "number": 123,
-        "name": "Johny",
-        "Johny": "shiny_stickers"
+        "number": employee_id,
+        "name": name,
+        name: "shiny_stickers",
+        "extra": extra_info,
     }
 
     expected_raw_resp = make_response(201, test_resp_employee01)
@@ -47,7 +53,7 @@ def test_post_employee_input_parameters():
                 with_security(BearerToken("token")).
                 tests("shiny_stickers").
                 employees().
-                post(123, "Johny", params={'foo': 'bar'}))
+                post(employee_id, name, extra_info, params={'foo': 'bar'}))
 
     m.assert_called_once_with("POST",
                               "https://test-api.com/tests/shiny_stickers/employees",
