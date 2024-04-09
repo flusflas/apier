@@ -16,9 +16,9 @@ class Extensions(BaseModel):
     class Config:
         allow_population_by_field_name = True
 
-    pagination: Pagination = Field(default=None, alias='x-pagination')
-    input_parameters: InputParametersDescription = Field(default=None, alias='x-input-parameters')
-    method_name: MethodNameDescription = Field(default=None, alias='x-method-name')
+    pagination: Pagination = Field(default=None, alias='pagination')
+    input_parameters: InputParametersDescription = Field(default=None, alias='input-parameters')
+    method_name: MethodNameDescription = Field(default=None, alias='method-name')
 
 
 class Pagination(BaseModel):
@@ -31,7 +31,7 @@ Extensions.update_forward_refs()
 def parse_extensions(endpoint: Endpoint):
     for method in endpoint.methods:
         endpoint_def = endpoint.definition.paths[endpoint.path][method.name]
-        extensions_def = {k: v for k, v in endpoint_def.items() if k.lower().startswith('x-')}
+        extensions_def = endpoint_def.get('x-api-gen')
         if not extensions_def:
             continue
 

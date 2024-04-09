@@ -276,7 +276,7 @@ expected_endpoints = {
                                           code=500)
                         ],
                         extensions=Extensions.parse_obj({
-                            "x-pagination": {
+                            "pagination": {
                                 "next": {
                                     "reuse-previous-request": True,
                                     "modifiers": [

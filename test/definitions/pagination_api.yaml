@@ -41,14 +41,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-      x-pagination:
-        next:
-          reuse-previous-request: true
-          modifiers:
-            - param: "$request.query.next"
-              value: "$response.body#/cursors/next"
-          result: "results"
-          has_more: "$response.body#/cursors/next"
+      x-api-gen:
+        pagination:
+          next:
+            reuse-previous-request: true
+            modifiers:
+              - param: "$request.query.next"
+                value: "$response.body#/cursors/next"
+            result: "results"
+            has_more: "$response.body#/cursors/next"
 
   /pagination/next_page_url:
     get:
@@ -82,8 +83,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-      x-pagination:
-        $ref: '#/components/x-pagination/PagePagination'
+      x-api-gen:
+        pagination:
+          $ref: '#/components/x-pagination/PagePagination'
 
 components:
   x-pagination:

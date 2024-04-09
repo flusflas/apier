@@ -23,14 +23,15 @@ paths:
     post:
       tags:
         - Companies
-      x-method-name:
-        default: create company
-        templates:
-          python: create
-          go: Create
       summary: Create a new Company
       description: Creates a new Company and expands your capitalist empire.
       operationId: CreateCompany
+      x-api-gen:
+        method-name:
+          default: create company
+          templates:
+            python: create
+            go: Create
       requestBody:
         required: true
         content:
@@ -69,10 +70,6 @@ paths:
     get:
       tags:
         - Companies
-      x-method-name:
-        default: list companies
-        templates:
-          go: List
       summary: List Companies
       description: Returns all your companies.
       parameters:
@@ -84,6 +81,19 @@ paths:
             type: string
             example: Stickers
       operationId: ListCompanies
+      x-api-gen:
+        method-name:
+          default: list companies
+          templates:
+            go: List
+        pagination:
+          next:
+            reuse-previous-request: true
+            modifiers:
+              - param: "$request.query.next_cursor"
+                value: "$response.body#/cursors/next"
+            result: "results"
+            has_more: "$response.body#/cursors/next"
       responses:
         '200':
           description: OK
@@ -97,14 +107,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-      x-pagination:
-        next:
-          reuse-previous-request: true
-          modifiers:
-            - param: "$request.query.next_cursor"
-              value: "$response.body#/cursors/next"
-          result: "results"
-          has_more: "$response.body#/cursors/next"
 
   /companies/{company_id}:
     parameters:
@@ -115,12 +117,13 @@ paths:
         - $ref: '#/components/parameters/company_id'
       tags:
         - Companies
-      x-method-name:
-        templates:
-          go: Get
       summary: Get a Company
       description: Returns a company by its ID.
       operationId: GetCompany
+      x-api-gen:
+        method-name:
+          templates:
+            go: Get
       responses:
         '200':
           description: OK
@@ -317,6 +320,15 @@ paths:
       summary: List Employees
       description: Returns all your employees.
       operationId: ListEmployees
+      x-api-gen:
+        pagination:
+          next:
+            reuse-previous-request: true
+            modifiers:
+              - param: "$request.query.next_cursor"
+                value: "$response.body#/cursors/next"
+            result: "results"
+            has_more: "$response.body#/cursors/next"
       responses:
         '200':
           description: OK
@@ -342,14 +354,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-      x-pagination:
-        next:
-          reuse-previous-request: true
-          modifiers:
-            - param: "$request.query.next_cursor"
-              value: "$response.body#/cursors/next"
-          result: "results"
-          has_more: "$response.body#/cursors/next"
 
   /companies/{company_id}/employees/{employee-num}:
     get:
@@ -421,17 +425,18 @@ paths:
       operationId: TestCreateCustom
       parameters:
         - $ref: '#/components/parameters/company_id'
-      x-input-parameters:
-        parameters:
-          - name: employee_id
-            description: ID of the employee.
-            schema:
-              type: integer
-          - name: employee_name
-            schema:
-              type: string
-          - name: extra_info
-        payload: '{"number": {{employee_id}}, "name": "{{employee_name}}", "{{employee_name}}": "{{ company_id }}", "extra": {{extra_info | json}}}'
+      x-api-gen:
+        input-parameters:
+          parameters:
+            - name: employee_id
+              description: ID of the employee.
+              schema:
+                type: integer
+            - name: employee_name
+              schema:
+                type: string
+            - name: extra_info
+          payload: '{"number": {{employee_id}}, "name": "{{employee_name}}", "{{employee_name}}": "{{ company_id }}", "extra": {{extra_info | json}}}'
       requestBody:
         required: true
         content:
