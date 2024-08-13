@@ -72,7 +72,8 @@ def test_create(req, expected_resp):
                                   'Content-Type': 'application/json'
                               },
                               data=to_json(req),
-                              timeout=3)
+                              timeout=3,
+                              verify=True)
 
     assert resp.http_response().status_code == 201
     assert resp == expected_resp
@@ -97,7 +98,8 @@ def test_get():
                               params={'foo': 'bar'},
                               headers={'Authorization': 'Bearer token'},
                               data=[],
-                              timeout=3)
+                              timeout=3,
+                              verify=True)
 
     assert resp.http_response().status_code == 200
     assert resp == test_resp_employee01
@@ -134,7 +136,8 @@ def test_list():
                               params={'foo': 'bar'},
                               headers={'Authorization': 'Bearer token'},
                               data=[],
-                              timeout=3)
+                              timeout=3,
+                              verify=True)
 
     assert resp.http_response().status_code == 200
     assert resp == expected_list
@@ -160,7 +163,8 @@ def test_get_from_department():
                               params={'foo': 'bar'},
                               headers={'Authorization': 'Bearer token'},
                               data=[],
-                              timeout=3)
+                              timeout=3,
+                              verify=True)
 
     assert resp.http_response().status_code == 200
     assert resp == test_resp_employee02
@@ -184,7 +188,8 @@ def test_get_error():
                               params={},
                               headers={'Authorization': 'Bearer token'},
                               data=[],
-                              timeout=3)
+                              timeout=3,
+                              verify=True)
 
     exc = e.value
     assert exc.http_response().status_code == 404

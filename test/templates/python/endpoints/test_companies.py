@@ -91,7 +91,8 @@ def test_create(req, expected_resp):
                                   'Content-Type': 'application/json'
                               },
                               data=to_json(req),
-                              timeout=3)
+                              timeout=3,
+                              verify=True)
 
     assert resp.http_response().status_code == 201
     assert resp == expected_resp
@@ -120,7 +121,8 @@ def test_create_default_status_code():
                                   'Content-Type': 'application/json'
                               },
                               data=to_json(test_req_create01),
-                              timeout=3)
+                              timeout=3,
+                              verify=True)
 
     assert resp.http_response().status_code == 200
     assert resp == AnyValue.parse_obj("OK")
@@ -144,7 +146,8 @@ def test_get():
                               params={'foo': 'bar'},
                               headers={'Authorization': 'Bearer token'},
                               data=[],
-                              timeout=3)
+                              timeout=3,
+                              verify=True)
 
     assert resp.http_response().status_code == 200
     assert resp == test_resp_company01
@@ -180,7 +183,8 @@ def test_list():
                               params={'foo': 'bar'},
                               headers={'Authorization': 'Bearer token'},
                               data=[],
-                              timeout=3)
+                              timeout=3,
+                              verify=True)
 
     assert resp.http_response().status_code == 200
     assert resp == expected_list
@@ -211,7 +215,8 @@ def test_update(req, expected_resp):
                                   'Content-Type': 'application/json'
                               },
                               data=to_json(req),
-                              timeout=3)
+                              timeout=3,
+                              verify=True)
 
     assert resp.http_response().status_code == 200
     assert resp == expected_resp
@@ -235,7 +240,8 @@ def test_delete():
                               params={'foo': 'bar'},
                               headers={'Authorization': 'Bearer token'},
                               data=[],
-                              timeout=5.5)
+                              timeout=5.5,
+                              verify=True)
 
     assert resp.http_response().status_code == 204
     assert resp == NoResponse()
@@ -260,7 +266,8 @@ def test_get_multi_param():
                               params={'foo': 'bar'},
                               headers={'Authorization': 'Bearer token'},
                               data=[],
-                              timeout=3)
+                              timeout=3,
+                              verify=True)
 
     assert resp.http_response().status_code == 200
     assert resp == test_resp_company01
@@ -284,7 +291,8 @@ def test_get_error():
                               params={},
                               headers={'Authorization': 'Bearer token'},
                               data=[],
-                              timeout=3)
+                              timeout=3,
+                              verify=True)
 
     exc = e.value
     assert exc.http_response().status_code == 404

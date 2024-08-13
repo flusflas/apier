@@ -63,7 +63,8 @@ def test_post_employee_input_parameters(employee_id, name, extra_info):
                                   'Content-Type': 'application/json'
                               },
                               data=to_json(expected_req),
-                              timeout=3)
+                              timeout=3,
+                              verify=True)
 
     assert resp.http_response().status_code == 201
     assert resp == test_resp_employee01
@@ -98,7 +99,8 @@ def test_one_of(req, expected_resp):
                                   'Content-Type': 'application/json'
                               },
                               data=to_json(expected_req),
-                              timeout=3)
+                              timeout=3,
+                              verify=True)
 
     assert resp.http_response().status_code == 200
     assert resp == expected_resp

@@ -1,5 +1,7 @@
 from unittest import mock
 
+import pytest
+
 from .common import make_response, to_json
 from .setup import build_client
 
@@ -15,7 +17,8 @@ def test_create_successfully():
     assert api.host == "https://test-api.com"
 
 
-def test_make_request():
+@pytest.mark.parametrize("verify", [True, False])
+def test_make_request(verify):
     """
     Makes a request to the API.
     """
@@ -28,7 +31,7 @@ def test_make_request():
     expected_resp = make_response(200, expected_resp_payload)
 
     with mock.patch("requests.request", return_value=expected_resp) as m:
-        resp = (API(host="test-api.com").
+        resp = (API(host="test-api.com", verify=verify).
                 make_request("POST", "/info", body=req_payload, auth=False))
 
     m.assert_called_once_with("POST",
@@ -36,13 +39,15 @@ def test_make_request():
                               params={},
                               headers={'Content-Type': 'application/json'},
                               data=to_json(req_payload),
-                              timeout=3)
+                              timeout=3,
+                              verify=verify)
 
     assert resp.status_code == 200
     assert resp.json() == expected_resp_payload
 
 
-def test_make_request_with_security():
+@pytest.mark.parametrize("verify", [True, False])
+def test_make_request_with_security(verify):
     """
     Makes a request to the API setting a security scheme.
     """
@@ -54,7 +59,7 @@ def test_make_request_with_security():
 
     expected_resp = make_response(200, expected_resp_payload)
 
-    api = API(host="test-api.com").with_security(BearerToken('my_token'))
+    api = API(host="test-api.com", verify=verify).with_security(BearerToken('my_token'))
 
     with mock.patch("requests.request", return_value=expected_resp) as m:
         resp = (api.
@@ -68,7 +73,8 @@ def test_make_request_with_security():
                                   'Content-Type': 'application/json',
                               },
                               data=to_json(req_payload),
-                              timeout=3)
+                              timeout=3,
+                              verify=verify)
 
     assert resp.status_code == 200
     assert resp.json() == expected_resp_payload
