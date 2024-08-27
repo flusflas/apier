@@ -170,5 +170,5 @@ class Renderer:
 def format_file(filename):
     config_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'ruff.toml')
 
-    os.system(f"ruff --config {config_file} check {filename} --fix -q")
-    os.system(f"ruff --config {config_file} format {filename} -q")
+    os.system(f"ruff check --config {config_file} check {filename} --fix -q")
+    os.system(f"ruff check --config {config_file} format {filename} -q")

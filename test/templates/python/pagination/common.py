@@ -22,19 +22,19 @@ def assert_pagination(pagination_function: callable,
     Asserts that, given API function (pagination_function) that supports
     pagination, it can be paginated properly.
     """
-    original_request = requests.request
+    original_request_func = requests.request
 
     def side_effect(*args, **kwargs):
         # Makes a real call to the request function
-        response = original_request(*args, **kwargs)
+        response = original_request_func(*args, **kwargs)
         assert 'verify' in kwargs and kwargs['verify'] == expected_verify
         return response
 
+    httpretty.register_uri(httpretty.GET, expected_url, body=request_handler)
+    function_params_copy = copy.deepcopy(function_params)
+
     with mock.patch(request_mock_pkg) as m:
         m.side_effect = side_effect
-
-        httpretty.register_uri(httpretty.GET, expected_url, body=request_handler)
-        function_params_copy = copy.deepcopy(function_params)
 
         actual_result = pagination_function(**function_params_copy)
 
@@ -53,4 +53,6 @@ def assert_pagination(pagination_function: callable,
         # assert not actual_result.has_more()
 
         # Assert that the API has been called until all data has been fetched
-        assert len(httpretty.latest_requests()) == math.ceil(len(expected_results) / expected_limit)
+        expected_call_count = math.ceil(len(expected_results) / expected_limit)
+        assert len(httpretty.latest_requests()) == expected_call_count
+        assert m.call_count == expected_call_count

@@ -5,16 +5,16 @@ description = ""
 authors = ["Daniel Sánchez Gallego <dsanchez@altair.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.8"
 openapi3 = "^1.7.0"
 openapi-spec-validator = "^0.7.1"
 prance = "^23.6.21.0"
 Jinja2 = "^3.1.2"
-pydantic = "^1.10.9"
+pydantic = "^1.10.18"
 vulture = "^2.11"
-datamodel-code-generator = "^0.25.4"
+datamodel-code-generator = "^0.25.9"
 xmltodict = "^0.13.0"
-ruff = "^0.3.2"
+ruff = "^0.6.2"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.3.2"
