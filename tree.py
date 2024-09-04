@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import itertools
 import uuid
 from collections import OrderedDict
@@ -65,7 +66,7 @@ class APITree:
                         node_matched = True
                         break
 
-        raise PathNotFoundException("path not found in api tree")
+        raise PathNotFoundException(f"path not found in api tree: {search_path}")
 
 
 @dataclass
@@ -86,11 +87,13 @@ class APINode:
         return list(OrderedDict.fromkeys(params))
 
 
-def build_endpoints_tree(endpoints: List[Endpoint]) -> APITree:
+def build_endpoints_tree(endpoints: List[Endpoint], deepcopy: bool = True) -> APITree:
     """
     Builds an APITree from the given list of endpoints.
 
     :param endpoints: List of Endpoint instances to build the tree.
+    :param deepcopy: Whether to create a deep copy of the endpoints list before
+                     building the tree so the original list is not modified.
     :return: An API tree built from the given list of endpoints.
     """
     api_tree = APITree()
@@ -98,7 +101,16 @@ def build_endpoints_tree(endpoints: List[Endpoint]) -> APITree:
     if len(endpoints) == 0:
         return api_tree
 
+    if deepcopy:
+        endpoints = copy.deepcopy(endpoints)
+
     config = endpoints[0].definition.get_value('info.x-api-gen', '.', {})
+    equivalent_paths = config.get('equivalent_paths', [])
+    targets = [eq_path["target"] for eq_path in equivalent_paths]
+
+    # Sort endpoints to process target paths first. This is necessary to prevent
+    # source paths from being created before the target paths.
+    endpoints.sort(key=lambda endpoint: (not any(endpoint.path.startswith(source) for source in targets), endpoint.path))
 
     for e in endpoints:
         _build_recursive(api_tree, api_tree, e.layers, config)
@@ -130,8 +142,8 @@ def _build_recursive(api_tree: APITree,
                 current_tree.branches.append(node)
                 current_tree = tree
                 break
-            except PathNotFoundException:
-                raise PathNotFoundException("equivalent endpoint not found in tree")
+            except PathNotFoundException as e:
+                raise PathNotFoundException(f"equivalent endpoint not found in tree: {e}")
 
     api_level = layer.api_levels[0]
     node = current_tree.node(api_level)
@@ -141,6 +153,11 @@ def _build_recursive(api_tree: APITree,
         if p is None:
             node.layers.append(layer)
         else:
+            # If the current layer is a final endpoint, the methods and
+            # parameters of the existing layer are updated.
+            # if len(layer.methods) > 0:
+            #     p.methods = layer.methods
+            #     p.parameters = layer.parameters
             layer = p
     else:
         node = APINode(api=api_level, layers=[layer])
