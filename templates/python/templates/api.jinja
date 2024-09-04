@@ -101,7 +101,7 @@ class API(
         headers.update(self.headers)
 
         # TODO: Handle request Content-Type
-        if isinstance(body, dict):
+        if isinstance(body, (dict, list)):
             headers['Content-Type'] = 'application/json'
             body = json.dumps(body)
         elif isinstance(body, BaseModel):
