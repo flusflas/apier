@@ -102,7 +102,7 @@ def to_json(obj) -> str:
     elif isinstance(obj, (dict, list)):
         return json.dumps(obj)
     elif isinstance(obj, APIBaseModel):
-        return obj.json()
+        return obj.json(by_alias=True)
     else:
         raise ValueError(f'Value type "{type(obj).__name__}" cannot be converted to JSON')
 
