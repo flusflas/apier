@@ -155,9 +155,9 @@ def _build_recursive(api_tree: APITree,
         else:
             # If the current layer is a final endpoint, the methods and
             # parameters of the existing layer are updated.
-            # if len(layer.methods) > 0:
-            #     p.methods = layer.methods
-            #     p.parameters = layer.parameters
+            if len(p.methods) == 0 and len(layer.methods) > 0:
+                p.methods = layer.methods
+                p.parameters = layer.parameters
             layer = p
     else:
         node = APINode(api=api_level, layers=[layer])
