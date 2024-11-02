@@ -1,0 +1,144 @@
+import json
+import os
+import sys
+import warnings
+from typing import Iterable
+
+import click
+import yaml
+
+from build import build as build_api_client
+from merge import merge_spec_files, MergeWarning
+
+# Global variable to control the verbosity of the warning messages
+_VERBOSE = False
+
+# Built-in templates for client generation
+built_in_templates = [
+    'python-tree',
+]
+
+
+def warning_handler(message, category, filename, lineno, file=None, line=None):
+    """ Custom warning handler that formats the warning messages. """
+    if isinstance(message, MergeWarning):
+        msg = f"Merge Warning ({message.spec_filename}): {message}"
+    else:
+        msg = f"{category.__name__}: {message}"
+
+    if _VERBOSE:
+        msg = f"{filename}:{lineno}: {msg}"
+
+    click.echo(click.style(msg, fg='yellow'))
+
+
+warnings.showwarning = warning_handler
+
+
+@click.group(context_settings=dict(help_option_names=['-h', '--help']))
+@click.pass_context
+def cli(ctx):
+    """CLI for generating API clients from OpenAPI files."""
+    pass
+
+
+@click.command()
+@click.option('--template', '-t', type=click.Choice(built_in_templates),
+              help='Template name for client generation (allowed: python-tree).')
+@click.option('--custom-template', type=click.Path(exists=True),
+              help='Path to a custom template directory for client generation.')
+@click.option('--input', '-i', 'input_', multiple=True, required=True,
+              type=click.Path(exists=True),
+              help='One or more OpenAPI files or directories. If a directory is '
+                   'provided, all files within will be used.')
+@click.option('--overwrite', is_flag=True,
+              help='Overwrite the output directory if it already exists.')
+@click.argument('output', type=click.Path(file_okay=False, dir_okay=True))
+@click.pass_context
+def build(ctx, template, custom_template, input_, overwrite, output):
+    """
+    Generate an API client from OpenAPI files.
+
+    This command takes one or more OpenAPI files or directories (via --input/-i)
+    and generates the client code in the specified output directory.
+    If multiple OpenAPI files are provided, they will be merged before
+    generating the client.
+
+    You must provide either --template to use a built-in template ('python-tree')
+    or --custom-template to define the client structure.
+    """
+    # Ensure either --template or --custom-template is provided
+    if not template and not custom_template:
+        raise click.UsageError('Either --template or --custom-template '
+                               'must be provided.', ctx=ctx)
+
+    input_files = _get_file_list(input_)
+
+    if not overwrite and os.path.exists(output):
+        raise click.UsageError(f"Output directory '{output}' already "
+                               f"exists. Use --overwrite to replace it.", ctx=ctx)
+
+    build_api_client(input_files, output)
+
+
+@click.command()
+@click.option('--input', '-i', 'input_', multiple=True, required=True,
+              type=click.Path(exists=True),
+              help='One or more OpenAPI files or directories to merge. '
+                   'If a directory is provided, all files within will be used.')
+@click.option('--overwrite', is_flag=True,
+              help='Overwrite the output file if it already exists.')
+@click.argument('output', type=click.Path())
+@click.pass_context
+def merge(ctx, input_, overwrite, output):
+    """
+    Merge multiple OpenAPI files into one.
+
+    This command takes one or more OpenAPI files or directories (via --input/-i)
+    and merges them into a single OpenAPI file.
+
+    The resulting merged file is written to the specified output path.
+    """
+    input_files = _get_file_list(input_)
+
+    if not overwrite and os.path.exists(output):
+        raise click.UsageError(f"Output file '{output}' already exists. "
+                               f"Use --overwrite to replace it.", ctx=ctx)
+
+    merged_spec = merge_spec_files(*input_files)
+
+    with open(output, 'w') as f:
+        if output.endswith('.json'):
+            json.dump(merged_spec, f, indent=2)
+        else:
+            yaml.dump(merged_spec, f, sort_keys=False, allow_unicode=True)
+
+
+def _get_file_list(inputs: Iterable[str]) -> list[str]:
+    files = []
+    for path in inputs:
+        if os.path.isdir(path):
+            files.extend([os.path.join(path, f) for f in os.listdir(path)
+                          if os.path.isfile(os.path.join(path, f))])
+        else:
+            files.append(path)
+    return files
+
+
+cli.add_command(build)
+cli.add_command(merge)
+
+if __name__ == '__main__':
+    # Remove "--verbose" from the command line arguments to avoid click errors
+    if '--verbose' in sys.argv:
+        sys.argv.remove('--verbose')
+        _VERBOSE = True
+
+    try:
+        cli.main(standalone_mode=False)
+    except click.UsageError as e:
+        click.echo(e.ctx.get_help() + '\n')
+        click.echo(click.style(f"Usage Error: {e.format_message()}", fg='red'),
+                   err=True)
+    except Exception as e:
+        click.echo(click.style(f"Error: {str(e)}", fg='red'), err=True)

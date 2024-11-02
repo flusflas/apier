@@ -1,13 +1,25 @@
-import sys
+from typing import Union, List
 
 from endpoints import EndpointsParser
+from merge import merge_spec_files
 from openapi import Definition
 from renderer import render_api
-from tree import build_endpoints_tree
 
 
-def build(filename, output_path='_build/'):
-    definition = Definition.load(filename)
+def build(filename: Union[str, List], output_path='_build/'):
+    """
+    Build the API client from the given OpenAPI file(s).
+
+    :param filename: The OpenAPI file(s) to use.
+    :param output_path: The output directory.
+    """
+    if isinstance(filename, str):
+        definition = Definition.load(filename)
+    elif len(filename) == 1:
+        definition = Definition.load(filename[0])
+    else:
+        merged_spec = merge_spec_files(*filename)
+        definition = Definition(merged_spec)
 
     parser = EndpointsParser(definition)
 
@@ -16,7 +28,3 @@ def build(filename, output_path='_build/'):
         endpoints.append(parser.parse_endpoint(path))
 
     render_api('python', definition, parser.schemas, endpoints, output_path)
-
-
-if __name__ == '__main__':
-    build(sys.argv[1])
