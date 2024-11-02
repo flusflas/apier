@@ -1,6 +1,12 @@
 from functools import reduce
 
-_default = object()
+
+class _Default:
+    """Unique class to signal that no default value has been provided."""
+    pass
+
+
+_default = _Default()
 
 
 def get_multi_key(d: dict, key: str, separator: str = '.', default=_default):

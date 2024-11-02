@@ -1,6 +1,6 @@
 from typing import Mapping, Any
 
-from openapi_spec_validator import validate_spec
+from openapi_spec_validator import validate
 from openapi_spec_validator.readers import read_from_filename
 
 from utils.dicts import get_multi_key, _default
@@ -22,7 +22,7 @@ class Definition:
         :return: Definition loaded from file.
         """
         spec_dict, _ = read_from_filename(filename)
-        validate_spec(spec_dict)
+        validate(spec_dict)
         return Definition(dict(spec_dict))
 
     @property
