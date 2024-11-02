@@ -5,7 +5,7 @@ description = ""
 authors = ["Daniel Sánchez Gallego <dsanchez@altair.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9"
 openapi3 = "^1.7.0"
 openapi-spec-validator = "^0.7.1"
 prance = "^23.6.21.0"
@@ -15,6 +15,8 @@ vulture = "^2.11"
 datamodel-code-generator = "^0.25.9"
 xmltodict = "^0.13.0"
 ruff = "^0.6.2"
+click = "^8.1.7"
+onedict = "^0.1.0"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.3.2"
