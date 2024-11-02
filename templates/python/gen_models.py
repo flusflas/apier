@@ -1,11 +1,10 @@
 import copy
-import os
 import shutil
 from pathlib import Path
 
 import yaml
+from datamodel_code_generator import InputFileType, generate
 
-from endpoints import ContentSchema
 from openapi import Definition
 
 
@@ -28,8 +27,11 @@ def generate_models(definition: Definition, schemas: dict[str, dict],
     with file.open('w') as f:
         yaml.dump(openapi_output, f)
 
-    os.system(f"datamodel-codegen --input {filename} --input-file-type openapi "
-              f"--output {output_path}/models/models.py "
-              f"--base-class .basemodel.APIBaseModel")
+    generate(
+        input_=Path(filename),
+        input_file_type=InputFileType.OpenAPI,
+        output=Path(f"{output_path}/models/models.py"),
+        base_class=".basemodel.APIBaseModel"
+    )
 
     shutil.rmtree(f'{output_path}/_temp')
