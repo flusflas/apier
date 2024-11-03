@@ -23,8 +23,9 @@ class Renderer:
     could be called using `api.companies(company_id).employees(employee_id)`.
     """
 
-    def __init__(self, definition: Definition, schemas: dict,
+    def __init__(self, ctx, definition: Definition, schemas: dict,
                  endpoints: list[Endpoint], output_path: str):
+        self.ctx = ctx
         self.definition = definition
         self.schemas = schemas
         self.endpoints = endpoints
@@ -32,6 +33,9 @@ class Renderer:
         self.output_path = output_path.rstrip('/')
         self.api_names = {}
         self.security_scheme_names = parse_security_schemes(self.definition)
+
+        self.verbose = ctx.get('verbose', False)
+        self.output_logger = ctx.get('output_logger', print)
 
     def render(self):
         self.api_names = {}
@@ -43,8 +47,10 @@ class Renderer:
         os.makedirs(self.output_path + '/apis')
         open(self.output_path + '/apis/__init__.py', 'w').close()
 
+        self.output_logger(f"  📜 Generating models...")
         generate_models(self.definition, self.schemas, self.output_path)
 
+        self.output_logger(f"  📝 Generating API client...")
         self.render_security_schemes_file()
         self.render_api_file()
         self.render_api_components()
@@ -135,7 +141,9 @@ class Renderer:
     def render_api_component(self, api_node: APINode):
         api_filename = to_snake_case(self.get_api_name(api_node))
         filename = f"{self.output_path}/apis/{api_filename}.py"
-        print(f"Rendering {filename}... ", end="")
+
+        if self.verbose:
+            self.output_logger(f"    Rendering /apis/{api_filename}.py... ")
 
         environment = Environment(loader=FileSystemLoader(abs_path('./')),
                                   trim_blocks=True, lstrip_blocks=True)
@@ -163,8 +171,6 @@ class Renderer:
         )
         with open(filename, mode="w", encoding="utf-8") as message:
             message.write(content)
-
-        print("OK")
 
 
 def format_file(filename):

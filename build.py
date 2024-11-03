@@ -6,7 +6,7 @@ from openapi import Definition
 from renderer import render_api
 
 
-def build(filename: Union[str, List], output_path='_build/'):
+def build(ctx, filename: Union[str, List], output_path='_build/'):
     """
     Build the API client from the given OpenAPI file(s).
 
@@ -27,4 +27,4 @@ def build(filename: Union[str, List], output_path='_build/'):
     for path in definition.paths:
         endpoints.append(parser.parse_endpoint(path))
 
-    render_api('python', definition, parser.schemas, endpoints, output_path)
+    render_api(ctx, 'python', definition, parser.schemas, endpoints, output_path)

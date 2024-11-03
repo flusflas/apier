@@ -27,9 +27,9 @@ def warning_handler(message, category, filename, lineno, file=None, line=None):
         msg = f"{category.__name__}: {message}"
 
     if _VERBOSE:
-        msg = f"{filename}:{lineno}: {msg}"
+        msg = f"{filename}:{lineno}: " + click.style(msg, fg='yellow')
 
-    click.echo(click.style(msg, fg='yellow'))
+    click.echo(msg)
 
 
 warnings.showwarning = warning_handler
@@ -78,7 +78,12 @@ def build(ctx, template, custom_template, input_, overwrite, output):
         raise click.UsageError(f"Output directory '{output}' already "
                                f"exists. Use --overwrite to replace it.", ctx=ctx)
 
-    build_api_client(input_files, output)
+    context = ctx.params.copy()
+    context['verbose'] = _VERBOSE
+    context['output_logger'] = click.echo
+
+    build_api_client(context, input_files, output)
+    click.echo(click.style(f"\n🎉 API client generated in '{output}'", fg='green'))
 
 
 @click.command()
@@ -113,6 +118,8 @@ def merge(ctx, input_, overwrite, output):
         else:
             yaml.dump(merged_spec, f, sort_keys=False, allow_unicode=True)
 
+    click.echo(click.style(f"\n🎉 OpenAPI files merged into '{output}'", fg='green'))
+
 
 def _get_file_list(inputs: Iterable[str]) -> list[str]:
     files = []
@@ -142,3 +149,5 @@ if __name__ == '__main__':
                    err=True)
     except Exception as e:
         click.echo(click.style(f"Error: {str(e)}", fg='red'), err=True)
+        if _VERBOSE:
+            raise
