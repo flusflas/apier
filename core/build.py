@@ -1,10 +1,10 @@
 from pathlib import Path
 from typing import Union, List
 
-from endpoints import EndpointsParser
-from merge import merge_spec_files
-from openapi import Definition
-from renderer import render_api
+from core.api.endpoints import EndpointsParser
+from core.api.merge import merge_spec_files
+from core.api.openapi import Definition
+from core.renderer import render_api
 
 
 def build(ctx, template: Union[str, Path], filename: Union[str, List], output_path='_build/'):

@@ -1,9 +1,9 @@
 import re
 from typing import Union
 
-from consts import NO_RESPONSE_ID
-from endpoints import ContentSchema, EndpointMethod, EndpointLayer
-from tree import APITree
+from core.api.endpoints import ContentSchema, EndpointMethod, EndpointLayer
+from core.api.tree import APITree
+from core.consts import NO_RESPONSE_ID
 from utils.strings import to_snake_case
 
 

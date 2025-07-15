@@ -9,8 +9,8 @@ from importlib import import_module, util
 from pathlib import Path
 from typing import Union
 
-from endpoints import Endpoint
-from openapi import Definition
+from core.api.endpoints import Endpoint
+from core.api.openapi import Definition
 
 builtin_template_map = {
     'python-tree': 'python_tree',
@@ -91,5 +91,8 @@ def render_api(ctx, template: Union[str, Path], definition: Definition,
 
     except ModuleNotFoundError:
         raise ValueError(f"Template '{template}' not found")
+
+    except AttributeError:
+        raise ValueError(f"Template '{template}' does not have a Renderer class")
 
     renderer.render()

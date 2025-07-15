@@ -7,7 +7,7 @@ from collections import OrderedDict
 from dataclasses import dataclass, field
 from typing import List
 
-from endpoints import EndpointLayer, Endpoint, EndpointsParser
+from core.api.endpoints import EndpointLayer, Endpoint, EndpointsParser
 
 
 class PathNotFoundException(Exception):

@@ -1,6 +1,6 @@
 import warnings
 
-from openapi import Definition
+from core.api.openapi import Definition
 
 
 def parse_security_schemes(definition: Definition) -> list[str]:

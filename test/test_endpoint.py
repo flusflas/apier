@@ -2,13 +2,13 @@ import copy
 
 import pytest
 
-from consts import NO_RESPONSE_ID
-from endpoints import (EndpointsParser, Endpoint, EndpointLayer, EndpointMethod,
-                       EndpointParameter, ContentSchema, parse_parameters,
-                       split_endpoint_layers)
+from core.consts import NO_RESPONSE_ID
+from core.api.endpoints import (EndpointsParser, Endpoint, EndpointLayer, EndpointMethod,
+                                EndpointParameter, ContentSchema, parse_parameters,
+                                split_endpoint_layers)
 from extensions.extensions import Extensions
 from extensions.method_name import MethodNameDescription
-from openapi import Definition
+from core.api.openapi import Definition
 
 openapi_definition = Definition.load('definitions/companies_api.yaml')
 

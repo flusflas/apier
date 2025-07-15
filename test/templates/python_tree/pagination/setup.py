@@ -1,4 +1,4 @@
-from build import build
+from core.build import build
 from utils.path import abs_path_from_current_script
 
 built = False

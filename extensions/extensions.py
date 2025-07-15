@@ -9,7 +9,7 @@ from templates.python_tree.base.models.extensions.pagination import PaginationDe
 from .method_name import MethodNameDescription
 
 if TYPE_CHECKING:
-    from endpoints import Endpoint
+    from core.api.endpoints import Endpoint
 
 
 class Extensions(BaseModel):

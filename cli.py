@@ -8,16 +8,15 @@ from typing import Iterable
 import click
 import yaml
 
-from build import build as build_api_client
-from merge import merge_spec_files, MergeWarning
+from core.api.merge import merge_spec_files, MergeWarning
+from core.build import build as build_api_client
+from core.renderer import builtin_template_map
 
 # Global variable to control the verbosity of the warning messages
 _VERBOSE = False
 
 # Built-in templates for client generation
-built_in_templates = [
-    'python-tree',
-]
+built_in_templates = builtin_template_map.keys()
 
 
 def warning_handler(message, category, filename, lineno, file=None, line=None):

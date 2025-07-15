@@ -3,9 +3,9 @@ from typing import List
 
 import pytest
 
-from endpoints import Endpoint, EndpointsParser, EndpointLayer
-from openapi import Definition
-from tree import build_endpoints_tree
+from core.api.endpoints import Endpoint, EndpointsParser, EndpointLayer
+from core.api.openapi import Definition
+from core.api.tree import build_endpoints_tree
 
 openapi_definition = Definition.load('definitions/companies_api.yaml')
 
