@@ -5,7 +5,7 @@ from httpretty.core import HTTPrettyRequest
 from .common import assert_pagination
 from .setup import build_client
 
-build_client()
+build_client("python-tree")
 if True:
     from ._build.api import API
     from ._build.models.models import Result

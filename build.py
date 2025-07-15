@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Union, List
 
 from endpoints import EndpointsParser
@@ -6,10 +7,14 @@ from openapi import Definition
 from renderer import render_api
 
 
-def build(ctx, filename: Union[str, List], output_path='_build/'):
+def build(ctx, template: Union[str, Path], filename: Union[str, List], output_path='_build/'):
     """
     Build the API client from the given OpenAPI file(s).
 
+    :param ctx: A context dictionary.
+    :param template: The template to use. If it is a string, it must be a
+                     built-in template. If it is a Path, it must be the
+                     directory containing a custom template.
     :param filename: The OpenAPI file(s) to use.
     :param output_path: The output directory.
     """
@@ -27,4 +32,4 @@ def build(ctx, filename: Union[str, List], output_path='_build/'):
     for path in definition.paths:
         endpoints.append(parser.parse_endpoint(path))
 
-    render_api(ctx, 'python', definition, parser.schemas, endpoints, output_path)
+    render_api(ctx, template, definition, parser.schemas, endpoints, output_path)

@@ -2,7 +2,8 @@ import re
 from typing import Union
 
 from consts import NO_RESPONSE_ID
-from endpoints import ContentSchema, EndpointMethod
+from endpoints import ContentSchema, EndpointMethod, EndpointLayer
+from tree import APITree
 from utils.strings import to_snake_case
 
 
@@ -142,3 +143,14 @@ def get_method_name(endpoint_method: EndpointMethod) -> str:
             return to_snake_case(extension_info.default)
 
     return to_snake_case(endpoint_method.name)
+
+
+def chain_layers(api_tree: APITree, path: str) -> list[EndpointLayer]:
+    _, _, layers = api_tree.search_path(path)
+    if not layers:
+        raise Exception(f"path '{path}' not found")
+
+    # layers.reverse()
+    return layers
+    # api_names = [l.api_levels[0]+'()' for l in layers]
+    # return '.'.join(api_names)

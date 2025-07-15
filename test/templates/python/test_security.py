@@ -7,7 +7,7 @@ from requests import Request
 from .common import make_response
 from .setup import build_client
 
-build_client()
+build_client("python-tree")
 if True:
     from ._build.security import BasicToken, BearerToken, OAuth2ClientCredentials
     from ._build.models.exceptions import ResponseError

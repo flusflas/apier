@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Optional
 
 import pytest
 
-from templates.python.base.models.basemodel import IterBaseModel
+from templates.python_tree.base.models.basemodel import IterBaseModel
 
 
 class AClass(IterBaseModel):

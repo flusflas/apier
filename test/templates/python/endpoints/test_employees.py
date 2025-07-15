@@ -5,7 +5,7 @@ import pytest
 from .setup import build_client
 from ..common import make_response, to_dict, to_json
 
-build_client()
+build_client("python-tree")
 request_mock_pkg = 'test.templates.python.endpoints._build.api.requests.request'
 if True:
     from ._build.api import API

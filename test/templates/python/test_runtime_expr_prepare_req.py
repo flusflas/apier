@@ -4,7 +4,7 @@ import json
 import pytest
 from requests import Request, Response, PreparedRequest
 
-from templates.python.base.internal.runtime_expr import RuntimeExpressionError, prepare_request
+from templates.python_tree.base.internal.runtime_expr import RuntimeExpressionError, prepare_request
 
 test_payload = {
     "prev_offset": 0,

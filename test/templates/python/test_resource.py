@@ -1,8 +1,8 @@
 import pytest
 
-from templates.python.base.internal.resource import _validate_request_payload
-from templates.python.base.models.basemodel import APIBaseModel
-from templates.python.base.models.exceptions import ExceptionList
+from templates.python_tree.base.internal.resource import _validate_request_payload
+from templates.python_tree.base.models.basemodel import APIBaseModel
+from templates.python_tree.base.models.exceptions import ExceptionList
 
 
 class Person(APIBaseModel):

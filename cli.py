@@ -2,6 +2,7 @@ import json
 import os
 import sys
 import warnings
+from pathlib import Path
 from typing import Iterable
 
 import click
@@ -71,6 +72,12 @@ def build(ctx, template, custom_template, input_, overwrite, output):
     if not template and not custom_template:
         raise click.UsageError('Either --template or --custom-template '
                                'must be provided.', ctx=ctx)
+    if template and custom_template:
+        raise click.UsageError('--template and --custom-template cannot '
+                               'be used together.', ctx=ctx)
+
+    if custom_template:
+        template = Path(custom_template)
 
     input_files = _get_file_list(input_)
 
@@ -82,7 +89,7 @@ def build(ctx, template, custom_template, input_, overwrite, output):
     context['verbose'] = _VERBOSE
     context['output_logger'] = click.echo
 
-    build_api_client(context, input_files, output)
+    build_api_client(context, template, input_files, output)
     click.echo(click.style(f"\n🎉 API client generated in '{output}'", fg='green'))
 
 
