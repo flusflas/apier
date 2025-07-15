@@ -6,7 +6,10 @@ from .setup import build_client
 from ..common import make_response, to_json
 
 build_client("python-tree")
-request_mock_pkg = 'test.templates.python.endpoints._build.api.requests.request'
+
+pkg_name = __name__.rsplit('.', 1)[0]
+request_mock_pkg = f'{pkg_name}._build.api.requests.request'
+
 if True:
     from ._build.api import API
     from ._build.security import BearerToken

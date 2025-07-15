@@ -8,11 +8,13 @@ from .common import make_response
 from .setup import build_client
 
 build_client("python-tree")
+
+pkg_name = __name__.rsplit('.', 1)[0]
+request_mock_pkg = f'{pkg_name}._build.security.requests.request'
+
 if True:
     from ._build.security import BasicToken, BearerToken, OAuth2ClientCredentials
     from ._build.models.exceptions import ResponseError
-
-request_mock_pkg = '_build.security.requests.request'
 
 
 def test_basic_security():

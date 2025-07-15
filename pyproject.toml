@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "openapi-client-gen"
+name = "apier"
 version = "0.1.0"
 description = ""
 authors = ["Daniel Sánchez Gallego <dsanchez@altair.com>"]

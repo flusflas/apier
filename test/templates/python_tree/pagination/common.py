@@ -5,7 +5,8 @@ from unittest import mock
 import httpretty
 import requests
 
-request_mock_pkg = 'iots.api.requests.request'
+pkg_name = __name__.rsplit('.', 1)[0]
+request_mock_pkg = f'{pkg_name}._build.api.requests.request'
 
 
 @httpretty.activate
