@@ -136,8 +136,9 @@ def get_method_name(endpoint_operation: EndpointOperation) -> str:
     if endpoint_operation.extensions and endpoint_operation.extensions.method_name:
         extension_info = endpoint_operation.extensions.method_name
 
-        if 'python' in extension_info.templates:
-            return to_snake_case(extension_info.templates['python'])
+        from templates.python_tree.renderer import TEMPLATE_NAME
+        if TEMPLATE_NAME in extension_info.templates:
+            return to_snake_case(extension_info.templates[TEMPLATE_NAME])
 
         if extension_info.default:
             return to_snake_case(extension_info.default)

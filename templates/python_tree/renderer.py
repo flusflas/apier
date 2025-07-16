@@ -12,6 +12,8 @@ from utils.path import abs_path_from_current_script as abs_path
 from utils.strings import to_pascal_case, to_snake_case
 from .security import parse_security_schemes
 
+TEMPLATE_NAME = 'python-tree'
+
 
 class Renderer:
     """
@@ -107,8 +109,10 @@ class Renderer:
             server_url=self.definition.get_value('servers.0.url', default=None),
             root_branches=self.api_tree.branches,
             security_scheme_names=self.security_scheme_names,
-            raise_errors=bool(self.definition.get_value('info.x-api-gen.templates.python.raise-response-errors',
-                                                        default=True)),
+            raise_errors=bool(
+                self.definition.get_value(f'info.x-apier.templates.{TEMPLATE_NAME}.raise-response-errors',
+                                          default=True)
+            ),
         )
         with open(filename, mode="w", encoding="utf-8") as message:
             message.write(content)

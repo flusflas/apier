@@ -57,7 +57,7 @@ def test_build_endpoints_tree_order():
     """
     definition = Definition({
         'info': {
-            'x-api-gen': {
+            'x-apier': {
                 'equivalent_paths': [
                     {
                         'source': '/foo',

@@ -3,12 +3,12 @@ info:
   title: Company Maker API
   description: An OpenAPI definition for testing.
   version: 1.0.0
-  x-api-gen:
+  x-apier:
     equivalent_paths:
       - source: /companies/{company_id}/departments/{department-name}/employees/{employee-num}
         target: /companies/{company_id}/employees/{employee-num}
     templates:
-      python:
+      python-tree:
         raise-response-errors: true
 servers:
   - url: 'https://company-maker.test'
@@ -26,11 +26,11 @@ paths:
       summary: Create a new Company
       description: Creates a new Company and expands your capitalist empire.
       operationId: CreateCompany
-      x-api-gen:
+      x-apier:
         method-name:
           default: create company
           templates:
-            python: create
+            python-tree: create
             go: Create
       requestBody:
         required: true
@@ -81,7 +81,7 @@ paths:
             type: string
             example: Stickers
       operationId: ListCompanies
-      x-api-gen:
+      x-apier:
         method-name:
           default: list companies
           templates:
@@ -120,7 +120,7 @@ paths:
       summary: Get a Company
       description: Returns a company by its ID.
       operationId: GetCompany
-      x-api-gen:
+      x-apier:
         method-name:
           templates:
             go: Get
@@ -320,7 +320,7 @@ paths:
       summary: List Employees
       description: Returns all your employees.
       operationId: ListEmployees
-      x-api-gen:
+      x-apier:
         pagination:
           next:
             reuse-previous-request: true
@@ -425,7 +425,7 @@ paths:
       operationId: TestCreateCustom
       parameters:
         - $ref: '#/components/parameters/company_id'
-      x-api-gen:
+      x-apier:
         input-parameters:
           parameters:
             - name: employee_id

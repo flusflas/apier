@@ -41,7 +41,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-      x-api-gen:
+      x-apier:
         pagination:
           next:
             reuse-previous-request: true
@@ -83,7 +83,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-      x-api-gen:
+      x-apier:
         pagination:
           $ref: '#/components/x-pagination/PagePagination'
 

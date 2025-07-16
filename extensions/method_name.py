@@ -7,23 +7,22 @@ For example, a POST endpoint could generate a `create` method instead of `post`.
 Usage:
 
 ```yaml
-...
-
 paths:
   /companies:
     post:
       tags:
         - Companies
-      x-method-name:
-        default: create company
-        templates:
-          python: create
-          go: Create
+      x-apier:
+        method-name:
+          default: create company
+          templates:
+            python-tree: create
+            go: Create
       ...
 ```
 
-This extension is defined using the `x-method-name` attribute inside a method
-definition. The following attributes can be defined:
+This extension is defined using the `method-name` attribute inside the
+extension attribute definition. The following attributes can be defined:
   - `default`: The generic name of the function. If the template for the client
     being generated is not included in `templates`, this value will be used.
     The function name will depend on the template used and the naming conventions

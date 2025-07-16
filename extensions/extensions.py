@@ -1,3 +1,8 @@
+"""
+This module defines model class for the supported OpenAPI extensions to
+customize the API client generation.
+"""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -13,6 +18,11 @@ if TYPE_CHECKING:
 
 
 class Extensions(BaseModel):
+    """
+    Model class for the OpenAPI extensions defined in the `x-apier` field of
+    the OpenAPI definition.
+    """
+
     class Config:
         allow_population_by_field_name = True
 
@@ -22,6 +32,10 @@ class Extensions(BaseModel):
 
 
 class Pagination(BaseModel):
+    """
+    Model class for the pagination extension, which allows customizing the
+    pagination behavior of the API client.
+    """
     next: PaginationDescription
 
 
@@ -29,9 +43,15 @@ Extensions.update_forward_refs()
 
 
 def parse_extensions(endpoint: Endpoint):
+    """
+    Parses the OpenAPI extensions defined in the endpoint and populates the
+    `extensions` attribute of the endpoint operations.
+
+    :param endpoint: The endpoint to parse the extensions for.
+    """
     for op in endpoint.operations:
         endpoint_def = endpoint.definition.paths[endpoint.path][op.name]
-        extensions_def = endpoint_def.get('x-api-gen')
+        extensions_def = endpoint_def.get('x-apier')
         if not extensions_def:
             continue
 

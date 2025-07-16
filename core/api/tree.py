@@ -104,7 +104,7 @@ def build_endpoints_tree(endpoints: List[Endpoint], deepcopy: bool = True) -> AP
     if deepcopy:
         endpoints = copy.deepcopy(endpoints)
 
-    config = endpoints[0].definition.get_value('info.x-api-gen', '.', {})
+    config = endpoints[0].definition.get_value('info.x-apier', '.', {})
     equivalent_paths = config.get('equivalent_paths', [])
     targets = [eq_path["target"] for eq_path in equivalent_paths]
 

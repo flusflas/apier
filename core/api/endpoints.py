@@ -1,3 +1,8 @@
+"""
+This module defines the structure and parsing logic for API endpoints
+and their associated operations, parameters, and content schemas.
+"""
+
 from __future__ import annotations
 
 import re
@@ -49,7 +54,8 @@ class ContentSchema:
 @dataclass
 class EndpointOperation:
     """
-    Defines an endpoint operation (e.g. GET, POST...).
+    Defines an endpoint operation, consisting of an HTTP method (e.g. GET, POST...)
+    and its associated parameters, request and response schemas.
     """
     name: str  # The HTTP method name (e.g. "get", "post"...)
     description: str
