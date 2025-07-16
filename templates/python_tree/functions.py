@@ -1,7 +1,7 @@
 import re
 from typing import Union
 
-from core.api.endpoints import ContentSchema, EndpointMethod, EndpointLayer
+from core.api.endpoints import ContentSchema, EndpointOperation, EndpointLayer
 from core.api.tree import APITree
 from core.consts import NO_RESPONSE_ID
 from utils.strings import to_snake_case
@@ -67,7 +67,7 @@ def get_type_hint(*args: Union[str, ContentSchema],
         return f"Union[{', '.join(types)}]"
 
 
-def payload_from_input_parameters(endpoint_method: EndpointMethod) -> str:
+def payload_from_input_parameters(endpoint_method: EndpointOperation) -> str:
     """
     Returns the code to dynamically generate the payload of an endpoint that
     uses the input-parameters extension.
@@ -127,14 +127,14 @@ def payload_from_input_parameters(endpoint_method: EndpointMethod) -> str:
         raise ValueError(f"Error building payload from input-parameters extension: {e}")
 
 
-def get_method_name(endpoint_method: EndpointMethod) -> str:
+def get_method_name(endpoint_operation: EndpointOperation) -> str:
     """
     Returns the name of the function used in the client for the given endpoint
     method. By default, the name will be the HTTP method name, but this may
     change if the method-name extension is defined.
     """
-    if endpoint_method.extensions and endpoint_method.extensions.method_name:
-        extension_info = endpoint_method.extensions.method_name
+    if endpoint_operation.extensions and endpoint_operation.extensions.method_name:
+        extension_info = endpoint_operation.extensions.method_name
 
         if 'python' in extension_info.templates:
             return to_snake_case(extension_info.templates['python'])
@@ -142,7 +142,7 @@ def get_method_name(endpoint_method: EndpointMethod) -> str:
         if extension_info.default:
             return to_snake_case(extension_info.default)
 
-    return to_snake_case(endpoint_method.name)
+    return to_snake_case(endpoint_operation.name)
 
 
 def chain_layers(api_tree: APITree, path: str) -> list[EndpointLayer]:

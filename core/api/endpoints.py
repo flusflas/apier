@@ -47,13 +47,13 @@ class ContentSchema:
 
 
 @dataclass
-class EndpointMethod:
+class EndpointOperation:
     """
-    Defines a method used by an endpoint (e.g. GET, POST...).
+    Defines an endpoint operation (e.g. GET, POST...).
     """
-    name: str
+    name: str  # The HTTP method name (e.g. "get", "post"...)
     description: str
-    method_definition: dict
+    definition: dict
     parameters: List[EndpointParameter] = field(default_factory=list)
     request_schemas: List[ContentSchema] = field(default_factory=list)
     response_schemas: List[ContentSchema] = field(default_factory=list)
@@ -72,13 +72,13 @@ class EndpointLayer:
     Defines a layer/level that is part of an endpoint.
 
     For example, the endpoint "/stores/{store_id}/products/{product_id}"
-    consists of two layers: "/stores/{store_id}" and "products/{product_id}".
+    consists of two layers: "/stores/{store_id}" and "/products/{product_id}".
     """
     path: str
     api_levels: List[str] = field(default_factory=list)
     parameters: List[EndpointParameter] = field(default_factory=list)  # Only path parameters
     next: List[APINode] = field(default_factory=list)
-    methods: List[EndpointMethod] = field(default_factory=list)
+    operations: List[EndpointOperation] = field(default_factory=list)
     _id: uuid.UUID = field(default_factory=uuid.uuid4, compare=False)
 
     def params_in(self, in_location: str):
@@ -90,28 +90,36 @@ class EndpointLayer:
     def param_types(self):
         return [p.type for p in self.parameters]
 
-    def get_method(self, method_name: str) -> EndpointMethod | None:
-        for method in self.methods:
-            if method.name == method_name:
-                return method
+    def get_operation(self, method_name: str) -> EndpointOperation | None:
+        for operation in self.operations:
+            if operation.name == method_name:
+                return operation
         return None
 
 
 @dataclass
 class Endpoint:
     """
-    Defines an API endpoint.
+    Defines an API endpoint with its path and the layers it consists of.
     """
     path: str
     layers: List[EndpointLayer] = field(default_factory=list)
     definition: Definition = None
 
     @property
-    def methods(self):
-        return self.layers[-1].methods
+    def operations(self):
+        return self.layers[-1].operations
 
 
 class EndpointsParser:
+    """
+    This class is initialized with an OpenAPI definition and provides methods
+    to parse endpoints and their associated content schemas.
+
+    It extracts information such as parameters, request and response schemas,
+    and organizes them into structured Endpoint, EndpointLayer, and
+    EndpointOperation instances.
+    """
 
     def __init__(self, definition: Definition = None):
         self.definition = definition
@@ -152,17 +160,17 @@ class EndpointsParser:
         """
         path_config = endpoint.definition.paths[endpoint.path]
 
-        for operation_name, operation in path_config.items():
-            if operation_name.lower() not in _ALLOWED_OPERATIONS:
+        for method_name, operation in path_config.items():
+            if method_name.lower() not in _ALLOWED_OPERATIONS:
                 continue
 
-            endpoint_method = endpoint.layers[-1].get_method(operation_name)
+            endpoint_operation = endpoint.layers[-1].get_operation(method_name)
 
             req_schemas = []
             req_definition = get_multi_key(operation, 'requestBody.content', '.', {})
             for content_type, content_type_definition in req_definition.items():
                 schema = content_type_definition.get('schema', {})
-                req_schemas.append(self.parse_schema(endpoint, endpoint_method,
+                req_schemas.append(self.parse_schema(endpoint, endpoint_operation,
                                                      schema, content_type))
 
             resp_schemas = []
@@ -174,7 +182,7 @@ class EndpointsParser:
                 resp_definition = resp_definition.get('content', {})
                 for content_type, content_type_definition in resp_definition.items():
                     schema = content_type_definition.get('schema', {})
-                    resp_schemas.append(self.parse_schema(endpoint, endpoint_method, schema,
+                    resp_schemas.append(self.parse_schema(endpoint, endpoint_operation, schema,
                                                           content_type, resp_code))
 
                 if len(resp_definition) == 0:
@@ -186,11 +194,11 @@ class EndpointsParser:
                         is_inline=True,
                     ))
 
-            method = endpoint.layers[-1].get_method(operation_name)
-            method.request_schemas = req_schemas
-            method.response_schemas = resp_schemas
+            operation = endpoint.layers[-1].get_operation(method_name)
+            operation.request_schemas = req_schemas
+            operation.response_schemas = resp_schemas
 
-    def parse_schema(self, endpoint: Endpoint, endpoint_method: EndpointMethod,
+    def parse_schema(self, endpoint: Endpoint, endpoint_operation: EndpointOperation,
                      schema_def: dict, content_type: str,
                      resp_code: int = -1) -> ContentSchema:
         """
@@ -201,7 +209,7 @@ class EndpointsParser:
         'title' attribute. Otherwise, the name will be generated automatically.
 
         :param endpoint: The Endpoint where the schema is used.
-        :param endpoint_method: The EndpointMethod instance of the schema.
+        :param endpoint_operation: The EndpointOperation instance of the schema.
         :param schema_def: Schema definition.
         :param content_type: Content type of the request/response.
         :param resp_code: Response code returned (omitted for requests).
@@ -223,7 +231,7 @@ class EndpointsParser:
                 if schema_name in self._schemas:
                     raise Exception(f"Schema name '{schema_name}' is already taken")
             else:
-                schema_name = endpoint_method.method_definition.get('operationId', endpoint.path)
+                schema_name = endpoint_operation.definition.get('operationId', endpoint.path)
                 if resp_code >= 0:
                     schema_name += "Response" + str(resp_code) if resp_code > 0 else 'Default'
                 else:
@@ -353,9 +361,9 @@ def parse_parameters(endpoint: Endpoint):
                 parameter = parse_parameter(endpoint.definition, p)
                 op_parameters[(parameter.in_location, parameter.name)] = parameter
 
-        endpoint.methods.append(EndpointMethod(
+        endpoint.operations.append(EndpointOperation(
             name=operation_name.lower(),
-            method_definition=operation,
+            definition=operation,
             description=operation.get("description"),
             parameters=list(op_parameters.values())
         ))

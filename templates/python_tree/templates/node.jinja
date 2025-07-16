@@ -23,41 +23,41 @@ class {{ api_node.api | pascal_case }}{{ loop.index }}(APIResource{% for next_no
     {{ param.name | snake_case }}: {{ get_type_hint(param.type) }}
     {% endfor %}
 
-    {%- for method in layer.methods %}
+    {%- for op in layer.operations %}
 
-    def {{ method | method_name }}(self
-            {%- if method.extensions.input_parameters -%}
-            {%- for param in method.extensions.input_parameters.parameters %}, {{ param.name | snake_case }}{% if param.schema_ %}: {{ get_type_hint(param.schema_.type) }}{% endif %}{% endfor %}
-            {%- elif method.request_schemas -%}, req: {{ get_type_hint(*method.request_schemas, include_primitive_type=True) }}{% endif %}, **kwargs)
-            {%- if method.response_schemas | length > 0 %} -> {{ get_type_hint(*method.response_schemas) }}{% endif %}:
+    def {{ op | method_name }}(self
+            {%- if op.extensions.input_parameters -%}
+            {%- for param in op.extensions.input_parameters.parameters %}, {{ param.name | snake_case }}{% if param.schema_ %}: {{ get_type_hint(param.schema_.type) }}{% endif %}{% endfor %}
+            {%- elif op.request_schemas -%}, req: {{ get_type_hint(*op.request_schemas, include_primitive_type=True) }}{% endif %}, **kwargs)
+            {%- if op.response_schemas | length > 0 %} -> {{ get_type_hint(*op.response_schemas) }}{% endif %}:
         """
         {% with ignore_path_params = True %}{% include 'templates/method_docstring.jinja' %}{% endwith %}
         """
-        {% if method.extensions.input_parameters %}
-        req = {{ payload_from_input_parameters(method) }}
+        {% if op.extensions.input_parameters %}
+        req = {{ payload_from_input_parameters(op) }}
 
         {% endif %}
         {# Add request schemas info #}
-        {% if method.request_schemas %}
+        {% if op.request_schemas %}
         req_content_types = [
-        {% for schema in method.request_schemas %}
+        {% for schema in op.request_schemas %}
             ("{{ schema.content_type }}", {{ get_type_hint(schema) }}),
         {% endfor %}
         ]
 
         {% endif %}
         {# Pagination description #}
-        {% set has_pagination = method.extensions and method.extensions.pagination and method.extensions.pagination.next %}
+        {% set has_pagination = op.extensions and op.extensions.pagination and op.extensions.pagination.next %}
         {% if has_pagination %}
-        pagination_info = PaginationDescription.parse_obj({{ method.extensions.pagination.next.dict() }})
+        pagination_info = PaginationDescription.parse_obj({{ op.extensions.pagination.next.dict() }})
 
         {% endif %}
         {# Add information of query and header parameters if present. This will be used to evaluate runtime expressions. #}
-        {% set has_params_info = method.params_in('query') or method.params_in('header') %}
+        {% set has_params_info = op.params_in('query') or op.params_in('header') %}
         {% if has_pagination and has_params_info %}
         param_types = {
         {% for param_location in ['query', 'header'] %}
-        {% set params = method.params_in(param_location) %}
+        {% set params = op.params_in(param_location) %}
         {% if params %}
             '{{ param_location }}': {
         {% for param in params %}
@@ -70,10 +70,10 @@ class {{ api_node.api | pascal_case }}{{ loop.index }}(APIResource{% for next_no
 
         {% endif %}
         {# Make request #}
-        resp = self._make_request("{{ method.name.upper() }}"{% if method.request_schemas %}, req, req_content_types=req_content_types{% endif %}, **kwargs)
+        resp = self._make_request("{{ op.name.upper() }}"{% if op.request_schemas %}, req, req_content_types=req_content_types{% endif %}, **kwargs)
         {# Process and return response #}
         return self._handle_response(resp, [
-        {% for schema in method.response_schemas %}
+        {% for schema in op.response_schemas %}
             ({{ schema.code }}, "{{ schema.content_type }}", {{ get_type_hint(schema) }}),
         {% endfor %}
         ]{% if has_pagination %}, pagination_info=pagination_info{% if has_params_info %}, param_types=param_types{% endif %}{% endif %})

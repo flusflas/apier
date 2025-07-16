@@ -29,8 +29,8 @@ Extensions.update_forward_refs()
 
 
 def parse_extensions(endpoint: Endpoint):
-    for method in endpoint.methods:
-        endpoint_def = endpoint.definition.paths[endpoint.path][method.name]
+    for op in endpoint.operations:
+        endpoint_def = endpoint.definition.paths[endpoint.path][op.name]
         extensions_def = endpoint_def.get('x-api-gen')
         if not extensions_def:
             continue
@@ -39,4 +39,4 @@ def parse_extensions(endpoint: Endpoint):
             if '$ref' in extension_def:
                 extensions_def[extension_name] = endpoint.definition.solve_ref(extension_def['$ref'])
 
-        method.extensions = Extensions.parse_obj(extensions_def)
+        op.extensions = Extensions.parse_obj(extensions_def)

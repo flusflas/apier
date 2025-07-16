@@ -1,3 +1,8 @@
+"""
+This module provides functionality to build an API client from one or more
+OpenAPI specification files.
+"""
+
 from pathlib import Path
 from typing import Union, List
 
