@@ -25,7 +25,7 @@ class Renderer:
     could be called using `api.companies(company_id).employees(employee_id)`.
     """
 
-    def __init__(self, ctx, definition: Definition, schemas: dict,
+    def __init__(self, ctx: dict, definition: Definition, schemas: dict,
                  endpoints: list[Endpoint], output_path: str):
         self.ctx = ctx
         self.definition = definition
