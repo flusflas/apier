@@ -301,3 +301,31 @@ def test_get_error():
     assert exc.http_response().status_code == 404
     assert exc.error == test_company_not_found
     assert isinstance(exc.error, ErrorResponse)
+
+
+def test_get_error_not_raised():
+    """
+    Tests a request to get a Company that returns a 404 error response but
+    is not raised by the client.
+    """
+    expected_resp = make_response(404, test_company_not_found)
+
+    api = API(host="test-api.com")
+    api._raise_errors = False  # Disable automatic error raising
+
+    with mock.patch(request_mock_pkg, return_value=expected_resp) as m:
+        resp = (api.
+                with_security(BearerToken("token")).
+                companies("shiny_stickers").get())
+
+    m.assert_called_once_with("GET",
+                              "https://test-api.com/companies/shiny_stickers",
+                              params={},
+                              headers={'Authorization': 'Bearer token'},
+                              data=[],
+                              timeout=3,
+                              verify=True)
+
+    assert resp.http_response().status_code == 404
+    assert resp == test_company_not_found
+    assert isinstance(resp, ErrorResponse)
