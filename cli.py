@@ -43,19 +43,20 @@ def cli(ctx):
 
 
 @click.command()
-@click.option('--template', '-t', type=click.Choice(built_in_templates),
-              help='Template name for client generation (allowed: python-tree).')
-@click.option('--custom-template', type=click.Path(exists=True),
-              help='Path to a custom template directory for client generation.')
 @click.option('--input', '-i', 'input_', multiple=True, required=True,
               type=click.Path(exists=True),
               help='One or more OpenAPI files or directories. If a directory is '
                    'provided, all files within will be used.')
+@click.option('--output', '-o', type=click.Path(file_okay=False, dir_okay=True),
+              required=True, help='Output directory for the generated API client code.')
+@click.option('--template', '-t', type=click.Choice(built_in_templates),
+              help='Template name for client generation (allowed: python-tree).')
+@click.option('--custom-template', type=click.Path(exists=True),
+              help='Path to a custom template directory for client generation.')
 @click.option('--overwrite', is_flag=True,
               help='Overwrite the output directory if it already exists.')
-@click.argument('output', type=click.Path(file_okay=False, dir_okay=True))
 @click.pass_context
-def build(ctx, template, custom_template, input_, overwrite, output):
+def build(ctx, input_, output, template, custom_template, overwrite):
     """
     Generate an API client from OpenAPI files.
 
@@ -97,11 +98,12 @@ def build(ctx, template, custom_template, input_, overwrite, output):
               type=click.Path(exists=True),
               help='One or more OpenAPI files or directories to merge. '
                    'If a directory is provided, all files within will be used.')
+@click.option('--outout', '-o', type=click.Path(),
+              required=True, help='Output file path for the merged OpenAPI spec.')
 @click.option('--overwrite', is_flag=True,
               help='Overwrite the output file if it already exists.')
-@click.argument('output', type=click.Path())
 @click.pass_context
-def merge(ctx, input_, overwrite, output):
+def merge(ctx, input_, output, overwrite):
     """
     Merge multiple OpenAPI files into one.
 
