@@ -9,8 +9,8 @@ from importlib import import_module, util
 from pathlib import Path
 from typing import Union
 
-from core.api.endpoints import Endpoint
-from core.api.openapi import Definition
+from apier.core.api.endpoints import Endpoint
+from apier.core.api.openapi import Definition
 
 builtin_template_map = {
     'python-tree': 'python_tree',
@@ -47,7 +47,7 @@ def render_api(ctx, template: Union[str, Path], definition: Definition,
         if isinstance(template, str):
             # Use a built-in template
             template = builtin_template_map.get(template)
-            renderer = (import_module(f"templates.{template}.renderer").
+            renderer = (import_module(f"apier.templates.{template}.renderer").
                         Renderer(ctx, definition, schemas, endpoints, output_path))
 
         elif isinstance(template, Path):
@@ -55,7 +55,7 @@ def render_api(ctx, template: Union[str, Path], definition: Definition,
             # registered as a package and imported dynamically.
 
             template_path = template.resolve()
-            package_name = f"templates.{template_path.stem}"
+            package_name = f"apier.templates.{template_path.stem}"
 
             # Register the external directory as a package
             sys.modules[package_name] = importlib.util.module_from_spec(

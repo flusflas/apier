@@ -1,5 +1,5 @@
-from core.build import build
-from utils.path import abs_path_from_current_script
+from apier.core.build import build
+from apier.utils.path import abs_path_from_current_script
 
 built = False
 

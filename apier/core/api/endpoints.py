@@ -11,14 +11,14 @@ import warnings
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, List, Tuple
 
-from core.api.openapi import Definition
-from core.consts import NO_RESPONSE_ID
-from extensions.extensions import Extensions, parse_extensions
-from utils.dicts import get_multi_key
-from utils.strings import to_pascal_case
+from apier.core.api.openapi import Definition
+from apier.core.consts import NO_RESPONSE_ID
+from apier.extensions.extensions import Extensions, parse_extensions
+from apier.utils.dicts import get_multi_key
+from apier.utils.strings import to_pascal_case
 
 if TYPE_CHECKING:
-    from core.api.tree import APINode
+    from apier.core.api.tree import APINode
 
 _ALLOWED_OPERATIONS = ["get", "put", "post", "delete", "options", "head", "patch", "trace"]
 

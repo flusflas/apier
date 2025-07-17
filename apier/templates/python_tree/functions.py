@@ -1,10 +1,10 @@
 import re
 from typing import Union
 
-from core.api.endpoints import ContentSchema, EndpointOperation, EndpointLayer
-from core.api.tree import APITree
-from core.consts import NO_RESPONSE_ID
-from utils.strings import to_snake_case
+from apier.core.api.endpoints import ContentSchema, EndpointOperation, EndpointLayer
+from apier.core.api.tree import APITree
+from apier.core.consts import NO_RESPONSE_ID
+from apier.utils.strings import to_snake_case
 
 
 def get_type_hint(*args: Union[str, ContentSchema],
@@ -136,7 +136,7 @@ def get_method_name(endpoint_operation: EndpointOperation) -> str:
     if endpoint_operation.extensions and endpoint_operation.extensions.method_name:
         extension_info = endpoint_operation.extensions.method_name
 
-        from templates.python_tree.renderer import TEMPLATE_NAME
+        from apier.templates.python_tree.renderer import TEMPLATE_NAME
         if TEMPLATE_NAME in extension_info.templates:
             return to_snake_case(extension_info.templates[TEMPLATE_NAME])
 

@@ -1,5 +1,5 @@
 import pytest
-from templates.python_tree.base.internal.content_type import parse_content_type, content_types_compatible
+from apier.templates.python_tree.base.internal.content_type import parse_content_type, content_types_compatible
 
 
 @pytest.mark.parametrize("content_type, expected", [

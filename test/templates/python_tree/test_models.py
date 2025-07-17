@@ -1,6 +1,6 @@
 from typing import Any, Dict, Optional
 
-from templates.python_tree.base.models.basemodel import APIBaseModel
+from apier.templates.python_tree.base.models.basemodel import APIBaseModel
 
 
 class ClassTest1(APIBaseModel):

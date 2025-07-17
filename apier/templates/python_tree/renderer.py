@@ -3,13 +3,13 @@ import shutil
 
 from jinja2 import Environment, FileSystemLoader
 
-from core.api.endpoints import Endpoint
-from core.api.openapi import Definition
-from templates.python_tree.functions import get_type_hint, payload_from_input_parameters, get_method_name, chain_layers
-from templates.python_tree.gen_models import generate_models
-from core.api.tree import APINode, build_endpoints_tree
-from utils.path import abs_path_from_current_script as abs_path
-from utils.strings import to_pascal_case, to_snake_case
+from apier.core.api.endpoints import Endpoint
+from apier.core.api.openapi import Definition
+from apier.templates.python_tree.functions import get_type_hint, payload_from_input_parameters, get_method_name, chain_layers
+from apier.templates.python_tree.gen_models import generate_models
+from apier.core.api.tree import APINode, build_endpoints_tree
+from apier.utils.path import abs_path_from_current_script as abs_path
+from apier.utils.strings import to_pascal_case, to_snake_case
 from .security import parse_security_schemes
 
 TEMPLATE_NAME = 'python-tree'

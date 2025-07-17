@@ -2,7 +2,7 @@
 name = "apier"
 version = "0.1.0"
 description = ""
-authors = ["Daniel Sánchez Gallego <dsanchez@altair.com>"]
+authors = ["flusflas <aflusflas@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
@@ -26,3 +26,6 @@ httpretty = "^1.1.4"
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+apier = "apier.cli.cli:cli"

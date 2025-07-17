@@ -8,9 +8,9 @@ from typing import Iterable
 import click
 import yaml
 
-from core.api.merge import merge_spec_files, MergeWarning
-from core.build import build as build_api_client
-from core.renderer import builtin_template_map
+from apier.core.api.merge import merge_spec_files, MergeWarning
+from apier.core.build import build as build_api_client
+from apier.core.renderer import builtin_template_map
 
 # Global variable to control the verbosity of the warning messages
 _VERBOSE = False

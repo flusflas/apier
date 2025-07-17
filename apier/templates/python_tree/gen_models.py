@@ -5,7 +5,7 @@ from pathlib import Path
 import yaml
 from datamodel_code_generator import InputFileType, generate
 
-from core.api.openapi import Definition
+from apier.core.api.openapi import Definition
 
 
 def generate_models(definition: Definition, schemas: dict[str, dict],

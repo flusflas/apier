@@ -14,10 +14,17 @@
 
 apier is a Python tool for generating API client libraries from OpenAPI specifications. It uses a templating system that allows developers to define the structure, interface, and target programming language of the generated clients. This approach can help automate the process of creating and maintaining client libraries for external APIs, supporting consistency across projects and making it easier to keep libraries up to date as the API specification evolves.
 
-apier provides a command-line interface (CLI) for building client libraries and merging OpenAPI documents, making it a powerful addition to any developer's toolkit when working with APIs.
+apier provides a command-line interface (CLI) for building client libraries and merging OpenAPI documents.
 
 ## Installation
-<!-- How to install apier -->
+
+apier is available on PyPI:
+
+```bash
+pip install apier
+```
+
+Requires Python 3.9+.
 
 ## Main Concepts
 

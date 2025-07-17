@@ -1,6 +1,6 @@
 import pytest
 
-from utils.strings import to_pascal_case, to_snake_case
+from apier.utils.strings import to_pascal_case, to_snake_case
 
 
 @pytest.mark.parametrize("name, expected", [

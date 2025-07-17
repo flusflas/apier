@@ -6,10 +6,10 @@ OpenAPI specification files.
 from pathlib import Path
 from typing import Union, List
 
-from core.api.endpoints import EndpointsParser
-from core.api.merge import merge_spec_files
-from core.api.openapi import Definition
-from core.renderer import render_api
+from apier.core.api.endpoints import EndpointsParser
+from apier.core.api.merge import merge_spec_files
+from apier.core.api.openapi import Definition
+from apier.core.renderer import render_api
 
 
 def build(ctx, template: Union[str, Path], filename: Union[str, List], output_path='_build/'):

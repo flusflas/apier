@@ -3,7 +3,7 @@ from typing import Mapping, Any
 from openapi_spec_validator import validate
 from openapi_spec_validator.readers import read_from_filename
 
-from utils.dicts import get_multi_key, _default
+from apier.utils.dicts import get_multi_key, _default
 
 
 class Definition:
