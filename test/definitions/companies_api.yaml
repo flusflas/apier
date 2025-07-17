@@ -578,7 +578,7 @@ paths:
 
 components:
   securitySchemes:
-    BasicToken:
+    BasicAuthentication:
       type: http
       scheme: basic
       description: "Use basic authentication."

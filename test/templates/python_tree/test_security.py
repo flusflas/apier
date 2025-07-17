@@ -13,15 +13,15 @@ pkg_name = __name__.rsplit('.', 1)[0]
 request_mock_pkg = f'{pkg_name}._build.security.requests.request'
 
 if True:
-    from ._build.security import BasicToken, BearerToken, OAuth2ClientCredentials
+    from ._build.security import BasicAuthentication, BearerToken, OAuth2ClientCredentials
     from ._build.models.exceptions import ResponseError
 
 
 def test_basic_security():
     """
-    Tests the BasicToken security strategy.
+    Tests the BasicAuthentication security strategy.
     """
-    basic_strategy = BasicToken(username="alice", password="password123")
+    basic_strategy = BasicAuthentication(username="alice", password="password123")
     assert basic_strategy._encoded_credentials == "YWxpY2U6cGFzc3dvcmQxMjM="
 
     req = Request()
