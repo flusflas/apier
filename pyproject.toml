@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "apier"
 version = "0.1.0"
-description = ""
+description = "Turn API specs into code"
 authors = ["flusflas <aflusflas@gmail.com>"]
 
 [tool.poetry.dependencies]
