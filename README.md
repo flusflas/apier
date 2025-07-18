@@ -7,11 +7,9 @@
   <a href="https://pypi.org/project/apier"><img src="https://img.shields.io/pypi/pyversions/apier.svg?logo=python" alt="Supported Versions"></a>
 </p>
 
-**apier** is a tool that automatically generates API client libraries from OpenAPI specifications. It allows developers to customize the structure, interface or target programming language of the generated clients using templates, making it easier to integrate and interact with external APIs in their projects.
+## 🧐 What is _apier_?
 
-## 🧐 What is apier?
-
-apier is a Python tool for generating API client libraries from OpenAPI specifications. It uses a templating system that allows developers to define the structure, interface, and target programming language of the generated clients. This approach can help automate the process of creating and maintaining client libraries for external APIs, supporting consistency across projects and making it easier to keep libraries up to date as the API specification evolves.
+**apier** is a Python tool that automatically generates API client libraries from OpenAPI specifications. It uses a templates to allow developers to customize the structure, interface, or target programming language of the generated clients using templates, making it easier to integrate and interact with external APIs in their projects. This approach can help automate the process of creating and maintaining client libraries for external APIs, supporting consistency across projects and making it easier to keep libraries up to date as the API specification evolves.
 
 apier provides a command-line interface (CLI) for building client libraries and merging OpenAPI documents.
 
