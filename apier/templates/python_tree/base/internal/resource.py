@@ -10,13 +10,17 @@ from requests.structures import CaseInsensitiveDict
 from ..models.basemodel import APIBaseModel
 from ..models.exceptions import ExceptionList, ResponseError
 from ..models.extensions.pagination import PaginationDescription
-from .content_type import (SUPPORTED_REQUEST_CONTENT_TYPES, content_types_match,
-                           content_types_compatible)
+from .content_type import (
+    SUPPORTED_REQUEST_CONTENT_TYPES,
+    content_types_match,
+    content_types_compatible,
+)
 from .runtime_expr import evaluate, prepare_request
 
 
 def _is_api(obj):
     from ..api import API
+
     return isinstance(obj, API)
 
 
@@ -101,9 +105,9 @@ class APIResource(ABC):
         Returns a dictionary with the values of all the path parameters of the
         current stack.
         """
-        values = {k: v for k, v in self.__dict__.items() if k != '_stack'}
+        values = {k: v for k, v in self.__dict__.items() if k != "_stack"}
         for r in self._stack[1:]:
-            values.update({k: v for k, v in r.__dict__.items() if k != '_stack'})
+            values.update({k: v for k, v in r.__dict__.items() if k != "_stack"})
 
         return values
 
@@ -112,28 +116,40 @@ class APIResource(ABC):
             raise RuntimeError("API instance is missing in the stack")
         return self._stack[0]
 
-    def _make_request(self, method="GET", body=None, req_content_types: list = None, **kwargs) -> Response:
+    def _make_request(
+        self, method="GET", body=None, req_content_types: list = None, **kwargs
+    ) -> Response:
         api = self._api()
 
-        body, headers = _validate_request_payload(body, req_content_types, kwargs.get('headers'))
-        kwargs['headers'] = headers
+        body, headers = _validate_request_payload(
+            body, req_content_types, kwargs.get("headers")
+        )
+        kwargs["headers"] = headers
 
         return api.make_request(method, self._build_path(), body=body, **kwargs)
 
-    def _handle_response(self, response: requests.Response, expected_responses: list,
-                         param_types: dict = None,
-                         pagination_info: PaginationDescription = None):
+    def _handle_response(
+        self,
+        response: requests.Response,
+        expected_responses: list,
+        param_types: dict = None,
+        pagination_info: PaginationDescription = None,
+    ):
         default_status_code = 0
 
         # Send default expected response to the end of the list
         expected_responses = sorted(expected_responses, key=lambda x: x[0] == 0)
 
         expected_status_codes = set([r[0] for r in expected_responses])
-        if (response.status_code not in expected_status_codes
-                and default_status_code not in expected_status_codes):
-            raise ResponseError(response, f"Unexpected response status code ({response.status_code})")
+        if (
+            response.status_code not in expected_status_codes
+            and default_status_code not in expected_status_codes
+        ):
+            raise ResponseError(
+                response, f"Unexpected response status code ({response.status_code})"
+            )
 
-        resp_content_type = response.headers.get('content-type')
+        resp_content_type = response.headers.get("content-type")
         for r in expected_responses:
             code, content_type, resp_class = r
 
@@ -141,33 +157,48 @@ class APIResource(ABC):
                 ret = resp_class()
 
                 ret._set_http_response(response)
-                self._handle_pagination(ret, response, pagination_info,
-                                        self._path_values(), param_types,
-                                        expected_responses)
+                self._handle_pagination(
+                    ret,
+                    response,
+                    pagination_info,
+                    self._path_values(),
+                    param_types,
+                    expected_responses,
+                )
 
                 return self._handle_error(ret)
 
-            if (code in [response.status_code, default_status_code]
-                    and content_types_match(resp_content_type, content_type)):
+            if code in [
+                response.status_code,
+                default_status_code,
+            ] and content_types_match(resp_content_type, content_type):
                 resp_payload = response.content
-                if resp_content_type.startswith('application/json'):
+                if resp_content_type.startswith("application/json"):
                     resp_payload = response.json()
-                elif resp_content_type.startswith('application/xml'):
+                elif resp_content_type.startswith("application/xml"):
                     import xmltodict
-                    resp_payload = xmltodict.parse(response.content)['root']
-                elif resp_content_type.startswith('text/plain'):
-                    resp_payload = resp_payload.decode('utf-8')
+
+                    resp_payload = xmltodict.parse(response.content)["root"]
+                elif resp_content_type.startswith("text/plain"):
+                    resp_payload = resp_payload.decode("utf-8")
 
                 ret = resp_class.parse_obj(resp_payload)
 
                 ret._set_http_response(response)
-                self._handle_pagination(ret, response, pagination_info,
-                                        self._path_values(), param_types,
-                                        expected_responses)
+                self._handle_pagination(
+                    ret,
+                    response,
+                    pagination_info,
+                    self._path_values(),
+                    param_types,
+                    expected_responses,
+                )
 
                 return self._handle_error(ret)
 
-        raise ResponseError(response, f"Unexpected response content type ({resp_content_type})")
+        raise ResponseError(
+            response, f"Unexpected response content type ({resp_content_type})"
+        )
 
     def _handle_error(self, ret):
         api = self._stack[0]
@@ -179,10 +210,15 @@ class APIResource(ABC):
 
         return ret
 
-    def _handle_pagination(self, ret: APIBaseModel, resp: Response,
-                           pagination_info: PaginationDescription,
-                           path_values: dict, params_info: dict,
-                           expected_responses: list):
+    def _handle_pagination(
+        self,
+        ret: APIBaseModel,
+        resp: Response,
+        pagination_info: PaginationDescription,
+        path_values: dict,
+        params_info: dict,
+        expected_responses: list,
+    ):
         """
         Add metadata to the returned model object to allow handling pagination.
         """
@@ -195,11 +231,12 @@ class APIResource(ABC):
         ret._enable_pagination(pagination_info.result)
         ret._pagination.iter_func = None
 
-        query_params = params_info.get('query')
-        headers = params_info.get('header')
+        query_params = params_info.get("query")
+        headers = params_info.get("header")
 
-        has_more = evaluate(resp, pagination_info.has_more, path_values,
-                            query_params, headers)
+        has_more = evaluate(
+            resp, pagination_info.has_more, path_values, query_params, headers
+        )
         if not has_more:
             return
 
@@ -207,7 +244,9 @@ class APIResource(ABC):
         if pagination_info.reuse_previous_request:
             req = resp.request
         if pagination_info.url:
-            url = evaluate(resp, pagination_info.url, path_values, query_params, headers)
+            url = evaluate(
+                resp, pagination_info.url, path_values, query_params, headers
+            )
             req.prepare_url(url, None)
         if pagination_info.method:
             # TODO: Evaluate expression ???
@@ -219,15 +258,19 @@ class APIResource(ABC):
 
         def make_request():
             api = self._api()
-            new_resp = api.make_request(req.method, req.url, req.body,
-                                        headers=req.headers)
-            return self._handle_response(new_resp, expected_responses, params_info, pagination_info)
+            new_resp = api.make_request(
+                req.method, req.url, req.body, headers=req.headers
+            )
+            return self._handle_response(
+                new_resp, expected_responses, params_info, pagination_info
+            )
 
         ret._pagination.iter_func = make_request
 
 
-def _validate_request_payload(body: Union[str, bytes, dict, APIBaseModel],
-                              req_content_types: list, headers: dict) -> Tuple[str, dict]:
+def _validate_request_payload(
+    body: Union[str, bytes, dict, APIBaseModel], req_content_types: list, headers: dict
+) -> Tuple[str, dict]:
     """
     Tries to parse the request body into one of the supported pairs of
     content-type / class type. An exception will be returned if the body
@@ -254,11 +297,14 @@ def _validate_request_payload(body: Union[str, bytes, dict, APIBaseModel],
         # If Content-Type header is set, only that one is allowed
         headers = CaseInsensitiveDict(headers)
         headers.items()
-        expected_content_type = headers.get('content-type', None)
+        expected_content_type = headers.get("content-type", None)
         if expected_content_type:
             content_type_defined = True
-            req_content_types = [(content_type, req_class) for content_type, req_class in req_content_types if
-                                 content_types_match(content_type, expected_content_type)]
+            req_content_types = [
+                (content_type, req_class)
+                for content_type, req_class in req_content_types
+                if content_types_match(content_type, expected_content_type)
+            ]
 
         for content_type, request_class in req_content_types:
             # TODO: currently, request_class is not used, but it could be used
@@ -270,12 +316,12 @@ def _validate_request_payload(body: Union[str, bytes, dict, APIBaseModel],
 
                         if not content_type_defined:
                             # Set content type header
-                            headers['Content-Type'] = content_type
+                            headers["Content-Type"] = content_type
                         return body, dict(headers)
                     except (ValueError, ExpatError) as e:
                         exceptions_raised.append(e)
 
     if len(exceptions_raised) > 0:
-        raise ExceptionList('Unexpected data format', exceptions_raised)
+        raise ExceptionList("Unexpected data format", exceptions_raised)
 
     return body, headers

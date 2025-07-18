@@ -7,15 +7,21 @@ from ..common import make_response, to_dict, to_json
 
 build_client("python-tree")
 
-pkg_name = __name__.rsplit('.', 1)[0]
-request_mock_pkg = f'{pkg_name}._build.api.requests.request'
+pkg_name = __name__.rsplit(".", 1)[0]
+request_mock_pkg = f"{pkg_name}._build.api.requests.request"
 
 if True:
     from ._build.api import API
     from ._build.security import BearerToken
     from ._build.models.exceptions import ResponseError
-    from ._build.models.models import (CompanyCreate, Company, CompanyList,
-                                       CompanyUpdate, ErrorResponse, AnyValue)
+    from ._build.models.models import (
+        CompanyCreate,
+        Company,
+        CompanyList,
+        CompanyUpdate,
+        ErrorResponse,
+        AnyValue,
+    )
     from ._build.models.primitives import NoResponse
 
 test_req_create01 = CompanyCreate(
@@ -62,16 +68,16 @@ test_resp_company04 = Company(
     modified="2021-08-30T12:15:00Z",
 )
 
-test_company_not_found = ErrorResponse(
-    status=404,
-    message="Company not found!"
+test_company_not_found = ErrorResponse(status=404, message="Company not found!")
+
+
+@pytest.mark.parametrize(
+    "req, expected_resp",
+    [
+        (test_req_create01, test_resp_company01),
+        (to_dict(test_req_create01), test_resp_company01),
+    ],
 )
-
-
-@pytest.mark.parametrize("req, expected_resp", [
-    (test_req_create01, test_resp_company01),
-    (to_dict(test_req_create01), test_resp_company01),
-])
 def test_create(req, expected_resp):
     """
     Tests a successful request to create a Company.
@@ -81,21 +87,22 @@ def test_create(req, expected_resp):
     expected_raw_resp = make_response(201, expected_resp)
 
     with mock.patch(request_mock_pkg, return_value=expected_raw_resp) as m:
-        resp = (API(host="test-api.com").
-                with_security(BearerToken("token")).
-                companies().
-                create(req, params={'foo': 'bar'}))
+        resp = (
+            API(host="test-api.com")
+            .with_security(BearerToken("token"))
+            .companies()
+            .create(req, params={"foo": "bar"})
+        )
 
-    m.assert_called_once_with("POST",
-                              "https://test-api.com/companies",
-                              params={'foo': 'bar'},
-                              headers={
-                                  'Authorization': 'Bearer token',
-                                  'Content-Type': 'application/json'
-                              },
-                              data=to_json(req),
-                              timeout=3,
-                              verify=True)
+    m.assert_called_once_with(
+        "POST",
+        "https://test-api.com/companies",
+        params={"foo": "bar"},
+        headers={"Authorization": "Bearer token", "Content-Type": "application/json"},
+        data=to_json(req),
+        timeout=3,
+        verify=True,
+    )
 
     assert resp.http_response().status_code == 201
     assert resp == expected_resp
@@ -111,21 +118,22 @@ def test_create_default_status_code():
     expected_raw_resp = make_response(200, "OK")
 
     with mock.patch(request_mock_pkg, return_value=expected_raw_resp) as m:
-        resp = (API(host="test-api.com").
-                with_security(BearerToken("token")).
-                companies().
-                create(test_req_create01, params={'foo': 'bar'}))
+        resp = (
+            API(host="test-api.com")
+            .with_security(BearerToken("token"))
+            .companies()
+            .create(test_req_create01, params={"foo": "bar"})
+        )
 
-    m.assert_called_once_with("POST",
-                              "https://test-api.com/companies",
-                              params={'foo': 'bar'},
-                              headers={
-                                  'Authorization': 'Bearer token',
-                                  'Content-Type': 'application/json'
-                              },
-                              data=to_json(test_req_create01),
-                              timeout=3,
-                              verify=True)
+    m.assert_called_once_with(
+        "POST",
+        "https://test-api.com/companies",
+        params={"foo": "bar"},
+        headers={"Authorization": "Bearer token", "Content-Type": "application/json"},
+        data=to_json(test_req_create01),
+        timeout=3,
+        verify=True,
+    )
 
     assert resp.http_response().status_code == 200
     assert resp == AnyValue.parse_obj("OK")
@@ -139,18 +147,22 @@ def test_get():
     expected_resp = make_response(200, test_resp_company01)
 
     with mock.patch(request_mock_pkg, return_value=expected_resp) as m:
-        resp = (API(host="test-api.com").
-                with_security(BearerToken("token")).
-                companies("shiny_stickers").
-                get(params={'foo': 'bar'}))
+        resp = (
+            API(host="test-api.com")
+            .with_security(BearerToken("token"))
+            .companies("shiny_stickers")
+            .get(params={"foo": "bar"})
+        )
 
-    m.assert_called_once_with("GET",
-                              "https://test-api.com/companies/shiny_stickers",
-                              params={'foo': 'bar'},
-                              headers={'Authorization': 'Bearer token'},
-                              data=[],
-                              timeout=3,
-                              verify=True)
+    m.assert_called_once_with(
+        "GET",
+        "https://test-api.com/companies/shiny_stickers",
+        params={"foo": "bar"},
+        headers={"Authorization": "Bearer token"},
+        data=[],
+        timeout=3,
+        verify=True,
+    )
 
     assert resp.http_response().status_code == 200
     assert resp == test_resp_company01
@@ -169,35 +181,42 @@ def test_list():
             test_resp_company04,
         ],
         cursors={
-            'next': None,
-            'previous': None,
-        }
+            "next": None,
+            "previous": None,
+        },
     )
     expected_resp = make_response(200, expected_list)
 
     with mock.patch(request_mock_pkg, return_value=expected_resp) as m:
-        resp = (API(host="test-api.com").
-                with_security(BearerToken("token")).
-                companies().
-                list_companies(params={'foo': 'bar'}))
+        resp = (
+            API(host="test-api.com")
+            .with_security(BearerToken("token"))
+            .companies()
+            .list_companies(params={"foo": "bar"})
+        )
 
-    m.assert_called_once_with("GET",
-                              "https://test-api.com/companies",
-                              params={'foo': 'bar'},
-                              headers={'Authorization': 'Bearer token'},
-                              data=[],
-                              timeout=3,
-                              verify=True)
+    m.assert_called_once_with(
+        "GET",
+        "https://test-api.com/companies",
+        params={"foo": "bar"},
+        headers={"Authorization": "Bearer token"},
+        data=[],
+        timeout=3,
+        verify=True,
+    )
 
     assert resp.http_response().status_code == 200
     assert resp == expected_list
     assert isinstance(resp, CompanyList)
 
 
-@pytest.mark.parametrize("req, expected_resp", [
-    (test_req_update01, test_resp_company01),
-    (to_dict(test_req_update01), test_resp_company01),
-])
+@pytest.mark.parametrize(
+    "req, expected_resp",
+    [
+        (test_req_update01, test_resp_company01),
+        (to_dict(test_req_update01), test_resp_company01),
+    ],
+)
 def test_update(req, expected_resp):
     """
     Tests a successful request to update a Company.
@@ -205,21 +224,22 @@ def test_update(req, expected_resp):
     expected_raw_resp = make_response(200, expected_resp)
 
     with mock.patch(request_mock_pkg, return_value=expected_raw_resp) as m:
-        resp = (API(host="test-api.com").
-                with_security(BearerToken("token")).
-                companies('shiny_stickers').
-                put(req, params={'foo': 'bar'}))
+        resp = (
+            API(host="test-api.com")
+            .with_security(BearerToken("token"))
+            .companies("shiny_stickers")
+            .put(req, params={"foo": "bar"})
+        )
 
-    m.assert_called_once_with("PUT",
-                              "https://test-api.com/companies/shiny_stickers",
-                              params={'foo': 'bar'},
-                              headers={
-                                  'Authorization': 'Bearer token',
-                                  'Content-Type': 'application/json'
-                              },
-                              data=to_json(req),
-                              timeout=3,
-                              verify=True)
+    m.assert_called_once_with(
+        "PUT",
+        "https://test-api.com/companies/shiny_stickers",
+        params={"foo": "bar"},
+        headers={"Authorization": "Bearer token", "Content-Type": "application/json"},
+        data=to_json(req),
+        timeout=3,
+        verify=True,
+    )
 
     assert resp.http_response().status_code == 200
     assert resp == expected_resp
@@ -233,18 +253,22 @@ def test_delete():
     expected_resp = make_response(204)
 
     with mock.patch(request_mock_pkg, return_value=expected_resp) as m:
-        resp = (API(host="test-api.com").
-                with_security(BearerToken("token")).
-                companies("shiny_stickers").
-                delete(params={'foo': 'bar'}, timeout=5.5))
+        resp = (
+            API(host="test-api.com")
+            .with_security(BearerToken("token"))
+            .companies("shiny_stickers")
+            .delete(params={"foo": "bar"}, timeout=5.5)
+        )
 
-    m.assert_called_once_with("DELETE",
-                              "https://test-api.com/companies/shiny_stickers",
-                              params={'foo': 'bar'},
-                              headers={'Authorization': 'Bearer token'},
-                              data=[],
-                              timeout=5.5,
-                              verify=True)
+    m.assert_called_once_with(
+        "DELETE",
+        "https://test-api.com/companies/shiny_stickers",
+        params={"foo": "bar"},
+        headers={"Authorization": "Bearer token"},
+        data=[],
+        timeout=5.5,
+        verify=True,
+    )
 
     assert resp.http_response().status_code == 204
     assert resp == NoResponse()
@@ -259,18 +283,22 @@ def test_get_multi_param():
     expected_resp = make_response(200, test_resp_company01)
 
     with mock.patch(request_mock_pkg, return_value=expected_resp) as m:
-        resp = (API(host="test-api.com").
-                with_security(BearerToken("token")).
-                companies("shiny_stickers", 7).
-                get(params={'foo': 'bar'}))
+        resp = (
+            API(host="test-api.com")
+            .with_security(BearerToken("token"))
+            .companies("shiny_stickers", 7)
+            .get(params={"foo": "bar"})
+        )
 
-    m.assert_called_once_with("GET",
-                              "https://test-api.com/companies/shiny_stickers/7",
-                              params={'foo': 'bar'},
-                              headers={'Authorization': 'Bearer token'},
-                              data=[],
-                              timeout=3,
-                              verify=True)
+    m.assert_called_once_with(
+        "GET",
+        "https://test-api.com/companies/shiny_stickers/7",
+        params={"foo": "bar"},
+        headers={"Authorization": "Bearer token"},
+        data=[],
+        timeout=3,
+        verify=True,
+    )
 
     assert resp.http_response().status_code == 200
     assert resp == test_resp_company01
@@ -285,17 +313,22 @@ def test_get_error():
 
     with mock.patch(request_mock_pkg, return_value=expected_resp) as m:
         with pytest.raises(ResponseError) as e:
-            (API(host="test-api.com").
-             with_security(BearerToken("token")).
-             companies("shiny_stickers").get())
+            (
+                API(host="test-api.com")
+                .with_security(BearerToken("token"))
+                .companies("shiny_stickers")
+                .get()
+            )
 
-    m.assert_called_once_with("GET",
-                              "https://test-api.com/companies/shiny_stickers",
-                              params={},
-                              headers={'Authorization': 'Bearer token'},
-                              data=[],
-                              timeout=3,
-                              verify=True)
+    m.assert_called_once_with(
+        "GET",
+        "https://test-api.com/companies/shiny_stickers",
+        params={},
+        headers={"Authorization": "Bearer token"},
+        data=[],
+        timeout=3,
+        verify=True,
+    )
 
     exc = e.value
     assert exc.http_response().status_code == 404
@@ -314,17 +347,17 @@ def test_get_error_not_raised():
     api._raise_errors = False  # Disable automatic error raising
 
     with mock.patch(request_mock_pkg, return_value=expected_resp) as m:
-        resp = (api.
-                with_security(BearerToken("token")).
-                companies("shiny_stickers").get())
+        resp = api.with_security(BearerToken("token")).companies("shiny_stickers").get()
 
-    m.assert_called_once_with("GET",
-                              "https://test-api.com/companies/shiny_stickers",
-                              params={},
-                              headers={'Authorization': 'Bearer token'},
-                              data=[],
-                              timeout=3,
-                              verify=True)
+    m.assert_called_once_with(
+        "GET",
+        "https://test-api.com/companies/shiny_stickers",
+        params={},
+        headers={"Authorization": "Bearer token"},
+        data=[],
+        timeout=3,
+        verify=True,
+    )
 
     assert resp.http_response().status_code == 404
     assert resp == test_company_not_found

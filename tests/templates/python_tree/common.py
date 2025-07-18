@@ -6,7 +6,9 @@ from pydantic import BaseModel
 from requests import PreparedRequest, Request, Response
 
 
-def make_response(status_code: int, body=None, request: Union[PreparedRequest, Request] = None) -> Response:
+def make_response(
+    status_code: int, body=None, request: Union[PreparedRequest, Request] = None
+) -> Response:
     resp = Response()
     resp.status_code = status_code
     if isinstance(request, Request):
@@ -15,11 +17,11 @@ def make_response(status_code: int, body=None, request: Union[PreparedRequest, R
     if body is not None:
         if isinstance(body, (dict, BaseModel)):
             body = to_dict(body)
-            resp._content = json.dumps(body).encode('utf-8')
-            resp.headers = CaseInsensitiveDict({'Content-Type': 'application/json'})
+            resp._content = json.dumps(body).encode("utf-8")
+            resp.headers = CaseInsensitiveDict({"Content-Type": "application/json"})
         elif isinstance(body, str):
-            resp._content = body.encode('utf-8')
-            resp.headers = CaseInsensitiveDict({'Content-Type': 'text/plain'})
+            resp._content = body.encode("utf-8")
+            resp.headers = CaseInsensitiveDict({"Content-Type": "text/plain"})
     return resp
 
 

@@ -20,6 +20,7 @@ class APITree:
     A tree of APINode instances that connects the layers of all the endpoints
     of an API.
     """
+
     branches: List[APINode] = field(default_factory=list)
 
     def node(self, api_level: str) -> APINode | None:
@@ -74,6 +75,7 @@ class APINode:
     """
     Defines a node of an APITree.
     """
+
     api: str
     layers: List[EndpointLayer] = field(default_factory=list)
     next: APITree = field(default_factory=APITree)
@@ -104,13 +106,18 @@ def build_endpoints_tree(endpoints: List[Endpoint], deepcopy: bool = True) -> AP
     if deepcopy:
         endpoints = copy.deepcopy(endpoints)
 
-    config = endpoints[0].definition.get_value('info.x-apier', '.', {})
-    equivalent_paths = config.get('equivalent_paths', [])
+    config = endpoints[0].definition.get_value("info.x-apier", ".", {})
+    equivalent_paths = config.get("equivalent_paths", [])
     targets = [eq_path["target"] for eq_path in equivalent_paths]
 
     # Sort endpoints to process target paths first. This is necessary to prevent
     # source paths from being created before the target paths.
-    endpoints.sort(key=lambda endpoint: (not any(endpoint.path.startswith(source) for source in targets), endpoint.path))
+    endpoints.sort(
+        key=lambda endpoint: (
+            not any(endpoint.path.startswith(source) for source in targets),
+            endpoint.path,
+        )
+    )
 
     for e in endpoints:
         _build_recursive(api_tree, api_tree, e.layers, config)
@@ -118,11 +125,13 @@ def build_endpoints_tree(endpoints: List[Endpoint], deepcopy: bool = True) -> AP
     return api_tree
 
 
-def _build_recursive(api_tree: APITree,
-                     current_tree: APITree,
-                     layers: List[EndpointLayer],
-                     config: dict,
-                     current_path: str = "") -> APINode | None:
+def _build_recursive(
+    api_tree: APITree,
+    current_tree: APITree,
+    layers: List[EndpointLayer],
+    config: dict,
+    current_path: str = "",
+) -> APINode | None:
     if len(layers) == 0:
         return None
 
@@ -133,7 +142,7 @@ def _build_recursive(api_tree: APITree,
         # raise Exception("this layer does not have an api level!")
         return None
 
-    equivalent_paths = config.get('equivalent_paths', [])
+    equivalent_paths = config.get("equivalent_paths", [])
     for eq_path in equivalent_paths:
         if current_path.startswith(eq_path["source"]):
             eq_path = current_path.replace(eq_path["source"], eq_path["target"])
@@ -143,7 +152,9 @@ def _build_recursive(api_tree: APITree,
                 current_tree = tree
                 break
             except PathNotFoundException as e:
-                raise PathNotFoundException(f"equivalent endpoint not found in tree: {e}")
+                raise PathNotFoundException(
+                    f"equivalent endpoint not found in tree: {e}"
+                )
 
     api_level = layer.api_levels[0]
     node = current_tree.node(api_level)
@@ -164,7 +175,9 @@ def _build_recursive(api_tree: APITree,
         current_tree.branches.append(node)
 
     if len(layers[1:]) > 0:
-        next_node = _build_recursive(api_tree, node.next, layers[1:], config, current_path)
+        next_node = _build_recursive(
+            api_tree, node.next, layers[1:], config, current_path
+        )
         if next_node is not None:
             if next_node not in layer.next:
                 layer.next.append(next_node)

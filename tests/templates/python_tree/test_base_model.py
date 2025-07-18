@@ -20,9 +20,7 @@ def test_base_model_dict():
     user_info = {
         "name": "Alice",
         "age": 22,
-        "info": {
-            "favourite_color": "Yellow"
-        },
+        "info": {"favourite_color": "Yellow"},
         "lucky_numbers": [1, 2, 3],
     }
 
@@ -109,7 +107,7 @@ def test_base_model_list():
     # iter
     res = [i for i in c]
     assert res == [27, 9]
-    assert not hasattr(c, 'items')
+    assert not hasattr(c, "items")
 
 
 def test_base_model_obj():
@@ -122,13 +120,7 @@ def test_base_model_obj():
         age: int
         info: Any = None
 
-    user_info = {
-        "name": "Alice",
-        "age": 22,
-        "info": {
-            "favourite_color": "Yellow"
-        }
-    }
+    user_info = {"name": "Alice", "age": 22, "info": {"favourite_color": "Yellow"}}
 
     c = ObjClass.parse_obj(user_info)
 
@@ -164,5 +156,9 @@ def test_base_model_obj():
 
     # iter
     res = [k for k in c]
-    assert res == [('name', 'Chloe'), ('age', 22), ('info', {'favourite_color': 'Yellow'})]
-    assert not hasattr(c, 'items')
+    assert res == [
+        ("name", "Chloe"),
+        ("age", 22),
+        ("info", {"favourite_color": "Yellow"}),
+    ]
+    assert not hasattr(c, "items")

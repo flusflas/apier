@@ -32,9 +32,9 @@ class Definition:
 
         :return: The paths content of this definition.
         """
-        return self.definition['paths']
+        return self.definition["paths"]
 
-    def get_value(self, key: str, separator: str = '.', default=_default):
+    def get_value(self, key: str, separator: str = ".", default=_default):
         """
         Returns the value of the definition given by a key, which can define
         multiple levels (e.g. "info.version").
@@ -59,8 +59,8 @@ class Definition:
         :return: The reference defintion. It raises a KeyError if the value
                  is not found.
         """
-        ref_clean = ref.replace('#/', '')
+        ref_clean = ref.replace("#/", "")
         try:
-            return self.get_value(ref_clean, '/')
+            return self.get_value(ref_clean, "/")
         except KeyError:
             raise KeyError(f"Reference '{ref}' not found")

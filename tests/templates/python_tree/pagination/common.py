@@ -5,20 +5,22 @@ from unittest import mock
 import httpretty
 import requests
 
-pkg_name = __name__.rsplit('.', 1)[0]
-request_mock_pkg = f'{pkg_name}._build.api.requests.request'
+pkg_name = __name__.rsplit(".", 1)[0]
+request_mock_pkg = f"{pkg_name}._build.api.requests.request"
 
 
 @httpretty.activate
-def assert_pagination(pagination_function: callable,
-                      function_params: dict,
-                      request_handler: callable,
-                      get_response_data: callable,
-                      expected_url: str,
-                      expected_results: list,
-                      expected_limit: int,
-                      expected_type,
-                      expected_verify: bool = True):
+def assert_pagination(
+    pagination_function: callable,
+    function_params: dict,
+    request_handler: callable,
+    get_response_data: callable,
+    expected_url: str,
+    expected_results: list,
+    expected_limit: int,
+    expected_type,
+    expected_verify: bool = True,
+):
     """
     Asserts that, given API function (pagination_function) that supports
     pagination, it can be paginated properly.
@@ -28,7 +30,7 @@ def assert_pagination(pagination_function: callable,
     def side_effect(*args, **kwargs):
         # Makes a real call to the request function
         response = original_request_func(*args, **kwargs)
-        assert 'verify' in kwargs and kwargs['verify'] == expected_verify
+        assert "verify" in kwargs and kwargs["verify"] == expected_verify
         return response
 
     httpretty.register_uri(httpretty.GET, expected_url, body=request_handler)

@@ -26,16 +26,16 @@ class MergeWarning(Warning):
 
         value1 = self.value1
         if isinstance(value1, str):
-            value1 = value1.replace('\n', '\\n')
+            value1 = value1.replace("\n", "\\n")
             if len(value1) > self.max_length:
-                value1 = value1[:self.max_length] + "..."
+                value1 = value1[: self.max_length] + "..."
             value1 = f"'{value1}'"
 
         value2 = self.value2
         if isinstance(value2, str):
-            value2 = value2.replace('\n', '\\n')
+            value2 = value2.replace("\n", "\\n")
             if len(value2) > self.max_length:
-                value2 = value2[:self.max_length] + "..."
+                value2 = value2[: self.max_length] + "..."
             value2 = f"'{value2}'"
 
         return f"{message}: {value1} != {value2}"
@@ -51,7 +51,9 @@ def solver_string(keys, value1, value2):
     """
     if not isinstance(value1, str) or not isinstance(value2, str):
         return Skip()
-    warnings.warn(MergeWarning(current_spec_filename, keys, value1, value2, max_length=100))
+    warnings.warn(
+        MergeWarning(current_spec_filename, keys, value1, value2, max_length=100)
+    )
     return value1
 
 
@@ -63,8 +65,9 @@ def merge_specs(*specs: dict) -> dict:
     """
     merged_spec = {}
     for spec in specs:
-        merged_spec = merge(merged_spec, spec,
-                            conflict_solvers=[unique_lists, solver_string])
+        merged_spec = merge(
+            merged_spec, spec, conflict_solvers=[unique_lists, solver_string]
+        )
     return merged_spec
 
 
@@ -80,8 +83,8 @@ def merge_spec_files(*files: str) -> dict:
 
     for spec_filename in files:
         current_spec_filename = spec_filename
-        with open(spec_filename, 'r') as f:
-            if spec_filename.endswith('.json'):
+        with open(spec_filename, "r") as f:
+            if spec_filename.endswith(".json"):
                 spec_dict = json.load(f)
             else:
                 spec_dict = yaml.safe_load(f)

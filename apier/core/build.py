@@ -12,7 +12,9 @@ from apier.core.api.openapi import Definition
 from apier.core.renderer import render_api
 
 
-def build(ctx, template: Union[str, Path], filename: Union[str, List], output_path='_build/'):
+def build(
+    ctx, template: Union[str, Path], filename: Union[str, List], output_path="_build/"
+):
     """
     Build the API client from the given OpenAPI file(s).
 

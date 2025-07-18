@@ -13,12 +13,18 @@ from apier.core.api.endpoints import Endpoint
 from apier.core.api.openapi import Definition
 
 builtin_template_map = {
-    'python-tree': 'python_tree',
+    "python-tree": "python_tree",
 }
 
 
-def render_api(ctx, template: Union[str, Path], definition: Definition,
-               schemas: dict, endpoints: list[Endpoint], output_path: str):
+def render_api(
+    ctx,
+    template: Union[str, Path],
+    definition: Definition,
+    schemas: dict,
+    endpoints: list[Endpoint],
+    output_path: str,
+):
     """
     Render the API client using the specified template.
 
@@ -35,10 +41,7 @@ def render_api(ctx, template: Union[str, Path], definition: Definition,
     """
 
     if ctx is None:
-        ctx = {
-            'verbose': False,
-            'output_logger': print
-        }
+        ctx = {"verbose": False, "output_logger": print}
 
     if not os.path.isabs(output_path):
         output_path = os.path.normpath(os.path.join(os.getcwd(), output_path))
@@ -47,8 +50,9 @@ def render_api(ctx, template: Union[str, Path], definition: Definition,
         if isinstance(template, str):
             # Use a built-in template
             template = builtin_template_map.get(template)
-            renderer = (import_module(f"apier.templates.{template}.renderer").
-                        Renderer(ctx, definition, schemas, endpoints, output_path))
+            renderer = import_module(f"apier.templates.{template}.renderer").Renderer(
+                ctx, definition, schemas, endpoints, output_path
+            )
 
         elif isinstance(template, Path):
             # Use a custom template directory. The directory must be
@@ -59,11 +63,7 @@ def render_api(ctx, template: Union[str, Path], definition: Definition,
 
             # Register the external directory as a package
             sys.modules[package_name] = importlib.util.module_from_spec(
-                importlib.machinery.ModuleSpec(
-                    package_name,
-                    None,
-                    is_package=True
-                )
+                importlib.machinery.ModuleSpec(package_name, None, is_package=True)
             )
 
             # Add the parent directory of the template to sys.path

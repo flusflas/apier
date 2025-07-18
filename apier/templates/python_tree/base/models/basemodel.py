@@ -17,25 +17,27 @@ class IterBaseModel(BaseModel):
     def __init__(self, **data):
         super().__init__(**data)
         if self._has_root(dict):
-            object.__setattr__(self, 'items', self._items)
+            object.__setattr__(self, "items", self._items)
 
     def _has_root(self, types):
-        return '__root__' in self.__dict__ and isinstance(self.__root__, types)
+        return "__root__" in self.__dict__ and isinstance(self.__root__, types)
 
     def __str__(self):
-        if '__root__' in self.__dict__:
+        if "__root__" in self.__dict__:
             return str(self.__root__)
         else:
             return super().__str__()
 
     def __repr__(self):
-        if '__root__' in self.__dict__:
+        if "__root__" in self.__dict__:
             return repr(self.__root__)
         else:
             return super().__repr__()
 
     def __getattr__(self, attribute):
-        if self._has_root(dict) and not (attribute.startswith('__') and attribute.endswith('__')):
+        if self._has_root(dict) and not (
+            attribute.startswith("__") and attribute.endswith("__")
+        ):
             return self.__root__[attribute]
         else:
             return super().__getattribute__(attribute)
@@ -46,8 +48,9 @@ class IterBaseModel(BaseModel):
         else:
             super().__setattr__(attribute, value)
 
-    def _nested_item(self, key: str, separator='.'):
+    def _nested_item(self, key: str, separator="."):
         try:
+
             def get_item(a, b):
                 if isinstance(a, list):
                     b = int(b)
@@ -99,25 +102,31 @@ class IterBaseModel(BaseModel):
             return len(self.__dict__)
 
     def dict(
-            self,
-            *,
-            include: Optional[Union['typing.AbstractSetIntStr', 'typing.MappingIntStrAny']] = None,
-            exclude: Optional[Union['typing.AbstractSetIntStr', 'typing.MappingIntStrAny']] = None,
-            by_alias: bool = False,
-            skip_defaults: Optional[bool] = None,
-            exclude_unset: bool = False,
-            exclude_defaults: bool = False,
-            exclude_none: bool = False,
-    ) -> 'typing.DictStrAny':
-        ret = super(IterBaseModel, self).dict(include=include,
-                                              exclude=exclude,
-                                              by_alias=by_alias,
-                                              skip_defaults=skip_defaults,
-                                              exclude_unset=exclude_unset,
-                                              exclude_defaults=exclude_defaults,
-                                              exclude_none=exclude_none)
+        self,
+        *,
+        include: Optional[
+            Union["typing.AbstractSetIntStr", "typing.MappingIntStrAny"]
+        ] = None,
+        exclude: Optional[
+            Union["typing.AbstractSetIntStr", "typing.MappingIntStrAny"]
+        ] = None,
+        by_alias: bool = False,
+        skip_defaults: Optional[bool] = None,
+        exclude_unset: bool = False,
+        exclude_defaults: bool = False,
+        exclude_none: bool = False,
+    ) -> "typing.DictStrAny":
+        ret = super(IterBaseModel, self).dict(
+            include=include,
+            exclude=exclude,
+            by_alias=by_alias,
+            skip_defaults=skip_defaults,
+            exclude_unset=exclude_unset,
+            exclude_defaults=exclude_defaults,
+            exclude_none=exclude_none,
+        )
         if self._has_root((dict, list)):
-            return ret['__root__']
+            return ret["__root__"]
         else:
             return ret
 
@@ -133,10 +142,11 @@ class HTTPResponseModel(BaseModel):
     Extends :class:`pydantic.BaseModel` to allow embedding a requests.Response
     instance. The method http_response() returns this instance.
     """
+
     _http_response: requests.Response = PrivateAttr(None)
 
     def _set_http_response(self, response):
-        object.__setattr__(self, '_http_response', response)
+        object.__setattr__(self, "_http_response", response)
 
     def http_response(self):
         """
@@ -149,6 +159,7 @@ class PaginatorBaseModel(IterBaseModel, HTTPResponseModel, Paginator):
     """
     This class allows to paginate the results of an API response instance.
     """
+
     _pagination: _PaginationHelper = PrivateAttr(default_factory=_PaginationHelper)
 
     def _enable_pagination(self, data_attribute: str):
@@ -173,4 +184,5 @@ class APIBaseModel(PaginatorBaseModel):
     """
     The Pydantic base model used for API schema models.
     """
+
     pass

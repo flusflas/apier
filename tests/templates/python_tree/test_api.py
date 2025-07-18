@@ -12,7 +12,7 @@ if True:
 
 
 def test_create_successfully():
-    """ Creates an API instance successfully. """
+    """Creates an API instance successfully."""
     api = API(host="test-api.com")
     assert api.host == "https://test-api.com"
 
@@ -23,24 +23,24 @@ def test_make_request(verify):
     Makes a request to the API.
     """
     req_payload = {"foo": "bar"}
-    expected_resp_payload = {
-        "key1": 123,
-        "key2": "hey!"
-    }
+    expected_resp_payload = {"key1": 123, "key2": "hey!"}
 
     expected_resp = make_response(200, expected_resp_payload)
 
     with mock.patch("requests.request", return_value=expected_resp) as m:
-        resp = (API(host="test-api.com", verify=verify).
-                make_request("POST", "/info", body=req_payload, auth=False))
+        resp = API(host="test-api.com", verify=verify).make_request(
+            "POST", "/info", body=req_payload, auth=False
+        )
 
-    m.assert_called_once_with("POST",
-                              "https://test-api.com/info",
-                              params={},
-                              headers={'Content-Type': 'application/json'},
-                              data=to_json(req_payload),
-                              timeout=3,
-                              verify=verify)
+    m.assert_called_once_with(
+        "POST",
+        "https://test-api.com/info",
+        params={},
+        headers={"Content-Type": "application/json"},
+        data=to_json(req_payload),
+        timeout=3,
+        verify=verify,
+    )
 
     assert resp.status_code == 200
     assert resp.json() == expected_resp_payload
@@ -52,29 +52,27 @@ def test_make_request_with_security(verify):
     Makes a request to the API setting a security scheme.
     """
     req_payload = {"foo": "bar"}
-    expected_resp_payload = {
-        "key1": 123,
-        "key2": "hey!"
-    }
+    expected_resp_payload = {"key1": 123, "key2": "hey!"}
 
     expected_resp = make_response(200, expected_resp_payload)
 
-    api = API(host="test-api.com", verify=verify).with_security(BearerToken('my_token'))
+    api = API(host="test-api.com", verify=verify).with_security(BearerToken("my_token"))
 
     with mock.patch("requests.request", return_value=expected_resp) as m:
-        resp = (api.
-                make_request("POST", "/info", body=req_payload))
+        resp = api.make_request("POST", "/info", body=req_payload)
 
-    m.assert_called_once_with("POST",
-                              "https://test-api.com/info",
-                              params={},
-                              headers={
-                                  'Authorization': 'Bearer my_token',
-                                  'Content-Type': 'application/json',
-                              },
-                              data=to_json(req_payload),
-                              timeout=3,
-                              verify=verify)
+    m.assert_called_once_with(
+        "POST",
+        "https://test-api.com/info",
+        params={},
+        headers={
+            "Authorization": "Bearer my_token",
+            "Content-Type": "application/json",
+        },
+        data=to_json(req_payload),
+        timeout=3,
+        verify=verify,
+    )
 
     assert resp.status_code == 200
     assert resp.json() == expected_resp_payload

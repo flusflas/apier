@@ -22,9 +22,7 @@ def test_api_base_model_dict():
     user_info = {
         "name": "Alice",
         "age": 22,
-        "info": {
-            "favourite_color": "Yellow"
-        },
+        "info": {"favourite_color": "Yellow"},
         "lucky_numbers": [1, 2, 3],
     }
 
@@ -51,13 +49,7 @@ def test_api_base_model_obj():
         age: int
         info: Any = None
 
-    user_info = {
-        "name": "Alice",
-        "age": 22,
-        "info": {
-            "favourite_color": "Yellow"
-        }
-    }
+    user_info = {"name": "Alice", "age": 22, "info": {"favourite_color": "Yellow"}}
 
     c = ObjClass.parse_obj(user_info)
 

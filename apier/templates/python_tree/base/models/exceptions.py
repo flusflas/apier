@@ -8,7 +8,7 @@ class APIException(Exception):
 
 
 class ResponseError(APIException):
-    """ Client or server error response. """
+    """Client or server error response."""
 
     def __init__(self, error, *attr):
         super().__init__(*attr)

@@ -10,7 +10,9 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field
 
 from .input_parameters import InputParametersDescription
-from apier.templates.python_tree.base.models.extensions.pagination import PaginationDescription
+from apier.templates.python_tree.base.models.extensions.pagination import (
+    PaginationDescription,
+)
 from .method_name import MethodNameDescription
 
 if TYPE_CHECKING:
@@ -26,9 +28,11 @@ class Extensions(BaseModel):
     class Config:
         allow_population_by_field_name = True
 
-    pagination: Pagination = Field(default=None, alias='pagination')
-    input_parameters: InputParametersDescription = Field(default=None, alias='input-parameters')
-    method_name: MethodNameDescription = Field(default=None, alias='method-name')
+    pagination: Pagination = Field(default=None, alias="pagination")
+    input_parameters: InputParametersDescription = Field(
+        default=None, alias="input-parameters"
+    )
+    method_name: MethodNameDescription = Field(default=None, alias="method-name")
 
 
 class Pagination(BaseModel):
@@ -36,6 +40,7 @@ class Pagination(BaseModel):
     Model class for the pagination extension, which allows customizing the
     pagination behavior of the API client.
     """
+
     next: PaginationDescription
 
 
@@ -51,12 +56,14 @@ def parse_extensions(endpoint: Endpoint):
     """
     for op in endpoint.operations:
         endpoint_def = endpoint.definition.paths[endpoint.path][op.name]
-        extensions_def = endpoint_def.get('x-apier')
+        extensions_def = endpoint_def.get("x-apier")
         if not extensions_def:
             continue
 
         for extension_name, extension_def in extensions_def.items():
-            if '$ref' in extension_def:
-                extensions_def[extension_name] = endpoint.definition.solve_ref(extension_def['$ref'])
+            if "$ref" in extension_def:
+                extensions_def[extension_name] = endpoint.definition.solve_ref(
+                    extension_def["$ref"]
+                )
 
         op.extensions = Extensions.parse_obj(extensions_def)

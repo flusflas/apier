@@ -7,8 +7,9 @@ from apier.core.consts import NO_RESPONSE_ID
 from apier.utils.strings import to_snake_case
 
 
-def get_type_hint(*args: Union[str, ContentSchema],
-                  include_primitive_type: bool = False) -> str:
+def get_type_hint(
+    *args: Union[str, ContentSchema], include_primitive_type: bool = False
+) -> str:
     """
     Returns the type string associated to the given array of schemas so that
     it can be used for type hints.
@@ -31,16 +32,16 @@ def get_type_hint(*args: Union[str, ContentSchema],
     :return:        Type hint.
     """
     if len(args) == 0:
-        return ''
+        return ""
 
     types_map = {
-        'string': 'str',
-        'number': 'float',
-        'integer': 'int',
-        'object': 'dict',
-        'array': 'list',
-        'boolean': 'bool',
-        'null': 'None',
+        "string": "str",
+        "number": "float",
+        "integer": "int",
+        "object": "dict",
+        "array": "list",
+        "boolean": "bool",
+        "null": "None",
     }
 
     types = []
@@ -51,12 +52,12 @@ def get_type_hint(*args: Union[str, ContentSchema],
             else:
                 types.append(t)
         elif isinstance(t, ContentSchema):
-            if t.name in [NO_RESPONSE_ID, '']:
-                types.append('primitives.NoResponse')
+            if t.name in [NO_RESPONSE_ID, ""]:
+                types.append("primitives.NoResponse")
                 break
             types.append("models." + t.name)
-            if include_primitive_type and 'type' in t.schema:
-                types.append(types_map[t.schema['type']])
+            if include_primitive_type and "type" in t.schema:
+                types.append(types_map[t.schema["type"]])
         else:
             raise ValueError("Invalid type")
 
@@ -75,17 +76,19 @@ def payload_from_input_parameters(endpoint_method: EndpointOperation) -> str:
     try:
         params = {}
         for method_param in endpoint_method.parameters:
-            if method_param.in_location == 'path':
-                params[method_param.name] = f"self._path_value('{to_snake_case(method_param.name)}')"
-            elif method_param.in_location in ['query', 'header']:
+            if method_param.in_location == "path":
+                params[method_param.name] = (
+                    f"self._path_value('{to_snake_case(method_param.name)}')"
+                )
+            elif method_param.in_location in ["query", "header"]:
                 params[method_param.name] = f"params[{method_param.name}]"
 
         for input_param in endpoint_method.extensions.input_parameters.parameters:
             params[input_param.name] = to_snake_case(input_param.name)
 
         supported_filters = {
-            'str': lambda x: f"str({x})",
-            'json': lambda x: f"json.dumps({x})",
+            "str": lambda x: f"str({x})",
+            "json": lambda x: f"json.dumps({x})",
         }
 
         payload_str = endpoint_method.extensions.input_parameters.payload
@@ -93,33 +96,36 @@ def payload_from_input_parameters(endpoint_method: EndpointOperation) -> str:
         escaped_expression = payload_str.replace('"', '\\"')
 
         # Find and replace the variables in the expression
-        variables = re.findall(r'{{([^{].*?[^}])}}', escaped_expression)
+        variables = re.findall(r"{{([^{].*?[^}])}}", escaped_expression)
         for var in variables:
-            var_name, *filters = var.split('|')
+            var_name, *filters = var.split("|")
             param_name = params[var_name.strip()]
 
             partial_escaped_expression = param_name
 
             # Apply filters
             if not filters:
-                filters.append('str')
+                filters.append("str")
 
             for f in filters:
                 f = f.strip()
                 if f not in supported_filters:
                     raise ValueError(f"Unknown function {filters}")
 
-                partial_escaped_expression = supported_filters[f](partial_escaped_expression)
+                partial_escaped_expression = supported_filters[f](
+                    partial_escaped_expression
+                )
 
-            escaped_expression = escaped_expression.replace('{{' + var + '}}',
-                                                            '" + ' + partial_escaped_expression + ' + "')
+            escaped_expression = escaped_expression.replace(
+                "{{" + var + "}}", '" + ' + partial_escaped_expression + ' + "'
+            )
 
         escaped_expression = f'"{escaped_expression}"'
 
         if escaped_expression.startswith('"" +'):
-            escaped_expression = escaped_expression[len('"" +'):]
+            escaped_expression = escaped_expression[len('"" +') :]
         if escaped_expression.endswith('+ ""'):
-            escaped_expression = escaped_expression[:-len('+ ""'):]
+            escaped_expression = escaped_expression[: -len('+ ""') :]
 
         return escaped_expression
 
@@ -137,6 +143,7 @@ def get_method_name(endpoint_operation: EndpointOperation) -> str:
         extension_info = endpoint_operation.extensions.method_name
 
         from apier.templates.python_tree.renderer import TEMPLATE_NAME
+
         if TEMPLATE_NAME in extension_info.templates:
             return to_snake_case(extension_info.templates[TEMPLATE_NAME])
 

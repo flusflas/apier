@@ -3,13 +3,14 @@ from functools import reduce
 
 class _Default:
     """Unique class to signal that no default value has been provided."""
+
     pass
 
 
 _default = _Default()
 
 
-def get_multi_key(d: dict, key: str, separator: str = '.', default=_default):
+def get_multi_key(d: dict, key: str, separator: str = ".", default=_default):
     """
     Returns the value of the dictionary given by a key, which can define
     multiple levels (e.g. "info.version").
@@ -24,6 +25,7 @@ def get_multi_key(d: dict, key: str, separator: str = '.', default=_default):
              is not found and default is not set.
     """
     try:
+
         def get_item(a, b):
             if isinstance(a, list):
                 b = int(b)

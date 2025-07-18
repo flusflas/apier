@@ -44,5 +44,5 @@ class MethodNameDescription(BaseModel):
     class Config:
         allow_population_by_field_name = True
 
-    default: str = ''
+    default: str = ""
     templates: dict[str, str] = Field(default_factory=dict)

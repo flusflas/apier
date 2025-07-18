@@ -23,8 +23,8 @@ class Schema(BaseModel):
 
 class Parameter(BaseModel):
     name: str
-    description: str = ''
-    schema_: Schema = Field(default=None, alias='schema')
+    description: str = ""
+    schema_: Schema = Field(default=None, alias="schema")
 
 
 class InputParametersDescription(BaseModel):
