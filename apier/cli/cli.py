@@ -131,7 +131,7 @@ def build(ctx, input_, output, template, custom_template, overwrite):
     "If a directory is provided, all files within will be used.",
 )
 @click.option(
-    "--outout",
+    "--output",
     "-o",
     type=click.Path(),
     required=True,
