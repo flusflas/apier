@@ -3,6 +3,15 @@ name = "apier"
 version = "0.1.0"
 description = "Turn API specs into code"
 authors = ["flusflas <aflusflas@gmail.com>"]
+readme = "README.md"
+license = "MIT"
+repository = "https://github.com/flusflas/apier"
+keywords = ["openapi", "code generation", "api", "specification", "cli", "swagger"]
+classifiers = [
+    "Topic :: Utilities",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent"
+]
 
 [tool.poetry.dependencies]
 python = "^3.9"
