@@ -193,5 +193,5 @@ def test__validate_request_payload_errors(data, expected_exception):
     assert str(e.value) == str(expected_exception)
     assert len(e.value.exceptions) == len(expected_exception.exceptions)
     for i, e in enumerate(e.value.exceptions):
-        assert type(e) == type(expected_exception.exceptions[i])
+        assert type(e) is type(expected_exception.exceptions[i])
         assert str(e) == str(expected_exception.exceptions[i])

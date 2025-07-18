@@ -43,8 +43,6 @@ def test_post_employee_input_parameters(employee_id, name, extra_info):
     Tests a successful request to create a new employee using a test endpoint
     that uses the input-parameters extension.
     """
-    from ._build.api import API
-
     expected_req = {
         "number": employee_id,
         "name": name,
@@ -86,9 +84,7 @@ def test_post_employee_input_parameters(employee_id, name, extra_info):
     ],
 )
 def test_one_of(req, expected_resp):
-    """ """
-    from ._build.api import API
-
+    """Tests a successful request using a model defined with oneOf."""
     expected_req = PostTestsOneOfRequest.parse_obj(req)
 
     expected_raw_resp = make_response(200, "OK")

@@ -5,7 +5,7 @@ This module provides functionality to render an API client using a specified tem
 import importlib
 import os
 import sys
-from importlib import import_module, util
+from importlib import import_module
 from pathlib import Path
 from typing import Union
 

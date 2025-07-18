@@ -9,7 +9,6 @@ from apier.templates.python_tree.functions import (
     get_type_hint,
     payload_from_input_parameters,
     get_method_name,
-    chain_layers,
 )
 from apier.templates.python_tree.gen_models import generate_models
 from apier.core.api.tree import APINode, build_endpoints_tree
@@ -60,12 +59,10 @@ class Renderer:
         os.makedirs(self.output_path + "/apis")
         open(self.output_path + "/apis/__init__.py", "w").close()
 
-        self.output_logger(f"  📜 Generating models...")
+        self.output_logger("  📜 Generating models...")
         generate_models(self.definition, self.schemas, self.output_path)
 
-        self.render_blabla_file()
-
-        self.output_logger(f"  📝 Generating API client...")
+        self.output_logger("  📝 Generating API client...")
         self.render_security_schemes_file()
         self.render_api_file()
         self.render_api_components()
@@ -79,33 +76,6 @@ class Renderer:
 
         with open(self.output_path + "/models/__init__.py", "w") as f:
             f.write("from .models import *\n")
-
-    def render_blabla_file(self):
-        filename = f"{self.output_path}/blabla.py"
-        environment = Environment(
-            loader=FileSystemLoader(abs_path("./")),
-            trim_blocks=True,
-            lstrip_blocks=True,
-        )
-
-        environment.filters["snake_case"] = to_snake_case
-        environment.filters["pascal_case"] = to_pascal_case
-        environment.filters["api_name"] = self.get_api_name
-        environment.filters["method_name"] = get_method_name
-
-        template = environment.get_template("templates/blabla.jinja")
-        content = template.render(
-            openapi=self.definition.definition,
-            api_tree=self.api_tree,
-            endpoints=self.endpoints,
-            get_type_hint=get_type_hint,
-            chain_layers=chain_layers,
-            server_url=self.definition.get_value("servers.0.url", default=None),
-            root_branches=self.api_tree.branches,
-            security_scheme_names=self.security_scheme_names,
-        )
-        with open(filename, mode="w", encoding="utf-8") as message:
-            message.write(content)
 
     def render_api_file(self):
         filename = f"{self.output_path}/api.py"

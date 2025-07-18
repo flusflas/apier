@@ -9,8 +9,17 @@ repository = "https://github.com/flusflas/apier"
 keywords = ["openapi", "code generation", "api", "specification", "cli", "swagger"]
 classifiers = [
     "Topic :: Utilities",
+    'Development Status :: 4 - Beta',
     "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent"
+    "Operating System :: OS Independent",
+    'Programming Language :: Python',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3 :: Only',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
+    'Programming Language :: Python :: 3.12',
+    'Programming Language :: Python :: 3.13',
 ]
 
 [tool.poetry.dependencies]
@@ -26,6 +35,8 @@ xmltodict = "^0.13.0"
 ruff = "^0.6.2"
 click = "^8.1.7"
 onedict = "^0.1.0"
+flake8 = "^7.3.0"
+black = "^25.1.0"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.3.2"

@@ -7,7 +7,7 @@ from apier.core.api.endpoints import Endpoint, EndpointsParser, EndpointLayer
 from apier.core.api.openapi import Definition
 from apier.core.api.tree import build_endpoints_tree
 
-openapi_definition = Definition.load("definitions/companies_api.yaml")
+openapi_definition = Definition.load("tests/definitions/companies_api.yaml")
 
 
 @pytest.fixture

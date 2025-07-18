@@ -17,7 +17,7 @@ from apier.extensions.extensions import Extensions
 from apier.extensions.method_name import MethodNameDescription
 from apier.core.api.openapi import Definition
 
-openapi_definition = Definition.load("definitions/companies_api.yaml")
+openapi_definition = Definition.load("tests/definitions/companies_api.yaml")
 
 ERROR_RESPONSE_DEFINITION = {
     "properties": {
@@ -928,7 +928,7 @@ def test_parse_parameters(endpoint, expected):
     Tests processing an OpenAPI definition to fill the endpoint parameters
     information.
     """
-    parser = EndpointsParser(openapi_definition)
+    EndpointsParser(openapi_definition)
     split_endpoint_layers(endpoint)
 
     parse_parameters(endpoint)

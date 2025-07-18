@@ -95,7 +95,7 @@ def test_next_page_url_pagination():
 
             data = []
             next_page_url = ""
-            next_index, prev_index = len(expected_results), -1
+            next_index, _ = len(expected_results), -1
 
             next_cursor_param = req.querystring.get("next_page_url", None)
             if next_cursor_param:
@@ -111,7 +111,10 @@ def test_next_page_url_pagination():
 
             if next_index < len(expected_results):
                 next_cursor = str(expected_results[next_index]["value"])
-                next_page_url = f"https://pagination.test/pagination/next_page_url?next_page_url={next_cursor}&limit={limit}"
+                next_page_url = (
+                    f"https://pagination.test/pagination/next_page_url"
+                    f"?next_page_url={next_cursor}&limit={limit}"
+                )
 
             resp = {"results": data, "next_page_url": next_page_url}
 

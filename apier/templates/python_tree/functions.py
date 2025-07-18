@@ -22,7 +22,7 @@ def get_type_hint(
     'Union[str, int]'
     >>> get_type_hint(ContentSchema(name='MyType'), 'array')
     'Union[models.MyType, list]'
-    >>> get_type_hint(ContentSchema(name='MyType', definition={'type': 'object'}), include_primitive_type=True)
+    >>> get_type_hint(ContentSchema(name='MyType', schema={'type': 'object'}), include_primitive_type=True)
     'Union[models.MyType, dict]'
 
     :param args:    List of type strings and/or ContentSchema instances.
