@@ -4,7 +4,7 @@ This document describes the command-line interface (CLI) for apier, which is use
 
 ## Commands
 
-### apier build
+### build
 
 Generate an API client from one or more OpenAPI files.
 
@@ -47,7 +47,7 @@ apier build --input <path> --output <dir> (--template <name> | --custom-template
 
 ---
 
-### apier merge
+### merge
 
 Merge multiple OpenAPI files into a single specification.
 
