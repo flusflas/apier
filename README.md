@@ -1,6 +1,6 @@
 <h2 align="center"><b>apier</b></h3>
 
-<p align="center">A Python tool to turn OpenAPI specifications into API client libraries.</p>
+<p align="center">A Python tool to turn OpenAPI specifications into API client libraries</p>
 
 <p align="center">
   <a href="https://pypi.org/project/apier"><img src="https://img.shields.io/badge/pip_install-apier-orange" alt="pip command"></a>
