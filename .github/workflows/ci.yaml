@@ -5,6 +5,10 @@ on:
     branches:
       - 'feature/*'
       - main
+    paths-ignore:
+      - README.md
+      - CHANGELOG.md
+      - docs/**
   pull_request:
     branches:
       - main
