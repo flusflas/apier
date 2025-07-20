@@ -1,6 +1,10 @@
 import pytest
+from requests.structures import CaseInsensitiveDict
 
 from apier.templates.python_tree.base.internal.resource import _validate_request_payload
+from apier.templates.python_tree.base.internal.resource import (
+    ContentTypeValidationResult,
+)
 from apier.templates.python_tree.base.models.basemodel import APIBaseModel
 from apier.templates.python_tree.base.models.exceptions import ExceptionList
 
@@ -23,7 +27,9 @@ class String(APIBaseModel):
                 "req_content_types": [],
                 "headers": {},
             },
-            {"body": "Lorem ipsum dolor", "headers": {}},
+            ContentTypeValidationResult(
+                data="Lorem ipsum dolor", json=None, headers=CaseInsensitiveDict()
+            ),
         ),
         (
             {
@@ -35,7 +41,11 @@ class String(APIBaseModel):
                 ],
                 "headers": {},
             },
-            {"body": "Lorem ipsum dolor", "headers": {"Content-Type": "text/plain"}},
+            ContentTypeValidationResult(
+                data="Lorem ipsum dolor",
+                json=None,
+                headers=CaseInsensitiveDict({"Content-Type": "text/plain"}),
+            ),
         ),
         (
             {
@@ -47,10 +57,11 @@ class String(APIBaseModel):
                 ],
                 "headers": None,
             },
-            {
-                "body": '{"name": "Alice", "age": 24}',
-                "headers": {"Content-Type": "application/json"},
-            },
+            ContentTypeValidationResult(
+                data=None,
+                json={"name": "Alice", "age": 24},
+                headers=CaseInsensitiveDict({"Content-Type": "application/json"}),
+            ),
         ),
         (
             {
@@ -62,10 +73,11 @@ class String(APIBaseModel):
                 ],
                 "headers": None,
             },
-            {
-                "body": '{"name": "Alice", "age": 24}',
-                "headers": {"Content-Type": "application/json"},
-            },
+            ContentTypeValidationResult(
+                data=None,
+                json={"name": "Alice", "age": 24},
+                headers=CaseInsensitiveDict({"Content-Type": "application/json"}),
+            ),
         ),
         (
             {
@@ -77,10 +89,11 @@ class String(APIBaseModel):
                 ],
                 "headers": None,
             },
-            {
-                "body": '{"name": "Alice", "age": 24}',
-                "headers": {"Content-Type": "application/json"},
-            },
+            ContentTypeValidationResult(
+                data=None,
+                json={"name": "Alice", "age": 24},
+                headers=CaseInsensitiveDict({"Content-Type": "application/json"}),
+            ),
         ),
         (
             {
@@ -93,11 +106,11 @@ class String(APIBaseModel):
                 ],
                 "headers": None,
             },
-            {
-                "body": '<?xml version="1.0" encoding="utf-8"?>\n'
+            ContentTypeValidationResult(
+                data='<?xml version="1.0" encoding="utf-8"?>\n'
                 "<root><name>Alice</name><age>24</age></root>",
-                "headers": {"Content-Type": "application/xml"},
-            },
+                headers=CaseInsensitiveDict({"Content-Type": "application/xml"}),
+            ),
         ),
         (
             {
@@ -109,11 +122,11 @@ class String(APIBaseModel):
                 ],
                 "headers": None,
             },
-            {
-                "body": '<?xml version="1.0" encoding="utf-8"?>\n'
+            ContentTypeValidationResult(
+                data='<?xml version="1.0" encoding="utf-8"?>\n'
                 "<root><name>Alice</name><age>24</age></root>",
-                "headers": {"Content-Type": "application/xml"},
-            },
+                headers=CaseInsensitiveDict({"Content-Type": "application/xml"}),
+            ),
         ),
         (
             {
@@ -125,11 +138,13 @@ class String(APIBaseModel):
                 ],
                 "headers": {"content-type": "application/xml; charset=utf-8"},
             },
-            {
-                "body": '<?xml version="1.0" encoding="utf-8"?>\n'
+            ContentTypeValidationResult(
+                data='<?xml version="1.0" encoding="utf-8"?>\n'
                 "<root><name>Alice</name><age>24</age></root>",
-                "headers": {"content-type": "application/xml; charset=utf-8"},
-            },
+                headers=CaseInsensitiveDict(
+                    {"content-type": "application/xml; charset=utf-8"}
+                ),
+            ),
         ),
     ],
 )
@@ -137,11 +152,8 @@ def test__validate_request_payload(data, expected):
     body = data["body"]
     req_content_types = data["req_content_types"]
     headers = data["headers"]
-    actual_body, actual_headers = _validate_request_payload(
-        body, req_content_types, headers
-    )
-    assert actual_body == expected["body"]
-    assert actual_headers == expected["headers"]
+    result = _validate_request_payload(body, req_content_types, headers)
+    assert result == expected
 
 
 @pytest.mark.parametrize(

@@ -1,3 +1,10 @@
+"""
+This module defines the APIResource class, which is the base class for all API
+resources. It provides methods to build URLs, handle requests and responses,
+and manage the API call stack. It also includes methods for validating request
+payloads and handling pagination.
+"""
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Union, Tuple
@@ -14,6 +21,7 @@ from .content_type import (
     SUPPORTED_REQUEST_CONTENT_TYPES,
     content_types_match,
     content_types_compatible,
+    ContentTypeValidationResult,
 )
 from .runtime_expr import evaluate, prepare_request
 
@@ -121,12 +129,13 @@ class APIResource(ABC):
     ) -> Response:
         api = self._api()
 
-        body, headers = _validate_request_payload(
+        results = _validate_request_payload(
             body, req_content_types, kwargs.get("headers")
         )
-        kwargs["headers"] = headers
 
-        return api.make_request(method, self._build_path(), body=body, **kwargs)
+        return api.make_request(
+            method, self._build_path(), data=results.data, json=results.json, **kwargs
+        )
 
     def _handle_response(
         self,
@@ -270,7 +279,7 @@ class APIResource(ABC):
 
 def _validate_request_payload(
     body: Union[str, bytes, dict, APIBaseModel], req_content_types: list, headers: dict
-) -> Tuple[str, dict]:
+) -> ContentTypeValidationResult:
     """
     Tries to parse the request body into one of the supported pairs of
     content-type / class type. An exception will be returned if the body
@@ -286,20 +295,16 @@ def _validate_request_payload(
     :param headers:           The headers of the request. If a Content-Type is
                               set, only the types in req_content_types that
                               matches that Content-Type will be validated.
-    :return:                  The body ready to be sent, and the headers with
-                              the proper Content-Type added.
+    :return:                  A ContentTypeValidationResult object with data,
+                              json and headers information.
     """
     exceptions_raised = []
 
     if req_content_types:
-        content_type_defined = False
-
         # If Content-Type header is set, only that one is allowed
         headers = CaseInsensitiveDict(headers)
-        headers.items()
         expected_content_type = headers.get("content-type", None)
         if expected_content_type:
-            content_type_defined = True
             req_content_types = [
                 (content_type, req_class)
                 for content_type, req_class in req_content_types
@@ -312,16 +317,17 @@ def _validate_request_payload(
             for ct, conv_func in SUPPORTED_REQUEST_CONTENT_TYPES.items():
                 if content_types_compatible(content_type, ct):
                     try:
-                        body = conv_func(body)
+                        result = conv_func(body)
 
-                        if not content_type_defined:
-                            # Set content type header
-                            headers["Content-Type"] = content_type
-                        return body, dict(headers)
+                        # Keep the headers from the request
+                        if headers:
+                            result.headers.update(headers)
+
+                        return result
                     except (ValueError, ExpatError) as e:
                         exceptions_raised.append(e)
 
     if len(exceptions_raised) > 0:
         raise ExceptionList("Unexpected data format", exceptions_raised)
 
-    return body, headers
+    return ContentTypeValidationResult(data=body, headers=headers)

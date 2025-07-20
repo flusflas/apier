@@ -3,7 +3,7 @@ from unittest import mock
 import pytest
 
 from .setup import build_client
-from ..common import make_response, to_json
+from ..common import make_response, to_json, to_dict
 
 build_client("python-tree")
 
@@ -65,8 +65,10 @@ def test_post_employee_input_parameters(employee_id, name, extra_info):
         "POST",
         "https://test-api.com/tests/shiny_stickers/employees",
         params={"foo": "bar"},
-        headers={"Authorization": "Bearer token", "Content-Type": "application/json"},
-        data=to_json(expected_req),
+        headers={"Authorization": "Bearer token"},
+        data=[],
+        files=None,
+        json=to_dict(expected_req),
         timeout=3,
         verify=True,
     )
@@ -102,8 +104,10 @@ def test_one_of(req, expected_resp):
         "POST",
         "https://test-api.com/tests/oneOf",
         params={"foo": "bar"},
-        headers={"Authorization": "Bearer token", "Content-Type": "application/json"},
-        data=to_json(expected_req),
+        headers={"Authorization": "Bearer token"},
+        data=[],
+        files=None,
+        json=to_dict(expected_req),
         timeout=3,
         verify=True,
     )

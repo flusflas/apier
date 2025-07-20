@@ -1,7 +1,11 @@
 import json
+from dataclasses import dataclass, field
+from io import IOBase
+from typing import Any, Optional
 from urllib.parse import parse_qsl
 
 import xmltodict
+from requests.structures import CaseInsensitiveDict
 
 from ..models.basemodel import APIBaseModel
 
@@ -93,32 +97,63 @@ def content_types_match(type1: str, type2: str) -> bool:
     return t1 == t2
 
 
-def to_json(obj) -> str:
+@dataclass
+class ContentTypeValidationResult:
+    """
+    Represents the result of preparing a request payload for a specific
+    Content-Type.
+    """
+
+    data: Any = None
+    json: Optional[dict] = None
+    headers: CaseInsensitiveDict = field(default_factory=dict)
+
+
+def to_plain_text(obj) -> ContentTypeValidationResult:
+    """
+    Returns the plain text representation of the given object.
+    """
+    return ContentTypeValidationResult(
+        data=str(obj),
+        headers=CaseInsensitiveDict({"Content-Type": "text/plain"}),
+    )
+
+
+def to_json(obj) -> ContentTypeValidationResult:
     """
     Returns the JSON representation of the given object.
     Raises an exception if the object cannot be serialized to a valid JSON.
     """
+    result = ContentTypeValidationResult(
+        headers=CaseInsensitiveDict({"Content-Type": "application/json"})
+    )
     if isinstance(obj, (str, bytes)):
-        json.loads(obj)
-        return str(obj)
+        result.json = json.loads(obj)
     elif isinstance(obj, (dict, list)):
-        return json.dumps(obj)
+        result.json = obj
     elif isinstance(obj, APIBaseModel):
-        return obj.json(by_alias=True)
+        # obj.dict() performs a shallow conversion, so a second conversion is
+        # used for a deeper JSON transformation
+        result.json = json.loads(obj.json(by_alias=True))
     else:
         raise ValueError(
             f'Value type "{type(obj).__name__}" cannot be converted to JSON'
         )
 
+    return result
 
-def to_xml(obj) -> str:
+
+def to_xml(obj) -> ContentTypeValidationResult:
     """
     Returns the XML representation of the given object.
     Raises an exception if the object cannot be serialized to a valid XML.
     """
     if isinstance(obj, (str, bytes)):
         xmltodict.parse(obj)
-        return str(obj)
+        return ContentTypeValidationResult(
+            data=str(obj),
+            headers=CaseInsensitiveDict({"Content-Type": "application/xml"}),
+        )
     elif isinstance(obj, dict):
         obj_dict = obj
     elif isinstance(obj, APIBaseModel):
@@ -129,11 +164,14 @@ def to_xml(obj) -> str:
         )
 
     obj_dict = {"root": obj_dict}
-    return xmltodict.unparse(obj_dict)
+    return ContentTypeValidationResult(
+        data=xmltodict.unparse(obj_dict),
+        headers=CaseInsensitiveDict({"Content-Type": "application/xml"}),
+    )
 
 
 SUPPORTED_REQUEST_CONTENT_TYPES = {
     "application/json": to_json,
     "application/xml": to_xml,
-    "text/plain": str,
+    "text/plain": to_plain_text,
 }

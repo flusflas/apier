@@ -69,9 +69,19 @@ class API(
         return self
     {% endif %}
 
-    def make_request(self, method: str, url: str, body=None, params=None,
-                     headers: dict = None, timeout: float = 3{% if security_scheme_names %}, auth: bool = True{% endif %},
-                     verify=None) -> requests.Response:
+    def make_request(
+        self,
+        method: str,
+        url: str,
+        data=None,
+        files: dict = None,
+        json=None,
+        params=None,
+        headers: dict = None,
+        timeout: float = 3,
+        {% if security_scheme_names %}auth: bool = True,{% endif %}
+        verify=None,
+    ) -> requests.Response:
         """
         Makes a request to the API server.
 
@@ -81,16 +91,15 @@ class API(
             host used must be the same as the host in this :class:`API` instance).
         :param body: (optional) Dictionary, list of tuples, bytes, or file-like
             object to send in the body of the request.
+        :param files: (optional) Dictionary of files to send in the request.
         :param params: (optional) Dictionary, list of tuples or bytes to send
             in the query string for the :class:`Request`.
         :param headers: (optional) Dictionary of HTTP headers to send.
         :param timeout: (optional) How many seconds to wait for the server to
             send data before giving up, as a float, or a `(connect timeout,
             read timeout)` tuple.
-        {% if security_scheme_names %}
         :param auth: (optional) If True (default), the authentication token will
-            be sent in the request. An exception will be raised if no token is set.
-        {% endif %}
+            be sent in the request if a security strategy is set.
         :param verify: (optional) If set as a boolean, it will override the API
             verify value.
         :return: An instance of :class:`request.Response`.
@@ -100,35 +109,39 @@ class API(
 
         headers.update(self.headers)
 
-        # TODO: Handle request Content-Type
-        if isinstance(body, (dict, list)):
-            headers['Content-Type'] = 'application/json'
-            body = json.dumps(body)
-        elif isinstance(body, BaseModel):
-            headers['Content-Type'] = 'application/json'
-            body = body.json(by_alias=True)
+        if isinstance(data, BaseModel):
+            data = data.json(by_alias=True)
+        if isinstance(json, BaseModel):
+            json = json.json(by_alias=True)
 
-        if url.lower().startswith('http://') or url.lower().startswith('https://'):
+        if url.lower().startswith("http://") or url.lower().startswith("https://"):
             url = url
         else:
             url = self.host + url
 
-        req = requests.Request(method, url, params=params,
-                               headers=headers, data=body)
+        req = requests.Request(
+            method, url, params=params, headers=headers, data=data, json=json
+        )
 
         {% if security_scheme_names %}
-        if auth:
-            if not self._security_strategy:
-                raise APIException("No security strategy has been set")
+        if auth and self._security_strategy:
             self._security_strategy.apply(req)
         {% endif %}
 
         if verify is None:
             verify = self._verify
 
-        return requests.request(req.method, req.url, params=req.params,
-                                headers=req.headers, data=req.data,
-                                timeout=timeout, verify=verify)
+        return requests.request(
+            req.method,
+            req.url,
+            params=req.params,
+            headers=req.headers,
+            data=req.data,
+            files=files,
+            json=req.json,
+            timeout=timeout,
+            verify=verify,
+        )
 
     def __enter__(self):
         return self

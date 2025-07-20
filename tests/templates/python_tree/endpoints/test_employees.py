@@ -62,8 +62,10 @@ def test_create(req, expected_resp):
         "POST",
         "https://test-api.com/companies/shiny_stickers/employees",
         params={"foo": "bar"},
-        headers={"Authorization": "Bearer token", "Content-Type": "application/json"},
-        data=to_json(req),
+        headers={"Authorization": "Bearer token"},
+        data=[],
+        files=None,
+        json=to_dict(req),
         timeout=3,
         verify=True,
     )
@@ -94,6 +96,8 @@ def test_get():
         params={"foo": "bar"},
         headers={"Authorization": "Bearer token"},
         data=[],
+        files=None,
+        json=None,
         timeout=3,
         verify=True,
     )
@@ -136,6 +140,8 @@ def test_list():
         params={"foo": "bar"},
         headers={"Authorization": "Bearer token"},
         data=[],
+        files=None,
+        json=None,
         timeout=3,
         verify=True,
     )
@@ -167,6 +173,8 @@ def test_get_from_department():
         params={"foo": "bar"},
         headers={"Authorization": "Bearer token"},
         data=[],
+        files=None,
+        json=None,
         timeout=3,
         verify=True,
     )
@@ -197,6 +205,8 @@ def test_get_error():
         params={},
         headers={"Authorization": "Bearer token"},
         data=[],
+        files=None,
+        json=None,
         timeout=3,
         verify=True,
     )

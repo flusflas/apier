@@ -98,8 +98,10 @@ def test_create(req, expected_resp):
         "POST",
         "https://test-api.com/companies",
         params={"foo": "bar"},
-        headers={"Authorization": "Bearer token", "Content-Type": "application/json"},
-        data=to_json(req),
+        headers={"Authorization": "Bearer token"},
+        data=[],
+        files=None,
+        json=to_dict(req),
         timeout=3,
         verify=True,
     )
@@ -129,8 +131,10 @@ def test_create_default_status_code():
         "POST",
         "https://test-api.com/companies",
         params={"foo": "bar"},
-        headers={"Authorization": "Bearer token", "Content-Type": "application/json"},
-        data=to_json(test_req_create01),
+        headers={"Authorization": "Bearer token"},
+        data=[],
+        files=None,
+        json=to_dict(test_req_create01),
         timeout=3,
         verify=True,
     )
@@ -160,6 +164,8 @@ def test_get():
         params={"foo": "bar"},
         headers={"Authorization": "Bearer token"},
         data=[],
+        files=None,
+        json=None,
         timeout=3,
         verify=True,
     )
@@ -201,6 +207,8 @@ def test_list():
         params={"foo": "bar"},
         headers={"Authorization": "Bearer token"},
         data=[],
+        files=None,
+        json=None,
         timeout=3,
         verify=True,
     )
@@ -235,8 +243,10 @@ def test_update(req, expected_resp):
         "PUT",
         "https://test-api.com/companies/shiny_stickers",
         params={"foo": "bar"},
-        headers={"Authorization": "Bearer token", "Content-Type": "application/json"},
-        data=to_json(req),
+        headers={"Authorization": "Bearer token"},
+        data=[],
+        files=None,
+        json=to_dict(req),
         timeout=3,
         verify=True,
     )
@@ -266,6 +276,8 @@ def test_delete():
         params={"foo": "bar"},
         headers={"Authorization": "Bearer token"},
         data=[],
+        files=None,
+        json=None,
         timeout=5.5,
         verify=True,
     )
@@ -296,6 +308,8 @@ def test_get_multi_param():
         params={"foo": "bar"},
         headers={"Authorization": "Bearer token"},
         data=[],
+        files=None,
+        json=None,
         timeout=3,
         verify=True,
     )
@@ -326,6 +340,8 @@ def test_get_error():
         params={},
         headers={"Authorization": "Bearer token"},
         data=[],
+        files=None,
+        json=None,
         timeout=3,
         verify=True,
     )
@@ -355,6 +371,8 @@ def test_get_error_not_raised():
         params={},
         headers={"Authorization": "Bearer token"},
         data=[],
+        files=None,
+        json=None,
         timeout=3,
         verify=True,
     )
