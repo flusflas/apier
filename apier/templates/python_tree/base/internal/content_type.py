@@ -104,6 +104,7 @@ class ContentTypeValidationResult:
     Content-Type.
     """
 
+    type: str = ""  # The request's Content-Type, indicating the data format
     data: Any = None
     json: Optional[dict] = None
     headers: CaseInsensitiveDict = field(default_factory=dict)
@@ -114,6 +115,7 @@ def to_plain_text(obj) -> ContentTypeValidationResult:
     Returns the plain text representation of the given object.
     """
     return ContentTypeValidationResult(
+        type="text/plain",
         data=str(obj),
         headers=CaseInsensitiveDict({"Content-Type": "text/plain"}),
     )
@@ -125,8 +127,10 @@ def to_json(obj) -> ContentTypeValidationResult:
     Raises an exception if the object cannot be serialized to a valid JSON.
     """
     result = ContentTypeValidationResult(
-        headers=CaseInsensitiveDict({"Content-Type": "application/json"})
+        type="application/json",
+        headers=CaseInsensitiveDict({"Content-Type": "application/json"}),
     )
+
     if isinstance(obj, (str, bytes)):
         result.json = json.loads(obj)
     elif isinstance(obj, (dict, list)):
@@ -148,26 +152,27 @@ def to_xml(obj) -> ContentTypeValidationResult:
     Returns the XML representation of the given object.
     Raises an exception if the object cannot be serialized to a valid XML.
     """
+    result = ContentTypeValidationResult(
+        type="application/xml",
+        headers=CaseInsensitiveDict({"Content-Type": "application/xml"}),
+    )
+
     if isinstance(obj, (str, bytes)):
         xmltodict.parse(obj)
-        return ContentTypeValidationResult(
-            data=str(obj),
-            headers=CaseInsensitiveDict({"Content-Type": "application/xml"}),
-        )
+        result.data = str(obj)
+        return result
     elif isinstance(obj, dict):
         obj_dict = obj
     elif isinstance(obj, APIBaseModel):
-        obj_dict = obj.dict()
+        obj_dict = json.loads(obj.json(by_alias=True))
     else:
         raise ValueError(
             f'Value type "{type(obj).__name__}" cannot be converted to XML'
         )
 
     obj_dict = {"root": obj_dict}
-    return ContentTypeValidationResult(
-        data=xmltodict.unparse(obj_dict),
-        headers=CaseInsensitiveDict({"Content-Type": "application/xml"}),
-    )
+    result.data = xmltodict.unparse(obj_dict)
+    return result
 
 
 SUPPORTED_REQUEST_CONTENT_TYPES = {

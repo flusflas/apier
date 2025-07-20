@@ -1,6 +1,8 @@
 from unittest import mock
 
 import pytest
+import xmltodict
+from requests.structures import CaseInsensitiveDict
 
 from .setup import build_client
 from ..common import make_response, to_dict, to_json
@@ -72,36 +74,47 @@ test_company_not_found = ErrorResponse(status=404, message="Company not found!")
 
 
 @pytest.mark.parametrize(
-    "req, expected_resp",
+    "req, expected_resp, req_headers",
     [
-        (test_req_create01, test_resp_company01),
-        (to_dict(test_req_create01), test_resp_company01),
+        (test_req_create01, test_resp_company01, {}),
+        (to_dict(test_req_create01), test_resp_company01, {}),
+        (test_req_create01, test_resp_company01, {"content-type": "application/xml"}),
     ],
 )
-def test_create(req, expected_resp):
+def test_create(req, expected_resp, req_headers):
     """
     Tests a successful request to create a Company.
     """
     from ._build.api import API
 
+    req_headers = CaseInsensitiveDict(req_headers)
     expected_raw_resp = make_response(201, expected_resp)
+
+    expected_req_headers = {"Authorization": "Bearer token"}
+    expected_req_headers.update(req_headers)
+    if req_headers.get("content-type") == "application/xml":
+        expected_req_data = xmltodict.unparse({"root": to_dict(req)})
+        expected_req_json = None
+    else:
+        expected_req_data = []
+        expected_req_json = to_dict(req)
 
     with mock.patch(request_mock_pkg, return_value=expected_raw_resp) as m:
         resp = (
             API(host="test-api.com")
             .with_security(BearerToken("token"))
             .companies()
-            .create(req, params={"foo": "bar"})
+            .create(req, params={"foo": "bar"}, headers=req_headers)
         )
 
     m.assert_called_once_with(
         "POST",
         "https://test-api.com/companies",
         params={"foo": "bar"},
-        headers={"Authorization": "Bearer token"},
-        data=[],
+        headers=expected_req_headers,
+        data=expected_req_data,
         files=None,
-        json=to_dict(req),
+        json=expected_req_json,
         timeout=3,
         verify=True,
     )

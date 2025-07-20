@@ -1,6 +1,8 @@
 from unittest import mock
 
 import pytest
+import xmltodict
+from requests.structures import CaseInsensitiveDict
 
 from .setup import build_client
 from ..common import make_response, to_json, to_dict
@@ -115,3 +117,55 @@ def test_one_of(req, expected_resp):
     assert resp.http_response().status_code == 200
     assert resp == expected_resp
     assert isinstance(resp, PostTestsOneOfResponse200)
+
+
+@pytest.mark.parametrize(
+    "req, expected_resp, expected_resp_xml",
+    [
+        (
+            test_resp_company01,
+            test_resp_company01,
+            xmltodict.unparse({"Company": to_dict(test_resp_company01)}),
+        ),
+        (
+            to_dict(test_resp_company01),
+            test_resp_company01,
+            xmltodict.unparse({"Company": to_dict(test_resp_company01)}),
+        ),
+    ],
+)
+def test_xml(req, expected_resp, expected_resp_xml):
+    """Tests sending a request with XML content type."""
+    expected_req = Company.parse_obj(req)
+    expected_req_xml = xmltodict.unparse({"root": to_dict(expected_req)})
+
+    expected_raw_resp = make_response(
+        200,
+        expected_resp_xml,
+        headers=CaseInsensitiveDict({"Content-Type": "application/xml"}),
+    )
+
+    with mock.patch(request_mock_pkg, return_value=expected_raw_resp) as m:
+        resp = (
+            API(host="test-api.com")
+            .with_security(BearerToken("token"))
+            .tests()
+            .echo_xml()
+            .post(expected_req, params={"foo": "bar"})
+        )
+
+    m.assert_called_once_with(
+        "POST",
+        "https://test-api.com/tests/echo_xml",
+        params={"foo": "bar"},
+        headers={"Authorization": "Bearer token", "Content-Type": "application/xml"},
+        data=expected_req_xml,
+        files=None,
+        json=None,
+        timeout=3,
+        verify=True,
+    )
+
+    assert resp.http_response().status_code == 200
+    assert resp == expected_resp
+    assert isinstance(resp, Company)

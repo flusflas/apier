@@ -133,8 +133,22 @@ class APIResource(ABC):
             body, req_content_types, kwargs.get("headers")
         )
 
+        forced_content_type = kwargs.get("headers", {}).get("Content-Type")
+        kwargs.pop("headers", None)  # Remove headers from kwargs to avoid duplication
+
+        # If the Content-Type header is not explicitly provided, remove it from
+        # the headers for cases where it should be set automatically
+        if not forced_content_type:
+            if results.type == "application/json":
+                results.headers.pop("Content-Type", None)
+
         return api.make_request(
-            method, self._build_path(), data=results.data, json=results.json, **kwargs
+            method,
+            self._build_path(),
+            data=results.data,
+            json=results.json,
+            headers=results.headers,
+            **kwargs,
         )
 
     def _handle_response(
@@ -158,7 +172,7 @@ class APIResource(ABC):
                 response, f"Unexpected response status code ({response.status_code})"
             )
 
-        resp_content_type = response.headers.get("content-type")
+        resp_content_type = response.headers.get("content-type", "")
         for r in expected_responses:
             code, content_type, resp_class = r
 
@@ -177,33 +191,44 @@ class APIResource(ABC):
 
                 return self._handle_error(ret)
 
-            if code in [
+            if code not in [
                 response.status_code,
                 default_status_code,
-            ] and content_types_match(resp_content_type, content_type):
-                resp_payload = response.content
-                if resp_content_type.startswith("application/json"):
-                    resp_payload = response.json()
-                elif resp_content_type.startswith("application/xml"):
-                    import xmltodict
+            ] or not content_types_match(resp_content_type, content_type):
+                continue
 
-                    resp_payload = xmltodict.parse(response.content)["root"]
-                elif resp_content_type.startswith("text/plain"):
-                    resp_payload = resp_payload.decode("utf-8")
+            resp_payload = response.content
 
-                ret = resp_class.parse_obj(resp_payload)
+            if resp_content_type.startswith("application/json"):
+                resp_payload = response.json()
 
-                ret._set_http_response(response)
-                self._handle_pagination(
-                    ret,
-                    response,
-                    pagination_info,
-                    self._path_values(),
-                    param_types,
-                    expected_responses,
-                )
+            elif resp_content_type.startswith("application/xml"):
+                import xmltodict
 
-                return self._handle_error(ret)
+                try:
+                    resp_payload = xmltodict.parse(response.content)
+                except ExpatError as e:
+                    raise ResponseError(response, f"Invalid XML response: {str(e)}")
+
+                root_name = list(resp_payload.keys())[0]
+                resp_payload = resp_payload[root_name]
+
+            elif resp_content_type.startswith("text/plain"):
+                resp_payload = resp_payload.decode("utf-8")
+
+            ret = resp_class.parse_obj(resp_payload)
+
+            ret._set_http_response(response)
+            self._handle_pagination(
+                ret,
+                response,
+                pagination_info,
+                self._path_values(),
+                param_types,
+                expected_responses,
+            )
+
+            return self._handle_error(ret)
 
         raise ResponseError(
             response, f"Unexpected response content type ({resp_content_type})"
@@ -295,8 +320,8 @@ def _validate_request_payload(
     :param headers:           The headers of the request. If a Content-Type is
                               set, only the types in req_content_types that
                               matches that Content-Type will be validated.
-    :return:                  A ContentTypeValidationResult object with data,
-                              json and headers information.
+    :return:                  A ContentTypeValidationResult object with request
+                              information prepared for a specific content type.
     """
     exceptions_raised = []
 

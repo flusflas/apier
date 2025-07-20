@@ -7,10 +7,14 @@ from requests import PreparedRequest, Request, Response
 
 
 def make_response(
-    status_code: int, body=None, request: Union[PreparedRequest, Request] = None
+    status_code: int,
+    body=None,
+    request: Union[PreparedRequest, Request] = None,
+    headers: CaseInsensitiveDict = None,
 ) -> Response:
     resp = Response()
     resp.status_code = status_code
+    resp.headers = headers or CaseInsensitiveDict()
     if isinstance(request, Request):
         request = request.prepare()
     resp.request = request
@@ -18,10 +22,12 @@ def make_response(
         if isinstance(body, (dict, BaseModel)):
             body = to_dict(body)
             resp._content = json.dumps(body).encode("utf-8")
-            resp.headers = CaseInsensitiveDict({"Content-Type": "application/json"})
+            if not (headers and headers.get("Content-Type")):
+                resp.headers = CaseInsensitiveDict({"Content-Type": "application/json"})
         elif isinstance(body, str):
             resp._content = body.encode("utf-8")
-            resp.headers = CaseInsensitiveDict({"Content-Type": "text/plain"})
+            if not (headers and headers.get("Content-Type")):
+                resp.headers = CaseInsensitiveDict({"Content-Type": "text/plain"})
     return resp
 
 

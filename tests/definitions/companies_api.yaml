@@ -38,6 +38,9 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CompanyCreate'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/CompanyCreate'
       responses:
         default:
           $ref: '#/components/responses/Unexpected'
@@ -575,6 +578,27 @@ paths:
             text/plain:
               schema:
                 type: string
+
+  /tests/echo_xml:
+    post:
+      tags:
+        - Tests
+      summary: Send an XML request and receive an XML response
+      description: Returns an XML response
+      operationId: GetXMLResponse
+      requestBody:
+        required: true
+        content:
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/Company'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Company'
 
 components:
   securitySchemes:

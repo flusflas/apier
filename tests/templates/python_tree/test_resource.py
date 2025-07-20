@@ -28,7 +28,10 @@ class String(APIBaseModel):
                 "headers": {},
             },
             ContentTypeValidationResult(
-                data="Lorem ipsum dolor", json=None, headers=CaseInsensitiveDict()
+                type="",
+                data="Lorem ipsum dolor",
+                json=None,
+                headers=CaseInsensitiveDict(),
             ),
         ),
         (
@@ -42,6 +45,7 @@ class String(APIBaseModel):
                 "headers": {},
             },
             ContentTypeValidationResult(
+                type="text/plain",
                 data="Lorem ipsum dolor",
                 json=None,
                 headers=CaseInsensitiveDict({"Content-Type": "text/plain"}),
@@ -58,6 +62,7 @@ class String(APIBaseModel):
                 "headers": None,
             },
             ContentTypeValidationResult(
+                type="application/json",
                 data=None,
                 json={"name": "Alice", "age": 24},
                 headers=CaseInsensitiveDict({"Content-Type": "application/json"}),
@@ -74,6 +79,7 @@ class String(APIBaseModel):
                 "headers": None,
             },
             ContentTypeValidationResult(
+                type="application/json",
                 data=None,
                 json={"name": "Alice", "age": 24},
                 headers=CaseInsensitiveDict({"Content-Type": "application/json"}),
@@ -90,6 +96,7 @@ class String(APIBaseModel):
                 "headers": None,
             },
             ContentTypeValidationResult(
+                type="application/json",
                 data=None,
                 json={"name": "Alice", "age": 24},
                 headers=CaseInsensitiveDict({"Content-Type": "application/json"}),
@@ -107,6 +114,7 @@ class String(APIBaseModel):
                 "headers": None,
             },
             ContentTypeValidationResult(
+                type="application/xml",
                 data='<?xml version="1.0" encoding="utf-8"?>\n'
                 "<root><name>Alice</name><age>24</age></root>",
                 headers=CaseInsensitiveDict({"Content-Type": "application/xml"}),
@@ -123,6 +131,7 @@ class String(APIBaseModel):
                 "headers": None,
             },
             ContentTypeValidationResult(
+                type="application/xml",
                 data='<?xml version="1.0" encoding="utf-8"?>\n'
                 "<root><name>Alice</name><age>24</age></root>",
                 headers=CaseInsensitiveDict({"Content-Type": "application/xml"}),
@@ -139,6 +148,7 @@ class String(APIBaseModel):
                 "headers": {"content-type": "application/xml; charset=utf-8"},
             },
             ContentTypeValidationResult(
+                type="application/xml",
                 data='<?xml version="1.0" encoding="utf-8"?>\n'
                 "<root><name>Alice</name><age>24</age></root>",
                 headers=CaseInsensitiveDict(
