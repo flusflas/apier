@@ -139,7 +139,8 @@ class APIResource(ABC):
         # If the Content-Type header is not explicitly provided, remove it from
         # the headers for cases where it should be set automatically
         if not forced_content_type:
-            if results.type == "application/json":
+            auto_content_types = ["application/json", "multipart/form-data"]
+            if results.type in auto_content_types:
                 results.headers.pop("Content-Type", None)
 
         return api.make_request(
@@ -147,6 +148,7 @@ class APIResource(ABC):
             self._build_path(),
             data=results.data,
             json=results.json,
+            files=results.files,
             headers=results.headers,
             **kwargs,
         )

@@ -26,11 +26,15 @@ def generate_models(definition: Definition, schemas: dict[str, dict], output_pat
     with file.open("w") as f:
         yaml.dump(openapi_output, f)
 
+    pkg_name = __name__.rsplit(".", 1)[0]
+    custom_formatter = f"{pkg_name}.formatter"
+
     generate(
         input_=Path(filename),
         input_file_type=InputFileType.OpenAPI,
         output=Path(f"{output_path}/models/models.py"),
         base_class=".basemodel.APIBaseModel",
+        custom_formatters=[custom_formatter],
     )
 
     shutil.rmtree(f"{output_path}/_temp")

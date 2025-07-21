@@ -10,7 +10,7 @@ from apier.templates.python_tree.functions import (
     payload_from_input_parameters,
     get_method_name,
 )
-from apier.templates.python_tree.gen_models import generate_models
+from apier.templates.python_tree.model_generation.generate import generate_models
 from apier.core.api.tree import APINode, build_endpoints_tree
 from apier.utils.path import abs_path_from_current_script as abs_path
 from apier.utils.strings import to_pascal_case, to_snake_case

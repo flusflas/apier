@@ -1,4 +1,5 @@
 import json
+import mimetypes
 from dataclasses import dataclass, field
 from io import IOBase
 from typing import Any, Optional
@@ -106,6 +107,7 @@ class ContentTypeValidationResult:
 
     type: str = ""  # The request's Content-Type, indicating the data format
     data: Any = None
+    files: Optional[dict] = None
     json: Optional[dict] = None
     headers: CaseInsensitiveDict = field(default_factory=dict)
 
@@ -175,8 +177,44 @@ def to_xml(obj) -> ContentTypeValidationResult:
     return result
 
 
+def to_multipart(obj) -> ContentTypeValidationResult:
+    """
+    Converts the given object to a multipart representation.
+    Returns the data and files to be sent in a multipart/form-data request.
+    """
+    if isinstance(obj, APIBaseModel):
+        obj = obj.dict(by_alias=True)
+
+    data = {}
+    files = {}
+
+    for key, value in obj.items():
+        if isinstance(value, (bytes, IOBase)):
+            name = key
+            content_type = "application/octet-stream"
+            if hasattr(value, "name"):
+                if filename := value.name.split("/")[-1]:
+                    name = filename
+
+                content_type_guess, _ = mimetypes.guess_type(value.name)
+                if content_type_guess:
+                    content_type = content_type_guess
+
+            files[key] = (name, value, content_type)
+        else:
+            data[key] = value
+
+    return ContentTypeValidationResult(
+        type="multipart/form-data",
+        data=data,
+        files=files,
+        headers=CaseInsensitiveDict({"Content-Type": "multipart/form-data"}),
+    )
+
+
 SUPPORTED_REQUEST_CONTENT_TYPES = {
     "application/json": to_json,
     "application/xml": to_xml,
     "text/plain": to_plain_text,
+    "multipart/form-data": to_multipart,
 }
