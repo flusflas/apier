@@ -208,3 +208,6 @@ def format_file(filename):
 
     os.system(f"ruff check --config {config_file} check {filename} --fix -q")
     os.system(f"ruff check --config {config_file} format {filename} -q")
+
+    # Run black with --exclude '' to format all files, including those in .gitignore
+    os.system(f"black {filename} --exclude '' -q")
