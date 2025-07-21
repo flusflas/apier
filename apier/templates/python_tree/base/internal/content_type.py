@@ -9,6 +9,7 @@ import xmltodict
 from requests.structures import CaseInsensitiveDict
 
 from ..models.basemodel import APIBaseModel
+from ..models.primitives import FilePayload
 
 
 class ContentType:
@@ -182,13 +183,19 @@ def to_multipart(obj) -> ContentTypeValidationResult:
     Converts the given object to a multipart representation.
     Returns the data and files to be sent in a multipart/form-data request.
     """
-    if isinstance(obj, APIBaseModel):
-        obj = obj.dict(by_alias=True)
+    if isinstance(obj, dict):
+        obj_dict = obj
+    elif isinstance(obj, APIBaseModel):
+        obj_dict = obj.dict(by_alias=True)
+    else:
+        raise ValueError(
+            f'Value type "{type(obj).__name__}" cannot be converted to multipart/form-data'
+        )
 
     data = {}
     files = {}
 
-    for key, value in obj.items():
+    for key, value in obj_dict.items():
         if isinstance(value, (bytes, IOBase)):
             name = key
             content_type = "application/octet-stream"
@@ -201,6 +208,11 @@ def to_multipart(obj) -> ContentTypeValidationResult:
                     content_type = content_type_guess
 
             files[key] = (name, value, content_type)
+
+        elif isinstance(obj[key], FilePayload):
+            value: FilePayload = obj[key]
+            files[key] = (value.filename, value.content, value.content_type)
+
         else:
             data[key] = value
 

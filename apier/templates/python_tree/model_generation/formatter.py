@@ -25,10 +25,11 @@ class ModelTypeReplacer:
 
 type_mapping = {
     "bytes": ModelTypeReplacer(
-        target="Union[bytes | IO | IOBase]",
+        target="Union[bytes | IO | IOBase | FilePayload]",
         extra_imports=[
             ("typing", ["Union", "IO"]),
             ("io", ["IOBase"]),
+            (".primitives", ["FilePayload"]),
         ],
         arbitrary_types_allowed=True,
     ),

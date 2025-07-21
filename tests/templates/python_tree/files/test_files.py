@@ -1,9 +1,10 @@
 from collections import OrderedDict
-from io import BytesIO, StringIO, IOBase
+from io import BytesIO, StringIO
 from unittest import mock
 
 import pytest
 import requests
+from pydantic import ValidationError
 
 from apier.utils.path import abs_path_from_current_script
 from .setup import build_client
@@ -18,56 +19,94 @@ send_mock_pkg = f"{pkg_name}._build.api.requests.Session.send"
 if True:
     from ._build.api import API
     from ._build.models.models import BookUploadRequest, BooksResponse201
+    from ._build.models.primitives import FilePayload
 
 test_file_path = abs_path_from_current_script("data/pdf.pdf")
 
 
 @pytest.mark.parametrize(
-    ("file", "req_type"),
+    ("filename", "file", "req_type", "expected_name", "expected_content_type"),
     [
         (
+            test_file_path,
             open(test_file_path, "rb"),
             BookUploadRequest,
+            "pdf.pdf",
+            "application/pdf",
         ),
         (
+            test_file_path,
             open(test_file_path, "r"),
             BookUploadRequest,
+            "pdf.pdf",
+            "application/pdf",
         ),
         (
+            test_file_path,
             open(test_file_path, "rb").read(),
             BookUploadRequest,
+            "file",
+            "application/octet-stream",
         ),
         (
+            test_file_path,
             BytesIO(open(test_file_path, "rb").read()),
             BookUploadRequest,
+            "file",
+            "application/octet-stream",
         ),
         (
+            test_file_path,
             StringIO(open(test_file_path, "r").read()),
             BookUploadRequest,
+            "file",
+            "application/octet-stream",
         ),
         (
+            test_file_path,
             open(test_file_path, "rb"),
             dict,
+            "pdf.pdf",
+            "application/pdf",
         ),
         (
+            test_file_path,
             open(test_file_path, "r"),
             dict,
+            "pdf.pdf",
+            "application/pdf",
         ),
         (
+            test_file_path,
             open(test_file_path, "rb").read(),
             dict,
+            "file",
+            "application/octet-stream",
         ),
         (
+            test_file_path,
             BytesIO(open(test_file_path, "rb").read()),
             dict,
+            "file",
+            "application/octet-stream",
         ),
         (
+            test_file_path,
             StringIO(open(test_file_path, "r").read()),
             dict,
+            "file",
+            "application/octet-stream",
+        ),
+        (
+            abs_path_from_current_script("data/pdf.pdf"),
+            FilePayload.from_path(path=abs_path_from_current_script("data/pdf.pdf")),
+            BookUploadRequest,
+            "pdf.pdf",
+            "application/pdf",
         ),
     ],
 )
-def test_upload_file(file, req_type):
+def test_upload_file(filename, file, req_type, expected_name, expected_content_type):
     """
     Tests a successful file upload request using a multipart/form-data request.
     """
@@ -99,11 +138,7 @@ def test_upload_file(file, req_type):
     with mock.patch(send_mock_pkg, return_value=expected_raw_resp) as m:
         resp = API(host="test-api.com").books().post(req_data, params={"foo": "bar"})
 
-    expected_file_content = open(test_file_path, "rb").read()
-    expected_file_name = "pdf.pdf" if hasattr(file, "name") else "file"
-    expected_file_content_type = (
-        "application/pdf" if hasattr(file, "name") else "application/octet-stream"
-    )
+    expected_content = open(filename, "rb").read()
 
     expected_prepared_req = requests.PreparedRequest()
     expected_prepared_req.prepare(
@@ -113,9 +148,9 @@ def test_upload_file(file, req_type):
         data=data,
         files={
             "file": (
-                expected_file_name,
-                expected_file_content,
-                expected_file_content_type,
+                expected_name,
+                expected_content,
+                expected_content_type,
             )
         },
         json=None,
@@ -144,3 +179,16 @@ def test_upload_file(file, req_type):
 
     assert resp.http_response().status_code == 201
     assert resp == BooksResponse201()
+
+
+def test_invalid_model_file_value():
+    """
+    Tests that a validation error is raised when an invalid file value is set to a model.
+    """
+    with pytest.raises(ValidationError):
+        BookUploadRequest(
+            title="El Quijote",
+            author="Miguel de Cervantes",
+            publication_year=1605,
+            file=[],  # Invalid file value
+        )
