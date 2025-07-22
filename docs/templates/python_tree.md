@@ -142,6 +142,12 @@ except ResponseError as e:
     print(f"Response Body: {raw_response.text}")
 ```
 
+## Multipart Requests
+
+The `python-tree` template supports multipart requests for endpoints that require file uploads or other multipart data. By default, `requests` library will handle multipart encoding by loading the full request body into memory. This can be a problem for large files or datasets.
+
+The [`requests-toolbelt`](https://github.com/requests/toolbelt) library enables streaming multipart requests. Simply add `requests-toolbelt` to your api library dependencies, and the generated client will automatically use it to handle multipart requests.
+
 ## ⚠️ Limitations
 
 - 🧬 The `python-tree` template is best suited for APIs that have a clear hierarchical structure. It may not be the best choice for APIs with flat or complex endpoint structures, where a different template design might be more appropriate.

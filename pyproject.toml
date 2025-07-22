@@ -38,6 +38,7 @@ onedict = "^0.1.0"
 flake8 = "^7.3.0"
 black = "^25.1.0"
 astor = "^0.8.1"
+requests-toolbelt = "^1.0.0"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.3.2"

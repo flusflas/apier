@@ -5,6 +5,7 @@ from unittest import mock
 import pytest
 import requests
 from pydantic import ValidationError
+from requests_toolbelt import MultipartEncoder
 
 from apier.utils.path import abs_path_from_current_script
 from .setup import build_client
@@ -106,7 +107,10 @@ test_file_path = abs_path_from_current_script("data/pdf.pdf")
         ),
     ],
 )
-def test_upload_file(filename, file, req_type, expected_name, expected_content_type):
+@pytest.mark.parametrize("stream_file", [True, False])
+def test_upload_file(
+    filename, file, req_type, expected_name, expected_content_type, stream_file
+):
     """
     Tests a successful file upload request using a multipart/form-data request.
     """
@@ -133,10 +137,34 @@ def test_upload_file(filename, file, req_type, expected_name, expected_content_t
     else:
         raise ValueError("Unsupported request type")
 
-    expected_raw_resp = make_response(201, BooksResponse201())
+    def make_request():
+        expected_raw_resp = make_response(201, BooksResponse201())
+        with mock.patch(send_mock_pkg, return_value=expected_raw_resp) as mock_send:
+            api = API(host="test-api.com")
+            return api.books().post(req_data, params={"foo": "bar"}), mock_send
 
-    with mock.patch(send_mock_pkg, return_value=expected_raw_resp) as m:
-        resp = API(host="test-api.com").books().post(req_data, params={"foo": "bar"})
+    if stream_file:
+        resp, m = make_request()
+    else:
+        # Simulate ImportError for requests_toolbelt so that the request
+        # is handled without file streaming support
+        def simulate_import_error(module_name):
+            original_import = __import__
+
+            def side_effect(name, *args, **kwargs):
+                if name == module_name:
+                    raise ImportError(f"No module named '{name}'")
+                return original_import(name, *args, **kwargs)
+
+            return side_effect
+
+        with mock.patch(
+            "builtins.__import__",
+            side_effect=simulate_import_error("requests_toolbelt"),
+        ):
+            resp, m = make_request()
+
+    ### Assert request was made correctly
 
     expected_content = open(filename, "rb").read()
 
@@ -169,13 +197,20 @@ def test_upload_file(filename, file, req_type, expected_name, expected_content_t
     actual_prepared_req = m.call_args[0][0]
     assert actual_prepared_req.method == expected_prepared_req.method
     assert actual_prepared_req.url == expected_prepared_req.url
-    assert len(actual_prepared_req.body) == len(expected_prepared_req.body)
+
+    if stream_file:
+        assert isinstance(actual_prepared_req.body, MultipartEncoder)
+    else:
+        assert len(actual_prepared_req.body) == len(expected_prepared_req.body)
+
     assert actual_prepared_req.hooks == expected_prepared_req.hooks
 
     actual_headers = actual_prepared_req.headers
     expected_headers = expected_prepared_req.headers
     assert actual_headers["Content-Length"] == expected_headers["Content-Length"]
     assert actual_headers.get("Content-Type", "").startswith("multipart/form-data;")
+
+    ### Assert response
 
     assert resp.http_response().status_code == 201
     assert resp == BooksResponse201()

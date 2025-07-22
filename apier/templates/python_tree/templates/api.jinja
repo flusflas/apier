@@ -131,6 +131,28 @@ class API(
         if verify is None:
             verify = self._verify
 
+        if data and files:
+            # Try to import MultipartEncoder from requests_toolbelt to handle
+            # multipart/form-data encoding with file streams
+            try:
+                from requests_toolbelt import MultipartEncoder
+
+                data_encoded = {
+                    k: v if isinstance(v, bytes) else str(v)
+                    for k, v in data.items()
+                    if v is not None
+                }
+
+                m = MultipartEncoder(fields={**data_encoded, **files})
+                req.data = m
+                files = None
+
+                req.headers["Content-Type"] = m.content_type
+
+            except ImportError:
+                # Fallback to standard file upload handling
+                pass
+
         return requests.request(
             req.method,
             req.url,
