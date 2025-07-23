@@ -7,16 +7,14 @@ payloads and handling pagination.
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Union, Tuple
+from pyexpat import ExpatError
+from typing import Union, get_type_hints, get_args, Type
 
 import requests
-from pyexpat import ExpatError
 from requests import HTTPError, PreparedRequest, Response
 from requests.structures import CaseInsensitiveDict
 
-from ..models.basemodel import APIBaseModel
-from ..models.exceptions import ExceptionList, ResponseError
-from ..models.extensions.pagination import PaginationDescription
+from .content_disposition import parse_content_disposition
 from .content_type import (
     SUPPORTED_REQUEST_CONTENT_TYPES,
     content_types_match,
@@ -24,6 +22,9 @@ from .content_type import (
     ContentTypeValidationResult,
 )
 from .runtime_expr import evaluate, prepare_request
+from ..models.basemodel import APIBaseModel
+from ..models.exceptions import ExceptionList, ResponseError
+from ..models.extensions.pagination import PaginationDescription
 
 
 def _is_api(obj):
@@ -199,24 +200,7 @@ class APIResource(ABC):
             ] or not content_types_match(resp_content_type, content_type):
                 continue
 
-            resp_payload = response.content
-
-            if resp_content_type.startswith("application/json"):
-                resp_payload = response.json()
-
-            elif resp_content_type.startswith("application/xml"):
-                import xmltodict
-
-                try:
-                    resp_payload = xmltodict.parse(response.content)
-                except ExpatError as e:
-                    raise ResponseError(response, f"Invalid XML response: {str(e)}")
-
-                root_name = list(resp_payload.keys())[0]
-                resp_payload = resp_payload[root_name]
-
-            elif resp_content_type.startswith("text/plain"):
-                resp_payload = resp_payload.decode("utf-8")
+            resp_payload = _parse_response_content(response, resp_class)
 
             ret = resp_class.parse_obj(resp_payload)
 
@@ -302,6 +286,74 @@ class APIResource(ABC):
             )
 
         ret._pagination.iter_func = make_request
+
+
+def _parse_response_content(response: Response, resp_class: Type[APIBaseModel]):
+    """
+    Parses the response content according to its content type to ensure it
+    matches the expected response class.
+    """
+    resp_content_type = response.headers.get("content-type", "")
+
+    if content_types_match(resp_content_type, "application/json"):
+        return response.json()
+
+    if content_types_match(resp_content_type, "application/xml"):
+        import xmltodict
+
+        try:
+            resp_payload = xmltodict.parse(response.content)
+        except ExpatError as e:
+            raise ResponseError(response, f"Invalid XML response: {str(e)}")
+
+        root_name = list(resp_payload.keys())[0]
+        return resp_payload[root_name]
+
+    if content_types_match(resp_content_type, "text/plain"):
+        return response.content.decode("utf-8")
+
+    # To handle files or streams, verify that the response class has a root
+    # type compatible with known file handling types
+    type_hints = get_type_hints(resp_class)
+    if "__root__" in type_hints:
+        root_types = _extract_subtypes(type_hints["__root__"])
+        root_type_names = {t.__name__ for t in root_types if hasattr(t, "__name__")}
+
+        if "FilePayload" in root_type_names:
+            from ..models.primitives import FilePayload
+
+            filename = ""
+            if content_disposition := response.headers.get("Content-Disposition"):
+                if parsed_filename := parse_content_disposition(content_disposition):
+                    filename = parsed_filename
+
+            content = response.content if response._content_consumed else response.raw
+
+            return FilePayload(
+                filename=filename, content_type=resp_content_type, content=content
+            )
+
+        if "IOBase" in root_type_names:
+            return response.raw
+
+        if "bytes" in root_type_names:
+            return response.content
+
+    return None
+
+
+def _extract_subtypes(tp):
+    """Recursively extracts subtypes from a type hint."""
+    args = get_args(tp)
+
+    if not args:
+        return {tp}
+
+    subtypes = set()
+    for arg in args:
+        subtypes.update(_extract_subtypes(arg))
+
+    return subtypes
 
 
 def _validate_request_payload(

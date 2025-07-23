@@ -81,6 +81,7 @@ class API(
         timeout: float = 3,
         {% if security_scheme_names %}auth: bool = True,{% endif %}
         verify=None,
+        **kwargs,
     ) -> requests.Response:
         """
         Makes a request to the API server.
@@ -163,6 +164,7 @@ class API(
             json=req.json,
             timeout=timeout,
             verify=verify,
+            **kwargs,
         )
 
     def __enter__(self):

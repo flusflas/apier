@@ -1,12 +1,20 @@
+from io import IOBase, BytesIO
+from typing import Union, IO
+
 import pytest
+from requests import Response
 from requests.structures import CaseInsensitiveDict
 
-from apier.templates.python_tree.base.internal.resource import _validate_request_payload
+from apier.templates.python_tree.base.internal.resource import (
+    _validate_request_payload,
+    _parse_response_content,
+)
 from apier.templates.python_tree.base.internal.resource import (
     ContentTypeValidationResult,
 )
 from apier.templates.python_tree.base.models.basemodel import APIBaseModel
 from apier.templates.python_tree.base.models.exceptions import ExceptionList
+from apier.templates.python_tree.base.models.primitives import FilePayload
 
 
 class Person(APIBaseModel):
@@ -217,3 +225,124 @@ def test__validate_request_payload_errors(data, expected_exception):
     for i, e in enumerate(e.value.exceptions):
         assert type(e) is type(expected_exception.exceptions[i])
         assert str(e) == str(expected_exception.exceptions[i])
+
+
+class File(APIBaseModel):
+    __root__: Union[bytes | IO | IOBase | FilePayload]
+
+    class Config:
+        arbitrary_types_allowed = True
+
+
+class FileBytes(APIBaseModel):
+    __root__: bytes
+
+
+class FileIO(APIBaseModel):
+    __root__: IOBase
+
+    class Config:
+        arbitrary_types_allowed = True
+
+
+def make_response(**kwargs) -> Response:
+    """Creates a mock response object with the given parameters."""
+    response = Response()
+    for key, value in kwargs.items():
+        if key == "content":
+            key = "_content"
+        elif key == "headers":
+            value = CaseInsensitiveDict(value)
+        setattr(response, key, value)
+
+    return response
+
+
+@pytest.mark.parametrize(
+    ("response", "resp_class", "expected"),
+    [
+        (
+            make_response(
+                headers={"content-type": "application/json"},
+                content=b'{"name": "Alice", "age": 24}',
+            ),
+            Person,
+            {"name": "Alice", "age": 24},
+        ),
+        (
+            make_response(
+                headers={"content-type": "application/xml"},
+                content=b'<?xml version="1.0" encoding="utf-8"?><root><name>Alice</name><age>24</age></root>',
+            ),
+            Person,
+            {"name": "Alice", "age": "24"},
+        ),
+        (
+            make_response(
+                headers={"content-type": "text/plain"},
+                content=b"Hello, World!",
+            ),
+            String,
+            "Hello, World!",
+        ),
+        (
+            make_response(
+                headers={
+                    "content-type": "application/pdf",
+                    "content-disposition": 'attachment; filename="file.pdf"',
+                },
+                raw=b"PDF-1.4\n%...",
+            ),
+            File,
+            FilePayload(
+                filename="file.pdf",
+                content=b"PDF-1.4\n%...",
+                content_type="application/pdf",
+            ),
+        ),
+        (
+            make_response(
+                headers={
+                    "content-type": "text/csv",
+                    "content-disposition": "attachment; filename*=UTF-8''%e2%82%ac%20rates.csv",
+                },
+                raw=b"currency,rate\nEUR,1.2345\nUSD,0.9876",
+            ),
+            File,
+            FilePayload(
+                filename="€ rates.csv",
+                content=b"currency,rate\nEUR,1.2345\nUSD,0.9876",
+                content_type="text/csv",
+            ),
+        ),
+        (
+            make_response(
+                headers={
+                    "content-type": "text/csv",
+                    "content-disposition": "attachment; filename*=UTF-8''%e2%82%ac%20rates.csv",
+                },
+                raw=b"currency,rate\nEUR,1.2345\nUSD,0.9876",
+            ),
+            FileIO,
+            b"currency,rate\nEUR,1.2345\nUSD,0.9876",
+        ),
+        (
+            make_response(
+                headers={
+                    "content-type": "text/csv",
+                    "content-disposition": "attachment; filename*=UTF-8''%e2%82%ac%20rates.csv",
+                },
+                content=b"currency,rate\nEUR,1.2345\nUSD,0.9876",
+            ),
+            FileBytes,
+            b"currency,rate\nEUR,1.2345\nUSD,0.9876",
+        ),
+    ],
+)
+def test_parse_response_content(response: Response, resp_class, expected):
+    """
+    Tests the _parse_response_content function.
+    """
+    result = _parse_response_content(response, resp_class)
+    assert result == expected
+    assert type(result) is type(expected)

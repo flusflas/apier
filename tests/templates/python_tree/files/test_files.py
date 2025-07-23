@@ -1,10 +1,11 @@
 from collections import OrderedDict
-from io import BytesIO, StringIO
+from io import BytesIO, StringIO, IOBase
 from unittest import mock
 
 import pytest
 import requests
 from pydantic import ValidationError
+from pytest_httpserver import HTTPServer
 from requests_toolbelt import MultipartEncoder
 
 from apier.utils.path import abs_path_from_current_script
@@ -227,3 +228,64 @@ def test_invalid_model_file_value():
             publication_year=1605,
             file=[],  # Invalid file value
         )
+
+
+@pytest.mark.parametrize("stream", [True, False])
+@pytest.mark.parametrize(
+    ("expected_content_type", "expected_content_disposition", "expected_filename"),
+    [
+        (
+            "application/pdf",
+            'attachment; filename="document.pdf"',
+            "document.pdf",
+        ),
+        (
+            "application/pdf",
+            "attachment; filename*=UTF-8''%e2%82%ac%20rates.csv",
+            "€ rates.csv",
+        ),
+    ],
+)
+def test_book_download(
+    httpserver: HTTPServer,
+    stream: bool,
+    expected_content_type,
+    expected_content_disposition,
+    expected_filename,
+):
+    """Tests downloading a file from the API."""
+    file_content = b"PDF content\n" * 1000
+
+    httpserver.expect_request("/books/123/download", method="GET").respond_with_data(
+        response_data=file_content,
+        status=200,
+        content_type=expected_content_type,
+        headers={"Content-Disposition": expected_content_disposition},
+    )
+
+    resp = API(host=httpserver.url_for("")).books("123").download().get(stream=stream)
+
+    http_response = resp.http_response()
+
+    assert http_response.status_code == 200
+    assert http_response.headers["Content-Type"] == expected_content_type
+    assert http_response.headers["Content-Disposition"] == expected_content_disposition
+
+    assert http_response._content_consumed != stream
+
+    assert isinstance(resp.__root__, FilePayload)
+
+    file_payload = resp.__root__
+    assert file_payload.filename == expected_filename
+    assert file_payload.content_type == expected_content_type
+
+    if stream:
+        assert isinstance(file_payload.content, IOBase)
+        actual_content = b""
+        while chunk := file_payload.content.read(100):
+            actual_content += chunk
+    else:
+        assert isinstance(file_payload.content, bytes)
+        actual_content = file_payload.content
+
+    assert actual_content == file_content

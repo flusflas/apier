@@ -4,6 +4,8 @@ The `python-tree` template is designed to generate Python client libraries with 
 
 It provides chainable methods that mirror the hierarchical nature of REST APIs. For example, an endpoint like `GET /accounts/<account>/users/<user>` can be accessed with a call such as `client.accounts(account).users(user).get()`. This design makes it straightforward to navigate and interact with nested resources in the API.
 
+> 👀 The `python-tree` template generates Pydantic models to define request and response schemas. It relies heavily on the Content-Type values specified in the OpenAPI documentation to determine how to process request and response payloads. Therefore, ensuring the specification is accurate and complete is crucial for the output client to work as intended.
+
 ## Example usage
 The generated client library allows you to interact with the API in a way that closely resembles the API's structure. Here's an example of how to use the generated client:
 
@@ -148,8 +150,131 @@ The `python-tree` template supports multipart requests for endpoints that requir
 
 The [`requests-toolbelt`](https://github.com/requests/toolbelt) library enables streaming multipart requests. Simply add `requests-toolbelt` to your api library dependencies, and the generated client will automatically use it to handle multipart requests.
 
+The `FilePayload` class is the recommended way to handle file uploads in multipart requests. It allows you to set the file content and metadata, such as filename and content type, or load the file content from a given file path.
+
+### Example
+
+Let's say you have an OpenAPI schema that defines an endpoint for uploading books:
+```yaml
+components:
+  schemas:
+    BookUploadRequest:
+      type: object
+      required:
+        - title
+        - file
+      properties:
+        title:
+          type: string
+        author:
+          type: string
+        publication_year:
+          type: integer
+        file:
+          type: string
+          format: binary  # This is needed for file uploads
+```
+
+In the above schema, the `file` property is defined as a binary type, which indicates that it will be used for file uploads. The generated client will create a model for this request:
+
+```python
+class BookUploadRequest(APIBaseModel):
+    title: str
+    author: Optional[str] = None
+    publication_year: Optional[int] = None
+    file: Union[bytes | IO | IOBase | FilePayload]
+```
+
+This model accepts a `FilePayload` instance for the `file` field, which can be used to upload a file as part of a multipart request. Note that you can also set the `file` field to a byte string or an IO object, but using `FilePayload` is recommended for better handling of file metadata, such as filename and content type.
+
+You can create a `FilePayload` instance like this and use it in your request:
+
+```python
+from my_api_client import API
+from my_api_client.models.primitives import FilePayload
+
+book_req = BookUploadRequest(
+    title="The Great Gatsby",
+    author="F. Scott Fitzgerald",
+    publication_year=1925,
+    file=FilePayload(
+        content=open("my_library/great_gatsby.pdf", "rb"),
+        filename="great_gatsby.pdf",
+        content_type="application/pdf"
+    )
+)
+
+resp = API().books().post(book_req)  # POST /books/upload
+```
+
+Alternatively, you can also use the `FilePayload.from_path` method to create a `FilePayload` instance from a file path, which automatically sets the filename and content type based on the file's properties:
+
+```python
+book_req = BookUploadRequest(
+    title="The Great Gatsby",
+    author="F. Scott Fitzgerald",
+    publication_year=1925,
+    file=FilePayload.from_path("my_library/great_gatsby.pdf")
+)
+```
+
+## Binary Responses
+
+When dealing with binary responses, such as images or files, the generated client will automatically decode the response and fit it into a `FilePayload` instance in the response model.
+
+The response's content type must match the exact type of the binary data being returned, such as `image/png` or `application/pdf`. Alternatively, you can use `*/*` to indicate that the response may contain any type of binary data. Other content types might not work as expected.
+
+By default, the response is fully loaded into memory. To process large binary responses efficiently, set the `stream` parameter to `True` when making the request. This enables chunked processing without loading the entire response into memory.
+
+### Example
+
+Let's imagine you have an OpenAPI endpoint that expects a binary response:
+```yaml
+paths:
+  /books/{book_id}/download:
+    get:
+      summary: Download a book
+      parameters:
+        - name: book_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response with binary data
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary  # This is needed for binary responses
+```
+
+The generated client will create a model for the response that expects a FilePayload instance:
+```python
+class BooksBookIdDownloadResponse200(APIBaseModel):
+    __root__: Union[bytes | IO | IOBase | FilePayload]
+```
+
+After a successful request, you can access the binary data by reading the content of the `FilePayload` instance:
+
+```python
+from my_api_client import API
+
+resp = API().books("123").download().get(stream=True)  # GET /books/123/download
+
+file_payload = resp.__root__
+with open(file_payload.filename, "wb") as f:
+    while chunk := file_payload.content.read():
+        f.write(chunk)
+```
+
+Alternatively, you can also read the content directly from the HTTP response object accessed via the `http_response()` method.
+
+In the example above, the `stream=True` parameter is used to enable streaming of the response content. This allows you to read the binary data in chunks, which is particularly useful for large files. When `stream=False`, the full response is loaded into memory, and the `content` field of the `FilePayload` instance contains a `bytes` object instead of an IO stream.
+
 ## ⚠️ Limitations
 
 - 🧬 The `python-tree` template is best suited for APIs that have a clear hierarchical structure. It may not be the best choice for APIs with flat or complex endpoint structures, where a different template design might be more appropriate.
-- 💾 Only text, JSON, and XML payloads are supported for requests and responses. Binary payloads, such as file uploads, are not supported yet.
+- 💾 The `python-tree` template supports text, JSON, XML, and multipart payloads for requests. Responses can handle text, JSON, XML, and binary data payloads. Other payload types have not been tested and therefore may not work as expected (or may not work at all).
 - 🧭 Strategies requiring dynamic evaluation of runtime expressions, such as page or offset pagination, are not yet supported.
