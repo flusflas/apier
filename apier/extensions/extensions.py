@@ -10,9 +10,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field
 
 from .input_parameters import InputParametersDescription
-from apier.templates.python_tree.base.models.extensions.pagination import (
-    PaginationDescription,
-)
+from .pagination import PaginationDescription
 from .method_name import MethodNameDescription
 
 if TYPE_CHECKING:
