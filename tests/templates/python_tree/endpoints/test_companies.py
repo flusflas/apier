@@ -5,7 +5,7 @@ import xmltodict
 from requests.structures import CaseInsensitiveDict
 
 from .setup import build_client
-from ..common import make_response, to_dict, to_json
+from ..common import make_response, to_dict
 
 build_client("python-tree")
 

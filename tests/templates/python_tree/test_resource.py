@@ -1,4 +1,4 @@
-from io import IOBase, BytesIO
+from io import IOBase
 from typing import Union, IO
 
 import pytest
@@ -6,11 +6,11 @@ from requests import Response
 from requests.structures import CaseInsensitiveDict
 
 from apier.templates.python_tree.base.internal.resource import (
-    _validate_request_payload,
-    _parse_response_content,
+    ContentTypeValidationResult,
 )
 from apier.templates.python_tree.base.internal.resource import (
-    ContentTypeValidationResult,
+    _validate_request_payload,
+    _parse_response_content,
 )
 from apier.templates.python_tree.base.models.basemodel import APIBaseModel
 from apier.templates.python_tree.base.models.exceptions import ExceptionList

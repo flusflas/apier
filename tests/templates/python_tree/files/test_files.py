@@ -165,7 +165,7 @@ def test_upload_file(
         ):
             resp, m = make_request()
 
-    ### Assert request was made correctly
+    # --- Assert request was made correctly
 
     expected_content = open(filename, "rb").read()
 
@@ -211,7 +211,7 @@ def test_upload_file(
     assert actual_headers["Content-Length"] == expected_headers["Content-Length"]
     assert actual_headers.get("Content-Type", "").startswith("multipart/form-data;")
 
-    ### Assert response
+    # --- Assert response
 
     assert resp.http_response().status_code == 201
     assert resp == BooksResponse201()
@@ -268,14 +268,13 @@ def test_book_download(
     get_kwargs = {"stream": stream} if stream is not None else {}
     expected_stream = stream if stream is not None else True
 
-    # Instead of returning a value, I want the mock to just capture the call but act as normal. I just want to check that the function was called with the expected parameters.
-    #
-    # Using side_effect=None doesn't work as the call returns a MagicMock instance.
     with mock.patch(request_mock_pkg, wraps=requests.request) as mock_request:
-        resp = API(host=httpserver.url_for("")).books("123").download().get(**get_kwargs)
+        resp = (
+            API(host=httpserver.url_for("")).books("123").download().get(**get_kwargs)
+        )
 
     # Assert that the request was made with the expected stream parameter
-    assert mock_request.call_args.kwargs['stream'] == expected_stream
+    assert mock_request.call_args.kwargs["stream"] == expected_stream
 
     http_response = resp.http_response()
 

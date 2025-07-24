@@ -2,7 +2,7 @@ from unittest import mock
 
 import pytest
 
-from .common import make_response, to_json, to_dict
+from .common import make_response, to_dict
 from .setup import build_client
 
 build_client("python-tree")
