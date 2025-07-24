@@ -74,11 +74,12 @@ print(f"Employee Name: {employee.name}")
 ## Supported Extensions
 
 The `python-tree` template supports the following OpenAPI extensions to enhance the generated client. For detailed descriptions, refer to the [OpenAPI extensions documentation](../extensions/README.md):
-- **`x-apier.templates`**
-- **`x-apier.equivalent-paths`**
-- **`x-apier.pagination`**
-- **`x-apier.method-name`**
-- **`x-apier.input-parameters`**
+- [Template Configuration](../extensions/README.md#template-configuration) (`x-apier.templates`)
+- [Equivalent Paths](../extensions/README.md#equivalent-paths) (`x-apier.equivalent-paths`)
+- [Pagination](../extensions/README.md#pagination) (`x-apier.pagination`)
+- [Method Name](../extensions/README.md#method-name) (`x-apier.method-name`)
+- [Input Parameters](../extensions/README.md#input-parameters) (`x-apier.input-parameters`)
+- [Response Stream](../extensions/README.md#response-stream) (`x-apier.response-stream`)
 
 ### Template Configuration
 
@@ -224,7 +225,7 @@ When dealing with binary responses, such as images or files, the generated clien
 
 The response's content type must match the exact type of the binary data being returned, such as `image/png` or `application/pdf`. Alternatively, you can use `*/*` to indicate that the response may contain any type of binary data. Other content types might not work as expected.
 
-By default, the response is fully loaded into memory. To process large binary responses efficiently, set the `stream` parameter to `True` when making the request. This enables chunked processing without loading the entire response into memory.
+By default, the response is fully loaded into memory. To process large binary responses efficiently, set the `stream` parameter to `True` when making the request to enable chunked processing without loading the entire response into memory. Alternatively, you can use the `x-apier.response-stream` extension to change the default stream behavior for the response body.
 
 ### Example
 

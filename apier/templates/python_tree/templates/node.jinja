@@ -33,10 +33,16 @@ class {{ api_node.api | pascal_case }}{{ loop.index }}(APIResource{% for next_no
         """
         {% with ignore_path_params = True %}{% include 'templates/method_docstring.jinja' %}{% endwith %}
         """
+        {% if op.extensions.response_stream %}
+        kwargs.setdefault('stream', True)
+
+        {% endif -%}
+
         {% if op.extensions.input_parameters %}
         req = {{ payload_from_input_parameters(op) }}
 
-        {% endif %}
+        {% endif -%}
+
         {# Add request schemas info #}
         {% if op.request_schemas %}
         req_content_types = [
@@ -45,13 +51,15 @@ class {{ api_node.api | pascal_case }}{{ loop.index }}(APIResource{% for next_no
         {% endfor %}
         ]
 
-        {% endif %}
+        {% endif -%}
+
         {# Pagination description #}
         {% set has_pagination = op.extensions and op.extensions.pagination and op.extensions.pagination.next %}
         {% if has_pagination %}
         pagination_info = PaginationDescription.parse_obj({{ op.extensions.pagination.next.dict() }})
 
-        {% endif %}
+        {% endif -%}
+
         {# Add information of query and header parameters if present. This will be used to evaluate runtime expressions. #}
         {% set has_params_info = op.params_in('query') or op.params_in('header') %}
         {% if has_pagination and has_params_info %}

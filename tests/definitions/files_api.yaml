@@ -43,6 +43,8 @@ paths:
               schema:
                 type: string
                 format: binary
+      x-apier:
+        response-stream: true
 
 components:
   schemas:

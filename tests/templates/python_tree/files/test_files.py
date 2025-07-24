@@ -230,7 +230,7 @@ def test_invalid_model_file_value():
         )
 
 
-@pytest.mark.parametrize("stream", [True, False])
+@pytest.mark.parametrize("stream", [True, False, None])
 @pytest.mark.parametrize(
     ("expected_content_type", "expected_content_disposition", "expected_filename"),
     [
@@ -263,7 +263,19 @@ def test_book_download(
         headers={"Content-Disposition": expected_content_disposition},
     )
 
-    resp = API(host=httpserver.url_for("")).books("123").download().get(stream=stream)
+    # Set the 'stream' parameter to control whether the response is streamed
+    # or not. If 'stream' is None, it will not be set to test the default behavior.
+    get_kwargs = {"stream": stream} if stream is not None else {}
+    expected_stream = stream if stream is not None else True
+
+    # Instead of returning a value, I want the mock to just capture the call but act as normal. I just want to check that the function was called with the expected parameters.
+    #
+    # Using side_effect=None doesn't work as the call returns a MagicMock instance.
+    with mock.patch(request_mock_pkg, wraps=requests.request) as mock_request:
+        resp = API(host=httpserver.url_for("")).books("123").download().get(**get_kwargs)
+
+    # Assert that the request was made with the expected stream parameter
+    assert mock_request.call_args.kwargs['stream'] == expected_stream
 
     http_response = resp.http_response()
 
@@ -279,7 +291,9 @@ def test_book_download(
     assert file_payload.filename == expected_filename
     assert file_payload.content_type == expected_content_type
 
-    if stream:
+    # If stream is None, it should behave like True since the stream extension
+    # is set to true for this endpoint
+    if stream or stream is None:
         assert isinstance(file_payload.content, IOBase)
         actual_content = b""
         while chunk := file_payload.content.read(100):
