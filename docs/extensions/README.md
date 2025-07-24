@@ -9,7 +9,8 @@ Top-level extensions are defined in the `info` section of the OpenAPI document a
 ### Template Configuration
 The `x-apier.templates` field allows defining template-specific configurations at the top level of the OpenAPI document. These configurations depend on the template used for client generation and can include settings such as error handling or custom behaviors.
 
-**Example:**
+#### Example
+
 ```yaml
 info:
   x-apier:
@@ -18,7 +19,7 @@ info:
         raise-response-errors: true
 ```
 
-### Equivalent Paths Extension
+### Equivalent Paths
 The `x-apier.equivalent_paths` extension maps equivalent paths in the OpenAPI specification to simplify client generation. This is particularly useful for templates that generate clients with hierarchical method structures, such as the `python-tree` template.
 
 This extension allows multiple paths that point to the same resource or operation to be unified in the generated client. By mapping a `source` path to a `target` path, the client can optimize its internal structure while handling both paths uniformly.
@@ -26,6 +27,7 @@ This extension allows multiple paths that point to the same resource or operatio
 While this use case may be uncommon, it can be useful when an API has multiple endpoints representing the same resource or operation with different URL structures.
 
 #### Example
+
 In the example below, the `source` path `/companies/{company_id}/departments/{department_name}/employees/{employee_num}` is mapped to the `target` path `/companies/{company_id}/employees/{employee_num}`. Both paths access the same resource (an employee within a company), but the `target` path is preferred for client generation.
 
 ```yaml
@@ -52,10 +54,11 @@ graph LR;
 
 These extensions are defined within the `paths` section of the OpenAPI document and apply to specific operations. These extensions can modify how individual operations are handled in the generated client.
 
-### Pagination Extension
+### Pagination
 The `x-apier.pagination` extension enables handling of paginated endpoints in generated clients. It supports various pagination strategies, such as cursor-based and next-page URL pagination. For detailed documentation, refer to [Pagination Extension](./pagination.md).
 
-**Example:**
+#### Example
+
 ```yaml
 paths:
   /pagination/cursor:
@@ -71,12 +74,13 @@ paths:
             has_more: "$response.body#/cursors/next"
 ```
 
-### Method Name Extension
+### Method Name
 The `x-apier.method-name` extension allows customization of method names for operations in generated clients. It supports:
 - **Default Method Name**: A generic name for the operation, used when no specific template is defined. This name will follow the naming conventions of the chosen template (e.g., `Create Company` may be converted to `create_company` in Python).
 - **Template-specific Method Name**: Allows defining different method names depending on the template used.
 
-**Example:**
+#### Example
+
 ```yaml
 paths:
   /companies:
@@ -89,10 +93,11 @@ paths:
             go: Create           # go template will create a `Create()` method for this operation
 ```
 
-### Input Parameters Extension
+### Input Parameters
 The `x-apier.input-parameters` extension enables custom input parameters for operations. It allows defining additional parameters and constructing the request body using a payload template.
 
-**Example:**
+#### Example
+
 ```yaml
 paths:
   /tests/{company_id}/employees:
@@ -127,6 +132,21 @@ With the input-parameters extension, you can call the method using individual pa
 client.create_employee(employee_id=123, employee_name="John Doe", extra_info={"role": "developer"})
 ```
 
+### Response Stream
+
+The `x-apier.response-stream` extension allows operations to set the default stream behavior for the response body. This is particularly useful for operations that can return large files or data streams, enabling efficient handling of such responses in the generated client.
+
+#### Example
+
+```yaml
+paths:
+  /download:
+    get:
+      x-apier:
+        response-stream: true
+      ...
+```
+
 ## Template Support
 
 The table below indicates the support of each built-in template for the described extensions.
@@ -138,5 +158,6 @@ The table below indicates the support of each built-in template for the describe
 | Equivalent Paths         | Yes         |
 | Input Parameters         | Yes         |
 | Template Configuration   | Yes         |
+| Response Stream          | Yes         |
 
 For more details on templates, refer to the [Templates Documentation](../templates/README.md).

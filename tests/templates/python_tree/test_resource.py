@@ -1,8 +1,20 @@
-import pytest
+from io import IOBase
+from typing import Union, IO
 
-from apier.templates.python_tree.base.internal.resource import _validate_request_payload
+import pytest
+from requests import Response
+from requests.structures import CaseInsensitiveDict
+
+from apier.templates.python_tree.base.internal.resource import (
+    ContentTypeValidationResult,
+)
+from apier.templates.python_tree.base.internal.resource import (
+    _validate_request_payload,
+    _parse_response_content,
+)
 from apier.templates.python_tree.base.models.basemodel import APIBaseModel
 from apier.templates.python_tree.base.models.exceptions import ExceptionList
+from apier.templates.python_tree.base.models.primitives import FilePayload
 
 
 class Person(APIBaseModel):
@@ -23,7 +35,12 @@ class String(APIBaseModel):
                 "req_content_types": [],
                 "headers": {},
             },
-            {"body": "Lorem ipsum dolor", "headers": {}},
+            ContentTypeValidationResult(
+                type="",
+                data="Lorem ipsum dolor",
+                json=None,
+                headers=CaseInsensitiveDict(),
+            ),
         ),
         (
             {
@@ -35,7 +52,12 @@ class String(APIBaseModel):
                 ],
                 "headers": {},
             },
-            {"body": "Lorem ipsum dolor", "headers": {"Content-Type": "text/plain"}},
+            ContentTypeValidationResult(
+                type="text/plain",
+                data="Lorem ipsum dolor",
+                json=None,
+                headers=CaseInsensitiveDict({"Content-Type": "text/plain"}),
+            ),
         ),
         (
             {
@@ -47,10 +69,12 @@ class String(APIBaseModel):
                 ],
                 "headers": None,
             },
-            {
-                "body": '{"name": "Alice", "age": 24}',
-                "headers": {"Content-Type": "application/json"},
-            },
+            ContentTypeValidationResult(
+                type="application/json",
+                data=None,
+                json={"name": "Alice", "age": 24},
+                headers=CaseInsensitiveDict({"Content-Type": "application/json"}),
+            ),
         ),
         (
             {
@@ -62,10 +86,12 @@ class String(APIBaseModel):
                 ],
                 "headers": None,
             },
-            {
-                "body": '{"name": "Alice", "age": 24}',
-                "headers": {"Content-Type": "application/json"},
-            },
+            ContentTypeValidationResult(
+                type="application/json",
+                data=None,
+                json={"name": "Alice", "age": 24},
+                headers=CaseInsensitiveDict({"Content-Type": "application/json"}),
+            ),
         ),
         (
             {
@@ -77,10 +103,12 @@ class String(APIBaseModel):
                 ],
                 "headers": None,
             },
-            {
-                "body": '{"name": "Alice", "age": 24}',
-                "headers": {"Content-Type": "application/json"},
-            },
+            ContentTypeValidationResult(
+                type="application/json",
+                data=None,
+                json={"name": "Alice", "age": 24},
+                headers=CaseInsensitiveDict({"Content-Type": "application/json"}),
+            ),
         ),
         (
             {
@@ -93,11 +121,12 @@ class String(APIBaseModel):
                 ],
                 "headers": None,
             },
-            {
-                "body": '<?xml version="1.0" encoding="utf-8"?>\n'
+            ContentTypeValidationResult(
+                type="application/xml",
+                data='<?xml version="1.0" encoding="utf-8"?>\n'
                 "<root><name>Alice</name><age>24</age></root>",
-                "headers": {"Content-Type": "application/xml"},
-            },
+                headers=CaseInsensitiveDict({"Content-Type": "application/xml"}),
+            ),
         ),
         (
             {
@@ -109,11 +138,12 @@ class String(APIBaseModel):
                 ],
                 "headers": None,
             },
-            {
-                "body": '<?xml version="1.0" encoding="utf-8"?>\n'
+            ContentTypeValidationResult(
+                type="application/xml",
+                data='<?xml version="1.0" encoding="utf-8"?>\n'
                 "<root><name>Alice</name><age>24</age></root>",
-                "headers": {"Content-Type": "application/xml"},
-            },
+                headers=CaseInsensitiveDict({"Content-Type": "application/xml"}),
+            ),
         ),
         (
             {
@@ -125,11 +155,32 @@ class String(APIBaseModel):
                 ],
                 "headers": {"content-type": "application/xml; charset=utf-8"},
             },
-            {
-                "body": '<?xml version="1.0" encoding="utf-8"?>\n'
+            ContentTypeValidationResult(
+                type="application/xml",
+                data='<?xml version="1.0" encoding="utf-8"?>\n'
                 "<root><name>Alice</name><age>24</age></root>",
-                "headers": {"content-type": "application/xml; charset=utf-8"},
+                headers=CaseInsensitiveDict(
+                    {"content-type": "application/xml; charset=utf-8"}
+                ),
+            ),
+        ),
+        (
+            # This test case checks that even if a content type is supported,
+            # it will not be used if the body is not compatible with it
+            {
+                "body": Person(name="Alice", age=24),
+                "req_content_types": [
+                    ("application/json", String),
+                    ("multipart/form-data; charset=utf-8", Person),
+                ],
+                "headers": {},
             },
+            ContentTypeValidationResult(
+                type="multipart/form-data",
+                data={"name": "Alice", "age": 24},
+                files={},
+                headers=CaseInsensitiveDict({"content-type": "multipart/form-data"}),
+            ),
         ),
     ],
 )
@@ -137,11 +188,8 @@ def test__validate_request_payload(data, expected):
     body = data["body"]
     req_content_types = data["req_content_types"]
     headers = data["headers"]
-    actual_body, actual_headers = _validate_request_payload(
-        body, req_content_types, headers
-    )
-    assert actual_body == expected["body"]
-    assert actual_headers == expected["headers"]
+    result = _validate_request_payload(body, req_content_types, headers)
+    assert result == expected
 
 
 @pytest.mark.parametrize(
@@ -195,3 +243,124 @@ def test__validate_request_payload_errors(data, expected_exception):
     for i, e in enumerate(e.value.exceptions):
         assert type(e) is type(expected_exception.exceptions[i])
         assert str(e) == str(expected_exception.exceptions[i])
+
+
+class File(APIBaseModel):
+    __root__: Union[bytes, IO, IOBase, FilePayload]
+
+    class Config:
+        arbitrary_types_allowed = True
+
+
+class FileBytes(APIBaseModel):
+    __root__: bytes
+
+
+class FileIO(APIBaseModel):
+    __root__: IOBase
+
+    class Config:
+        arbitrary_types_allowed = True
+
+
+def make_response(**kwargs) -> Response:
+    """Creates a mock response object with the given parameters."""
+    response = Response()
+    for key, value in kwargs.items():
+        if key == "content":
+            key = "_content"
+        elif key == "headers":
+            value = CaseInsensitiveDict(value)
+        setattr(response, key, value)
+
+    return response
+
+
+@pytest.mark.parametrize(
+    ("response", "resp_class", "expected"),
+    [
+        (
+            make_response(
+                headers={"content-type": "application/json"},
+                content=b'{"name": "Alice", "age": 24}',
+            ),
+            Person,
+            {"name": "Alice", "age": 24},
+        ),
+        (
+            make_response(
+                headers={"content-type": "application/xml"},
+                content=b'<?xml version="1.0" encoding="utf-8"?><root><name>Alice</name><age>24</age></root>',
+            ),
+            Person,
+            {"name": "Alice", "age": "24"},
+        ),
+        (
+            make_response(
+                headers={"content-type": "text/plain"},
+                content=b"Hello, World!",
+            ),
+            String,
+            "Hello, World!",
+        ),
+        (
+            make_response(
+                headers={
+                    "content-type": "application/pdf",
+                    "content-disposition": 'attachment; filename="file.pdf"',
+                },
+                raw=b"PDF-1.4\n%...",
+            ),
+            File,
+            FilePayload(
+                filename="file.pdf",
+                content=b"PDF-1.4\n%...",
+                content_type="application/pdf",
+            ),
+        ),
+        (
+            make_response(
+                headers={
+                    "content-type": "text/csv",
+                    "content-disposition": "attachment; filename*=UTF-8''%e2%82%ac%20rates.csv",
+                },
+                raw=b"currency,rate\nEUR,1.2345\nUSD,0.9876",
+            ),
+            File,
+            FilePayload(
+                filename="€ rates.csv",
+                content=b"currency,rate\nEUR,1.2345\nUSD,0.9876",
+                content_type="text/csv",
+            ),
+        ),
+        (
+            make_response(
+                headers={
+                    "content-type": "text/csv",
+                    "content-disposition": "attachment; filename*=UTF-8''%e2%82%ac%20rates.csv",
+                },
+                raw=b"currency,rate\nEUR,1.2345\nUSD,0.9876",
+            ),
+            FileIO,
+            b"currency,rate\nEUR,1.2345\nUSD,0.9876",
+        ),
+        (
+            make_response(
+                headers={
+                    "content-type": "text/csv",
+                    "content-disposition": "attachment; filename*=UTF-8''%e2%82%ac%20rates.csv",
+                },
+                content=b"currency,rate\nEUR,1.2345\nUSD,0.9876",
+            ),
+            FileBytes,
+            b"currency,rate\nEUR,1.2345\nUSD,0.9876",
+        ),
+    ],
+)
+def test_parse_response_content(response: Response, resp_class, expected):
+    """
+    Tests the _parse_response_content function.
+    """
+    result = _parse_response_content(response, resp_class)
+    assert result == expected
+    assert type(result) is type(expected)

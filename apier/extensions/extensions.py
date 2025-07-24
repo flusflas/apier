@@ -10,10 +10,8 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field
 
 from .input_parameters import InputParametersDescription
-from apier.templates.python_tree.base.models.extensions.pagination import (
-    PaginationDescription,
-)
 from .method_name import MethodNameDescription
+from .pagination import PaginationDescription
 
 if TYPE_CHECKING:
     from apier.core.api.endpoints import Endpoint
@@ -33,6 +31,7 @@ class Extensions(BaseModel):
         default=None, alias="input-parameters"
     )
     method_name: MethodNameDescription = Field(default=None, alias="method-name")
+    response_stream: bool = Field(default=False, alias="response-stream")
 
 
 class Pagination(BaseModel):
@@ -61,7 +60,7 @@ def parse_extensions(endpoint: Endpoint):
             continue
 
         for extension_name, extension_def in extensions_def.items():
-            if "$ref" in extension_def:
+            if isinstance(extension_def, dict) and "$ref" in extension_def:
                 extensions_def[extension_name] = endpoint.definition.solve_ref(
                     extension_def["$ref"]
                 )

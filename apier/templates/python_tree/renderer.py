@@ -10,7 +10,7 @@ from apier.templates.python_tree.functions import (
     payload_from_input_parameters,
     get_method_name,
 )
-from apier.templates.python_tree.gen_models import generate_models
+from apier.templates.python_tree.model_generation.generate import generate_models
 from apier.core.api.tree import APINode, build_endpoints_tree
 from apier.utils.path import abs_path_from_current_script as abs_path
 from apier.utils.strings import to_pascal_case, to_snake_case
@@ -208,3 +208,6 @@ def format_file(filename):
 
     os.system(f"ruff check --config {config_file} check {filename} --fix -q")
     os.system(f"ruff check --config {config_file} format {filename} -q")
+
+    # Run black with --exclude '' to format all files, including those in .gitignore
+    os.system(f"black {filename} --exclude '' -q")

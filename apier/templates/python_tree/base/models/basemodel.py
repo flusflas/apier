@@ -116,7 +116,10 @@ class IterBaseModel(BaseModel):
         exclude_defaults: bool = False,
         exclude_none: bool = False,
     ) -> "typing.DictStrAny":
-        ret = super(IterBaseModel, self).dict(
+
+        obj = self.__root__ if self._has_root(BaseModel) else self
+
+        ret = super(IterBaseModel, obj).dict(
             include=include,
             exclude=exclude,
             by_alias=by_alias,
@@ -125,7 +128,7 @@ class IterBaseModel(BaseModel):
             exclude_defaults=exclude_defaults,
             exclude_none=exclude_none,
         )
-        if self._has_root((dict, list)):
+        if self._has_root((dict, list)) and not isinstance(self.__root__, BaseModel):
             return ret["__root__"]
         else:
             return ret

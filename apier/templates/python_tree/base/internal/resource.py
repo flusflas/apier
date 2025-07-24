@@ -1,21 +1,30 @@
+"""
+This module defines the APIResource class, which is the base class for all API
+resources. It provides methods to build URLs, handle requests and responses,
+and manage the API call stack. It also includes methods for validating request
+payloads and handling pagination.
+"""
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Union, Tuple
+from pyexpat import ExpatError
+from typing import Union, get_type_hints, get_args, Type
 
 import requests
-from pyexpat import ExpatError
 from requests import HTTPError, PreparedRequest, Response
 from requests.structures import CaseInsensitiveDict
 
-from ..models.basemodel import APIBaseModel
-from ..models.exceptions import ExceptionList, ResponseError
-from ..models.extensions.pagination import PaginationDescription
+from .content_disposition import parse_content_disposition
 from .content_type import (
     SUPPORTED_REQUEST_CONTENT_TYPES,
     content_types_match,
     content_types_compatible,
+    ContentTypeValidationResult,
 )
 from .runtime_expr import evaluate, prepare_request
+from ..models.basemodel import APIBaseModel
+from ..models.exceptions import ExceptionList, ResponseError
+from ..models.extensions.pagination import PaginationDescription
 
 
 def _is_api(obj):
@@ -121,12 +130,29 @@ class APIResource(ABC):
     ) -> Response:
         api = self._api()
 
-        body, headers = _validate_request_payload(
+        results = _validate_request_payload(
             body, req_content_types, kwargs.get("headers")
         )
-        kwargs["headers"] = headers
 
-        return api.make_request(method, self._build_path(), body=body, **kwargs)
+        forced_content_type = kwargs.get("headers", {}).get("Content-Type")
+        kwargs.pop("headers", None)  # Remove headers from kwargs to avoid duplication
+
+        # If the Content-Type header is not explicitly provided, remove it from
+        # the headers for cases where it should be set automatically
+        if not forced_content_type:
+            auto_content_types = ["application/json", "multipart/form-data"]
+            if results.type in auto_content_types:
+                results.headers.pop("Content-Type", None)
+
+        return api.make_request(
+            method,
+            self._build_path(),
+            data=results.data,
+            json=results.json,
+            files=results.files,
+            headers=results.headers,
+            **kwargs,
+        )
 
     def _handle_response(
         self,
@@ -149,7 +175,7 @@ class APIResource(ABC):
                 response, f"Unexpected response status code ({response.status_code})"
             )
 
-        resp_content_type = response.headers.get("content-type")
+        resp_content_type = response.headers.get("content-type", "")
         for r in expected_responses:
             code, content_type, resp_class = r
 
@@ -168,33 +194,27 @@ class APIResource(ABC):
 
                 return self._handle_error(ret)
 
-            if code in [
+            if code not in [
                 response.status_code,
                 default_status_code,
-            ] and content_types_match(resp_content_type, content_type):
-                resp_payload = response.content
-                if resp_content_type.startswith("application/json"):
-                    resp_payload = response.json()
-                elif resp_content_type.startswith("application/xml"):
-                    import xmltodict
+            ] or not content_types_match(resp_content_type, content_type):
+                continue
 
-                    resp_payload = xmltodict.parse(response.content)["root"]
-                elif resp_content_type.startswith("text/plain"):
-                    resp_payload = resp_payload.decode("utf-8")
+            resp_payload = _parse_response_content(response, resp_class)
 
-                ret = resp_class.parse_obj(resp_payload)
+            ret = resp_class.parse_obj(resp_payload)
 
-                ret._set_http_response(response)
-                self._handle_pagination(
-                    ret,
-                    response,
-                    pagination_info,
-                    self._path_values(),
-                    param_types,
-                    expected_responses,
-                )
+            ret._set_http_response(response)
+            self._handle_pagination(
+                ret,
+                response,
+                pagination_info,
+                self._path_values(),
+                param_types,
+                expected_responses,
+            )
 
-                return self._handle_error(ret)
+            return self._handle_error(ret)
 
         raise ResponseError(
             response, f"Unexpected response content type ({resp_content_type})"
@@ -268,9 +288,77 @@ class APIResource(ABC):
         ret._pagination.iter_func = make_request
 
 
+def _parse_response_content(response: Response, resp_class: Type[APIBaseModel]):
+    """
+    Parses the response content according to its content type to ensure it
+    matches the expected response class.
+    """
+    resp_content_type = response.headers.get("content-type", "")
+
+    if content_types_match(resp_content_type, "application/json"):
+        return response.json()
+
+    if content_types_match(resp_content_type, "application/xml"):
+        import xmltodict
+
+        try:
+            resp_payload = xmltodict.parse(response.content)
+        except ExpatError as e:
+            raise ResponseError(response, f"Invalid XML response: {str(e)}")
+
+        root_name = list(resp_payload.keys())[0]
+        return resp_payload[root_name]
+
+    if content_types_match(resp_content_type, "text/plain"):
+        return response.content.decode("utf-8")
+
+    # To handle files or streams, verify that the response class has a root
+    # type compatible with known file handling types
+    type_hints = get_type_hints(resp_class)
+    if "__root__" in type_hints:
+        root_types = _extract_subtypes(type_hints["__root__"])
+        root_type_names = {t.__name__ for t in root_types if hasattr(t, "__name__")}
+
+        if "FilePayload" in root_type_names:
+            from ..models.primitives import FilePayload
+
+            filename = ""
+            if content_disposition := response.headers.get("Content-Disposition"):
+                if parsed_filename := parse_content_disposition(content_disposition):
+                    filename = parsed_filename
+
+            content = response.content if response._content_consumed else response.raw
+
+            return FilePayload(
+                filename=filename, content_type=resp_content_type, content=content
+            )
+
+        if "IOBase" in root_type_names:
+            return response.raw
+
+        if "bytes" in root_type_names:
+            return response.content
+
+    return None
+
+
+def _extract_subtypes(tp):
+    """Recursively extracts subtypes from a type hint."""
+    args = get_args(tp)
+
+    if not args:
+        return {tp}
+
+    subtypes = set()
+    for arg in args:
+        subtypes.update(_extract_subtypes(arg))
+
+    return subtypes
+
+
 def _validate_request_payload(
     body: Union[str, bytes, dict, APIBaseModel], req_content_types: list, headers: dict
-) -> Tuple[str, dict]:
+) -> ContentTypeValidationResult:
     """
     Tries to parse the request body into one of the supported pairs of
     content-type / class type. An exception will be returned if the body
@@ -286,20 +374,16 @@ def _validate_request_payload(
     :param headers:           The headers of the request. If a Content-Type is
                               set, only the types in req_content_types that
                               matches that Content-Type will be validated.
-    :return:                  The body ready to be sent, and the headers with
-                              the proper Content-Type added.
+    :return:                  A ContentTypeValidationResult object with request
+                              information prepared for a specific content type.
     """
     exceptions_raised = []
 
     if req_content_types:
-        content_type_defined = False
-
         # If Content-Type header is set, only that one is allowed
         headers = CaseInsensitiveDict(headers)
-        headers.items()
         expected_content_type = headers.get("content-type", None)
         if expected_content_type:
-            content_type_defined = True
             req_content_types = [
                 (content_type, req_class)
                 for content_type, req_class in req_content_types
@@ -307,21 +391,23 @@ def _validate_request_payload(
             ]
 
         for content_type, request_class in req_content_types:
-            # TODO: currently, request_class is not used, but it could be used
-            #       to validate that the payload matches a given model
+            if isinstance(body, APIBaseModel) and type(body) is not request_class:
+                continue
+
             for ct, conv_func in SUPPORTED_REQUEST_CONTENT_TYPES.items():
                 if content_types_compatible(content_type, ct):
                     try:
-                        body = conv_func(body)
+                        result = conv_func(body)
 
-                        if not content_type_defined:
-                            # Set content type header
-                            headers["Content-Type"] = content_type
-                        return body, dict(headers)
+                        # Keep the headers from the request
+                        if headers:
+                            result.headers.update(headers)
+
+                        return result
                     except (ValueError, ExpatError) as e:
                         exceptions_raised.append(e)
 
     if len(exceptions_raised) > 0:
         raise ExceptionList("Unexpected data format", exceptions_raised)
 
-    return body, headers
+    return ContentTypeValidationResult(data=body, headers=headers)

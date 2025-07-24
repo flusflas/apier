@@ -1,0 +1,70 @@
+openapi: 3.0.3
+info:
+  title: Files API
+  description: Test API for file-related operations
+  version: "1.0"
+
+paths:
+  /books:
+    post:
+      summary: Upload a book file
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BookUploadRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /books/{bookId}/download:
+    get:
+      summary: Download a book file
+      parameters:
+        - in: path
+          name: bookId
+          required: true
+          schema:
+            type: string
+          description: ID of the book to download
+      responses:
+        '200':
+          description: OK
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+      x-apier:
+        response-stream: true
+
+components:
+  schemas:
+    BookUploadRequest:
+      type: object
+      description: "Request schema for uploading a book file"
+      required:
+        - title
+        - file
+      properties:
+        title:
+          type: string
+          description: "Title of the book"
+        author:
+          type: string
+          description: "Author of the book"
+        publication_year:
+          type: integer
+          description: "Year the book was published"
+        file:
+          type: string
+          format: binary
+          description: "The book file to upload"
