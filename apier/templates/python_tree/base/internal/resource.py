@@ -391,8 +391,9 @@ def _validate_request_payload(
             ]
 
         for content_type, request_class in req_content_types:
-            # TODO: currently, request_class is not used, but it could be used
-            #       to validate that the payload matches a given model
+            if isinstance(body, APIBaseModel) and type(body) is not request_class:
+                continue
+
             for ct, conv_func in SUPPORTED_REQUEST_CONTENT_TYPES.items():
                 if content_types_compatible(content_type, ct):
                     try:

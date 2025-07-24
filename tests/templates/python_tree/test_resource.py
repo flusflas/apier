@@ -164,6 +164,24 @@ class String(APIBaseModel):
                 ),
             ),
         ),
+        (
+            # This test case checks that even if a content type is supported,
+            # it will not be used if the body is not compatible with it
+            {
+                "body": Person(name="Alice", age=24),
+                "req_content_types": [
+                    ("application/json", String),
+                    ("multipart/form-data; charset=utf-8", Person),
+                ],
+                "headers": {},
+            },
+            ContentTypeValidationResult(
+                type="multipart/form-data",
+                data={"name": "Alice", "age": 24},
+                files={},
+                headers=CaseInsensitiveDict({"content-type": "multipart/form-data"}),
+            ),
+        ),
     ],
 )
 def test__validate_request_payload(data, expected):
