@@ -246,7 +246,7 @@ def test__validate_request_payload_errors(data, expected_exception):
 
 
 class File(APIBaseModel):
-    __root__: Union[bytes | IO | IOBase | FilePayload]
+    __root__: Union[bytes, IO, IOBase, FilePayload]
 
     class Config:
         arbitrary_types_allowed = True
