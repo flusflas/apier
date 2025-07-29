@@ -124,6 +124,31 @@ def to_plain_text(obj) -> ContentTypeValidationResult:
     )
 
 
+def to_form_urlencoded(obj) -> ContentTypeValidationResult:
+    """
+    Returns the form-urlencoded representation of the given object.
+    Raises an exception if the object cannot be serialized to a valid
+    application/x-www-form-urlencoded format.
+    """
+    result = ContentTypeValidationResult(
+        type="application/x-www-form-urlencoded",
+        headers=CaseInsensitiveDict({"Content-Type": "application/x-www-form-urlencoded"}),
+    )
+
+    if isinstance(obj, (str, bytes)):
+        result.data = str(obj)
+    elif isinstance(obj, dict):
+        result.data = obj
+    elif isinstance(obj, APIBaseModel):
+        result.data = json.loads(obj.json(by_alias=True))
+    else:
+        raise ValueError(
+            f'Value type "{type(obj).__name__}" cannot be converted to form-urlencoded'
+        )
+
+    return result
+
+
 def to_json(obj) -> ContentTypeValidationResult:
     """
     Returns the JSON representation of the given object.
@@ -225,6 +250,7 @@ def to_multipart(obj) -> ContentTypeValidationResult:
 
 
 SUPPORTED_REQUEST_CONTENT_TYPES = {
+    "application/x-www-form-urlencoded": to_form_urlencoded,
     "application/json": to_json,
     "application/xml": to_xml,
     "text/plain": to_plain_text,

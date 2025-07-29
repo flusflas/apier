@@ -79,6 +79,7 @@ test_company_not_found = ErrorResponse(status=404, message="Company not found!")
         (test_req_create01, test_resp_company01, {}),
         (to_dict(test_req_create01), test_resp_company01, {}),
         (test_req_create01, test_resp_company01, {"content-type": "application/xml"}),
+        (test_req_create01, test_resp_company01, {"content-type": "application/x-www-form-urlencoded"}),
     ],
 )
 def test_create(req, expected_resp, req_headers):
@@ -92,7 +93,10 @@ def test_create(req, expected_resp, req_headers):
 
     expected_req_headers = {"Authorization": "Bearer token"}
     expected_req_headers.update(req_headers)
-    if req_headers.get("content-type") == "application/xml":
+    if req_headers.get("content-type") == "application/x-www-form-urlencoded":
+        expected_req_data = to_dict(req)
+        expected_req_json = None
+    elif req_headers.get("content-type") == "application/xml":
         expected_req_data = xmltodict.unparse({"root": to_dict(req)})
         expected_req_json = None
     else:
