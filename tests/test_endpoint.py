@@ -191,6 +191,109 @@ expected_endpoints = {
                         ],
                     ),
                     EndpointOperation(
+                        name="patch",
+                        definition=openapi_definition.paths["/companies/{company_id}"][
+                            "patch"
+                        ],
+                        description="Patches an existing company.",
+                        parameters=[
+                            EndpointParameter(
+                                name="company_id",
+                                description="Company!!!",
+                                in_location="path",
+                                type="string",
+                                required=True,
+                                format="",
+                            )
+                        ],
+                        request_schemas=[
+                            ContentSchema(
+                                name="PatchCompanyRequest",
+                                content_type="application/json-patch+json",
+                                schema={
+                                    "items": {
+                                        "properties": {
+                                            "from": {
+                                                "description": "Used with 'move' and 'copy' operations.",
+                                                "type": "string",
+                                            },
+                                            "op": {
+                                                "enum": [
+                                                    "add",
+                                                    "remove",
+                                                    "replace",
+                                                    "move",
+                                                    "copy",
+                                                    "test",
+                                                ],
+                                                "type": "string",
+                                            },
+                                            "path": {
+                                                "description": "The path to the property to modify, e.g. '/name'.",
+                                                "type": "string",
+                                            },
+                                            "value": {
+                                                "description": "The value to apply in operations like add/replace/test."
+                                            },
+                                        },
+                                        "required": ["op", "path"],
+                                        "type": "object",
+                                    },
+                                    "type": "array",
+                                },
+                                code=-1,
+                                is_inline=True,
+                            )
+                        ],
+                        response_schemas=[
+                            ContentSchema(
+                                name="Company",
+                                content_type="application/json",
+                                schema={
+                                    "allOf": [
+                                        {"$ref": "#/components/schemas/CompanyBase"},
+                                        {
+                                            "properties": {
+                                                "created": {
+                                                    "example": "2023-06-19T21:00:00Z",
+                                                    "format": "date-time",
+                                                    "type": "string",
+                                                },
+                                                "modified": {
+                                                    "example": "2023-06-19T21:00:00Z",
+                                                    "format": "date-time",
+                                                    "type": "string",
+                                                },
+                                            },
+                                            "type": "object",
+                                        },
+                                    ],
+                                    "title": "Company",
+                                    "type": "object",
+                                },
+                                code=200,
+                            ),
+                            ContentSchema(
+                                name="ErrorResponse",
+                                content_type="application/json",
+                                schema=ERROR_RESPONSE_DEFINITION,
+                                code=400,
+                            ),
+                            ContentSchema(
+                                name="ErrorResponse",
+                                content_type="application/json",
+                                schema=ERROR_RESPONSE_DEFINITION,
+                                code=409,
+                            ),
+                            ContentSchema(
+                                name="ErrorResponse",
+                                content_type="application/json",
+                                schema=ERROR_RESPONSE_DEFINITION,
+                                code=500,
+                            ),
+                        ],
+                    ),
+                    EndpointOperation(
                         name="delete",
                         definition=openapi_definition.paths["/companies/{company_id}"][
                             "delete"
@@ -828,6 +931,22 @@ def test_split_endpoint_layers(endpoint, expected):
                                     "/companies/{company_id}"
                                 ]["put"],
                                 description="Updates an exising company.",
+                                parameters=[
+                                    EndpointParameter(
+                                        name="company_id",
+                                        description="Company!!!",
+                                        in_location="path",
+                                        type="string",
+                                        required=True,
+                                    ),
+                                ],
+                            ),
+                            EndpointOperation(
+                                name="patch",
+                                definition=openapi_definition.paths[
+                                    "/companies/{company_id}"
+                                ]["patch"],
+                                description="Patches an existing company.",
                                 parameters=[
                                     EndpointParameter(
                                         name="company_id",

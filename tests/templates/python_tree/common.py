@@ -32,10 +32,10 @@ def make_response(
 
 
 def to_dict(d) -> dict:
-    if isinstance(d, dict):
+    if isinstance(d, (dict, list)):
         return d
     elif isinstance(d, BaseModel):
-        return json.loads(d.json())
+        return json.loads(d.json(by_alias=True))
     else:
         raise ValueError("value must be a dict or a pydantic model")
 

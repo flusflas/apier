@@ -197,6 +197,62 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+    patch:
+      tags:
+        - Companies
+      summary: Patch a Company
+      operationId: PatchCompany
+      description: Patches an existing company.
+      requestBody:
+        required: true
+        content:
+          application/json-patch+json:
+            schema:
+              type: array
+              items:
+                type: object
+                required:
+                  - op
+                  - path
+                properties:
+                  op:
+                    type: string
+                    enum: [ add, remove, replace, move, copy, test ]
+                  path:
+                    type: string
+                    description: "The path to the property to modify, e.g. '/name'."
+                  value:
+                    description: "The value to apply in operations like add/replace/test."
+                  from:
+                    type: string
+                    description: "Used with 'move' and 'copy' operations."
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+
     delete:
       tags:
         - Companies
@@ -247,25 +303,6 @@ paths:
             application/xml:
               schema:
                 $ref: '#/components/schemas/Company'
-#        '201':
-#          description: Content without x-apigen-model-name
-#          content:
-#            application/json:
-#              schema:
-#                type: object
-#                properties:
-#                  info:
-#                    type: string
-#        '202':
-#          description: Content with x-apigen-model-name
-#          content:
-#            application/json:
-#              schema:
-#                type: object
-#                x-apigen-model-name: ResponseContent202
-#                properties:
-#                  info2:
-#                    type: string
         '404':
           description: Not Found
           content:

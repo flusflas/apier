@@ -2,7 +2,7 @@ import json
 import mimetypes
 from dataclasses import dataclass, field
 from io import IOBase
-from typing import Any, Optional
+from typing import Any, Optional, Union
 from urllib.parse import parse_qsl
 
 import xmltodict
@@ -109,7 +109,7 @@ class ContentTypeValidationResult:
     type: str = ""  # The request's Content-Type, indicating the data format
     data: Any = None
     files: Optional[dict] = None
-    json: Optional[dict] = None
+    json: Optional[Union[dict, list]] = None
     headers: CaseInsensitiveDict = field(default_factory=dict)
 
 
@@ -132,7 +132,9 @@ def to_form_urlencoded(obj) -> ContentTypeValidationResult:
     """
     result = ContentTypeValidationResult(
         type="application/x-www-form-urlencoded",
-        headers=CaseInsensitiveDict({"Content-Type": "application/x-www-form-urlencoded"}),
+        headers=CaseInsensitiveDict(
+            {"Content-Type": "application/x-www-form-urlencoded"}
+        ),
     )
 
     if isinstance(obj, (str, bytes)):

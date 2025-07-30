@@ -182,6 +182,25 @@ class String(APIBaseModel):
                 headers=CaseInsensitiveDict({"content-type": "multipart/form-data"}),
             ),
         ),
+        (
+            # Verify that variations of a content type (e.g., application/json-patch+json)
+            # are correctly handled
+            {
+                "body": '[{"op": "replace", "path": "/name", "value": "Alice"}]',
+                "req_content_types": [
+                    ("application/json-patch+json", list),
+                ],
+                "headers": None,
+            },
+            ContentTypeValidationResult(
+                type="application/json-patch+json",
+                data=None,
+                json=[{"op": "replace", "path": "/name", "value": "Alice"}],
+                headers=CaseInsensitiveDict(
+                    {"Content-Type": "application/json-patch+json"}
+                ),
+            ),
+        ),
     ],
 )
 def test__validate_request_payload(data, expected):
