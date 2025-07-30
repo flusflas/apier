@@ -110,8 +110,9 @@ class API(
 
         headers.update(self.headers)
 
+        # If the payload is a pydantic model, handle it as JSON
         if isinstance(data, BaseModel):
-            data = data.json(by_alias=True)
+            json = data.json(by_alias=True)
         if isinstance(json, BaseModel):
             json = json.json(by_alias=True)
 
