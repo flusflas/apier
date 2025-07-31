@@ -2,10 +2,10 @@ from unittest import mock
 
 import pytest
 
+from tests.templates.setup import build_client
 from .common import make_response, to_dict
-from .setup import build_client
 
-build_client("python-tree")
+build_client("python-tree", "companies_api.yaml")
 if True:
     from ._build.api import API
     from ._build.security import BearerToken

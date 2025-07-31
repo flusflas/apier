@@ -4,10 +4,10 @@ import pytest
 import xmltodict
 from requests.structures import CaseInsensitiveDict
 
-from .setup import build_client
+from tests.templates.setup import build_client
 from ..common import make_response, to_dict
 
-build_client("python-tree")
+build_client("python-tree", "companies_api.yaml")
 
 pkg_name = __name__.rsplit(".", 1)[0]
 request_mock_pkg = f"{pkg_name}._build.api.requests.request"

@@ -2,10 +2,10 @@ import json
 
 from httpretty.core import HTTPrettyRequest
 
+from tests.templates.setup import build_client
 from .common import assert_pagination
-from .setup import build_client
 
-build_client("python-tree")
+build_client("python-tree", "pagination_api.yaml")
 if True:
     from ._build.api import API
     from ._build.models.models import Result

@@ -9,10 +9,10 @@ from pytest_httpserver import HTTPServer
 from requests_toolbelt import MultipartEncoder
 
 from apier.utils.path import abs_path_from_current_script
-from .setup import build_client
+from tests.templates.setup import build_client
 from ..common import make_response
 
-build_client("python-tree")
+build_client("python-tree", "files_api.yaml")
 
 pkg_name = __name__.rsplit(".", 1)[0]
 request_mock_pkg = f"{pkg_name}._build.api.requests.request"
