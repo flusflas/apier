@@ -4,10 +4,10 @@ import pytest
 import xmltodict
 from requests.structures import CaseInsensitiveDict
 
-from .setup import build_client
+from tests.templates.setup import build_client
 from ..common import make_response, to_dict
 
-build_client("python-tree")
+build_client("python-tree", "companies_api.yaml")
 
 pkg_name = __name__.rsplit(".", 1)[0]
 request_mock_pkg = f"{pkg_name}._build.api.requests.request"
@@ -23,6 +23,9 @@ if True:
         CompanyUpdate,
         ErrorResponse,
         AnyValue,
+        PatchCompanyRequest,
+        PatchCompanyRequestItem,
+        Op,
     )
     from ._build.models.primitives import NoResponse
 
@@ -37,6 +40,22 @@ test_req_update01 = CompanyUpdate(
     name="Shiny Stickers",
     category="stickers",
 )
+
+test_req_patch01 = PatchCompanyRequest(
+    __root__=[
+        PatchCompanyRequestItem(
+            op=Op.replace,
+            path="/name",
+            value="Updated Stickers Name",
+        ),
+        PatchCompanyRequestItem(
+            op=Op.add,
+            path="/category",
+            value="technology",
+        ),
+    ]
+)
+
 
 test_resp_company01 = Company(
     id="shiny_stickers",
@@ -79,6 +98,11 @@ test_company_not_found = ErrorResponse(status=404, message="Company not found!")
         (test_req_create01, test_resp_company01, {}),
         (to_dict(test_req_create01), test_resp_company01, {}),
         (test_req_create01, test_resp_company01, {"content-type": "application/xml"}),
+        (
+            test_req_create01,
+            test_resp_company01,
+            {"content-type": "application/x-www-form-urlencoded"},
+        ),
     ],
 )
 def test_create(req, expected_resp, req_headers):
@@ -92,7 +116,10 @@ def test_create(req, expected_resp, req_headers):
 
     expected_req_headers = {"Authorization": "Bearer token"}
     expected_req_headers.update(req_headers)
-    if req_headers.get("content-type") == "application/xml":
+    if req_headers.get("content-type") == "application/x-www-form-urlencoded":
+        expected_req_data = to_dict(req)
+        expected_req_json = None
+    elif req_headers.get("content-type") == "application/xml":
         expected_req_data = xmltodict.unparse({"root": to_dict(req)})
         expected_req_json = None
     else:
@@ -257,6 +284,47 @@ def test_update(req, expected_resp):
         "https://test-api.com/companies/shiny_stickers",
         params={"foo": "bar"},
         headers={"Authorization": "Bearer token"},
+        data=[],
+        files=None,
+        json=to_dict(req),
+        timeout=3,
+        verify=True,
+    )
+
+    assert resp.http_response().status_code == 200
+    assert resp == expected_resp
+    assert isinstance(resp, Company)
+
+
+@pytest.mark.parametrize(
+    "req, expected_resp",
+    [
+        (test_req_patch01, test_resp_company01),
+        (to_dict(test_req_patch01), test_resp_company01),
+    ],
+)
+def test_patch(req, expected_resp):
+    """
+    Tests a successful request to partially update a Company.
+    """
+    expected_raw_resp = make_response(200, expected_resp)
+
+    with mock.patch(request_mock_pkg, return_value=expected_raw_resp) as m:
+        resp = (
+            API(host="test-api.com")
+            .with_security(BearerToken("token"))
+            .companies("shiny_stickers")
+            .patch(req, params={"foo": "bar"})
+        )
+
+    m.assert_called_once_with(
+        "PATCH",
+        "https://test-api.com/companies/shiny_stickers",
+        params={"foo": "bar"},
+        headers={
+            "Authorization": "Bearer token",
+            "Content-Type": "application/json-patch+json",
+        },
         data=[],
         files=None,
         json=to_dict(req),

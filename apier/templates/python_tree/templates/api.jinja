@@ -1,5 +1,5 @@
-import json
 from typing import Union
+from urllib.parse import urljoin
 
 import requests
 from pydantic import BaseModel
@@ -39,7 +39,7 @@ class API(
         if not host.startswith("http://") and not host.startswith("https://"):
             host = "https://" + host
 
-        self.host = host
+        self.host = host.rstrip("/")
         self._verify = verify
         self.headers = {}
         self._raise_errors = {{ raise_errors }}
@@ -110,15 +110,16 @@ class API(
 
         headers.update(self.headers)
 
+        # If the payload is a pydantic model, handle it as JSON
         if isinstance(data, BaseModel):
-            data = data.json(by_alias=True)
+            json = data.json(by_alias=True)
         if isinstance(json, BaseModel):
             json = json.json(by_alias=True)
 
         if url.lower().startswith("http://") or url.lower().startswith("https://"):
             url = url
         else:
-            url = self.host + url
+            url = urljoin(self.host, url)
 
         req = requests.Request(
             method, url, params=params, headers=headers, data=data, json=json

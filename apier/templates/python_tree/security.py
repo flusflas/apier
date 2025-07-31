@@ -31,8 +31,7 @@ def parse_security_schemes(definition: Definition) -> list[str]:
                 else:
                     warnings.warn(
                         f"Security scheme '{name}' has an unsupported OAuth2 "
-                        f"flow type ({flow_name}) schema type '{scheme_type}' "
-                        f"and will be ignored"
+                        f"flow type '{flow_name}' and will be ignored"
                     )
                     continue
 

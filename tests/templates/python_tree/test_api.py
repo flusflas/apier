@@ -2,10 +2,10 @@ from unittest import mock
 
 import pytest
 
+from tests.templates.setup import build_client
 from .common import make_response, to_dict
-from .setup import build_client
 
-build_client("python-tree")
+build_client("python-tree", "companies_api.yaml")
 if True:
     from ._build.api import API
     from ._build.security import BearerToken
@@ -144,3 +144,38 @@ def test_make_request_xml(verify):
 
     assert resp.status_code == 200
     assert resp.json() == expected_resp_payload
+
+
+@pytest.mark.parametrize(
+    ("host", "url"),
+    [
+        ("test-api.com", "/info"),
+        ("test-api.com", "info"),
+        ("test-api.com/", "/info"),
+        ("test-api.com/", "info"),
+        ("https://test-api.com", "/info"),
+        ("https://test-api.com", "info"),
+        ("https://test-api.com/", "/info"),
+        ("https://test-api.com/", "info"),
+    ],
+)
+def test_make_request_url_join(host, url):
+    """
+    Ensures that the URL is correctly joined with the host.
+    """
+    req_payload = {"foo": "bar"}
+
+    with mock.patch("requests.request") as m:
+        API(host=host).make_request("POST", url, json=req_payload, auth=False)
+
+    m.assert_called_once_with(
+        "POST",
+        "https://test-api.com/info",
+        params={},
+        headers={},
+        data=[],
+        files=None,
+        json=to_dict(req_payload),
+        timeout=3,
+        verify=True,
+    )

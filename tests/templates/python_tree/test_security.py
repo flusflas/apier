@@ -4,10 +4,10 @@ from unittest import mock
 import pytest
 from requests import Request
 
+from tests.templates.setup import build_client
 from .common import make_response
-from .setup import build_client
 
-build_client("python-tree")
+build_client("python-tree", "companies_api.yaml")
 
 pkg_name = __name__.rsplit(".", 1)[0]
 request_mock_pkg = f"{pkg_name}._build.security.requests.request"

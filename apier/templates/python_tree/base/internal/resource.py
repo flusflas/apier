@@ -399,6 +399,12 @@ def _validate_request_payload(
                     try:
                         result = conv_func(body)
 
+                        # If the content types are not an exact match, update the info
+                        # (e.g. application/json to application/json-patch+json)
+                        if not content_types_match(content_type, ct):
+                            result.type = content_type
+                            result.headers["Content-Type"] = content_type
+
                         # Keep the headers from the request
                         if headers:
                             result.headers.update(headers)

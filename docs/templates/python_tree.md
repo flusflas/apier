@@ -277,5 +277,6 @@ In the example above, the `stream=True` parameter is used to enable streaming of
 ## ⚠️ Limitations
 
 - 🧬 The `python-tree` template is best suited for APIs that have a clear hierarchical structure. It may not be the best choice for APIs with flat or complex endpoint structures, where a different template design might be more appropriate.
-- 💾 The `python-tree` template supports text, JSON, XML, and multipart payloads for requests. Responses can handle text, JSON, XML, and binary data payloads. Other payload types have not been tested and therefore may not work as expected (or may not work at all).
+- 💾 **Request payloads**: This template supports request payloads with content types such as `text/plain`, `application/json`, `application/xml`, `multipart/form-data`, `application/x-www-form-urlencoded`, and types using structured syntax suffixes like `application/json-patch+json`. Other content types are untested and may not be supported.
+- 📦 **Response payloads**: Supports response content types like `text/plain`, `application/json`, `application/xml`, and binary data.
 - 🧭 Strategies requiring dynamic evaluation of runtime expressions, such as page or offset pagination, are not yet supported.
