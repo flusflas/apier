@@ -29,34 +29,156 @@ test_response = make_response(200, test_dict, test_request)
 @pytest.mark.parametrize(
     "resp, expression, expected",
     [
-        (test_dict, "next_offset", 2),
-        (test_dict, "users", test_dict["users"]),
-        (test_dict, "users.0", test_dict["users"][0]),
-        (test_dict, "users.1.name", "Bob"),
-        (test_response, "next_offset", 2),
-        (test_response, "users", test_dict["users"]),
-        (test_response, "users.0", test_dict["users"][0]),
-        (test_response, "users.1.name", "Bob"),
+        (
+            test_dict,
+            "next_offset",
+            2,
+        ),
+        (
+            test_dict,
+            "users",
+            test_dict["users"],
+        ),
+        (
+            test_dict,
+            "users.0",
+            test_dict["users"][0],
+        ),
+        (
+            test_dict,
+            "users.1.name",
+            "Bob",
+        ),
+        (
+            test_dict,
+            "{users.1.name}",
+            "Bob",
+        ),
+        (
+            test_response,
+            "next_offset",
+            2,
+        ),
+        (
+            test_response,
+            "users",
+            test_dict["users"],
+        ),
+        (
+            test_response,
+            "users.0",
+            test_dict["users"][0],
+        ),
+        (
+            test_response,
+            "users.1.name",
+            "Bob",
+        ),
         (
             test_response,
             "$url",
             "https://api.test/companies/ibm/department/17/users?foo=bar&limit=10&foo=abc",
         ),
-        (test_response, "$method", "GET"),
-        (test_response, "$request.query.limit", "10"),
-        (test_response, "$request.query.foo", ["bar", "abc"]),
-        (test_response, "$request.header.Authorization", "Bearer abc"),
-        (test_response, "$request.body", ""),
-        (test_response, "$statusCode", 200),
-        (test_response, "$response.header.Content-Type", "application/json"),
-        (test_response, "$response.body", test_response.text),
-        (test_response, "$response.body#/users/1/name", "Bob"),
-        (test_response, "$response.body#/next_offset", 2),
-        (test_response, "foo{$response.body#/next_offset}bar", "foo2bar"),
+        (
+            test_response,
+            "$method",
+            "GET",
+        ),
+        (
+            test_response,
+            "$request.query.limit",
+            "10",
+        ),
+        (
+            test_response,
+            "$request.query.foo",
+            ["bar", "abc"],
+        ),
+        (
+            test_response,
+            "$request.header.Authorization",
+            "Bearer abc",
+        ),
+        (
+            test_response,
+            "$request.body",
+            "",
+        ),
+        (
+            test_response,
+            "$statusCode",
+            200,
+        ),
+        (
+            test_response,
+            "$response.header.Content-Type",
+            "application/json",
+        ),
+        (
+            test_response,
+            "$response.body",
+            test_response.text,
+        ),
+        (
+            test_response,
+            "$response.body#/users/1/name",
+            "Bob",
+        ),
+        (
+            test_response,
+            "{$response.body#/users/1/name}",
+            "Bob",
+        ),
+        (
+            test_response,
+            "$response.body#/next_offset",
+            2,
+        ),
+        (
+            test_response,
+            "foo{$response.body#/next_offset}bar",
+            "foo2bar",
+        ),
         (
             test_response,
             "Alice: {$response.body#/users/0/id}, Bob: {$response.body#/users/1/id}",
             "Alice: 1, Bob: 2",
+        ),
+        (
+            test_response,
+            "Alice: {users.0.id}, Bob: {users.1.id}",
+            "Alice: 1, Bob: 2",
+        ),
+        # Evaluation expressions
+        (
+            test_response,
+            "$eval(7)",
+            7,
+        ),
+        (
+            test_response,
+            "$eval(int({$response.body#/next_offset}) + 1)",
+            3,
+        ),
+        (
+            test_response,
+            "$eval({$response.body#/next_offset} + 1)",
+            3,
+        ),
+        (
+            test_response,
+            "$eval({$response.body#/next_offset} + {users.1.id})",
+            4,
+        ),
+        (
+            test_response,
+            "$eval(int({$request.query.limit}) + len({$response.body#/users}))",
+            12,
+        ),
+        (
+            test_response,
+            "$eval(len({$response.body#/users}) >= int({$request.query.limit}))",
+            False,
         ),
     ],
 )
@@ -112,6 +234,8 @@ def test_evaluate_with_type_casting(
         (test_response, "$my_request.body", RuntimeExpressionError),
         (test_response, "$request.query.not_found", RuntimeExpressionError),
         (test_response, "$request.path.foo", RuntimeExpressionError),
+        (test_response, "$eval(1 / 0)", ZeroDivisionError),
+        (test_response, "$eval($eval(7))", RuntimeExpressionError),
     ],
 )
 def test_evaluate_with_errors(

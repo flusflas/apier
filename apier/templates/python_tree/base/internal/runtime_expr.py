@@ -6,6 +6,8 @@ from urllib.parse import parse_qs, urlparse
 
 from requests import PreparedRequest, Request, Response
 
+from .expressions.evaluation import eval_expr
+
 
 class RuntimeExpressionError(Exception):
     """Invalid runtime expression."""
@@ -21,6 +23,7 @@ def evaluate(
     path_values: dict = None,
     query_param_types: dict = None,
     header_param_types: dict = None,
+    **kwargs,
 ):
     """
     Evaluates an OpenAPI runtime expression (https://swagger.io/docs/specification/links/).
@@ -45,23 +48,66 @@ def evaluate(
                         will be returned.
     :return:            The result of the evaluated expression.
     """
+
+    # The 'eval_variables'  is a dictionary used to store variables when
+    # evaluating expressions within an $eval() expression. The result of the
+    # evaluation will be stored in this dictionary. This parameter is intended
+    # for internal use only and is not meant to be accessed directly outside the
+    # function.
+    eval_variables = kwargs.get("eval_variables")
+    is_eval = eval_variables is not None
+
     try:
         expression = expression.strip()
+
+        if expression.startswith("$eval("):
+            if is_eval:
+                raise RuntimeExpressionError(
+                    "Nested $eval() expressions are not supported."
+                )
+
+            # Extract the expression inside $eval()
+            inner_expression = expression[6:-1].strip()
+
+            eval_variables = {}
+            expr = evaluate(
+                resp,
+                inner_expression,
+                path_values=path_values,
+                query_param_types=query_param_types,
+                header_param_types=header_param_types,
+                eval_variables=eval_variables,
+            )
+
+            ret = eval_expr(expr, eval_variables)
+            return ret
 
         if "{" in expression:
 
             def replace_group(match):
-                return str(
-                    _evaluate_runtime_expression(
-                        resp,
-                        match.group(1),
-                        path_values=path_values,
-                        query_param_types=query_param_types,
-                        header_param_types=header_param_types,
-                    )
+                group_result = evaluate(
+                    resp,
+                    match.group(1),
+                    path_values=path_values,
+                    query_param_types=query_param_types,
+                    header_param_types=header_param_types,
                 )
 
-            return re.sub(r"{(\$[^}]+)}", replace_group, expression)
+                # If inside an $eval(), the expression must be replaced with
+                # variables instead of the group result
+                if is_eval:
+                    var_name = f"var{len(eval_variables)}"
+                    eval_variables[var_name] = group_result
+                    return var_name
+
+                return str(group_result)
+
+            return re.sub(r"{(\$?[^}]+)}", replace_group, expression)
+
+        # If inside an $eval() expression, any subexpressions (enclosed in {})
+        # should already have been resolved, so the expression can be returned as is
+        if is_eval:
+            return expression
 
         if expression.startswith("$"):
             return _evaluate_runtime_expression(
@@ -72,6 +118,7 @@ def evaluate(
                 header_param_types=header_param_types,
             )
 
+        # At this point, the expression is treated as a dot-separated path
         if isinstance(resp, Response):
             resp = resp.json()
 
@@ -79,8 +126,10 @@ def evaluate(
             raise ValueError("Invalid dict response")
 
         return _get_from_dict(resp, expression)
+
     except RuntimeExpressionError as e:
         raise e
+
     except Exception as e:
         raise RuntimeExpressionError(caused_by=e)
 
