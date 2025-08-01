@@ -18,6 +18,7 @@ def assert_pagination(
     expected_url: str,
     expected_results: list,
     expected_limit: int,
+    expected_call_count: int,
     expected_type,
     expected_verify: bool = True,
 ):
@@ -56,6 +57,5 @@ def assert_pagination(
         # assert not actual_result.has_more()
 
         # Assert that the API has been called until all data has been fetched
-        expected_call_count = math.ceil(len(expected_results) / expected_limit)
         assert len(httpretty.latest_requests()) == expected_call_count
         assert m.call_count == expected_call_count

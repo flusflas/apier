@@ -87,6 +87,47 @@ paths:
         pagination:
           $ref: '#/components/x-pagination/PagePagination'
 
+  /pagination/offset:
+    get:
+      tags:
+        - Pagination
+      summary: Offset pagination
+      description: Returns an offset-paginated list of responses.
+      operationId: GetPaginationOffset
+      parameters:
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageOffset'
+        '500':
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      x-apier:
+        pagination:
+          next:
+            reuse_previous_request: true
+            modifiers:
+              - param: "$request.query.offset"
+                value: "$eval({$request.query.offset ?? 0} + len({results}))"
+            result: "results"
+            has_more: "$eval(len({$response.body#/results}) >= {$request.query.limit})"
+
 components:
   x-pagination:
     PagePagination:
@@ -140,3 +181,10 @@ components:
           type: array
         next_page_url:
             type: string
+
+    PageOffset:
+      title: PageOffset
+      type: object
+      properties:
+        results:
+          type: array
