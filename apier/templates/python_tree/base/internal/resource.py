@@ -269,10 +269,8 @@ class APIResource(ABC):
             )
             req.prepare_url(url, None)
         if pagination_info.method:
-            # TODO: Evaluate expression ???
             req.prepare_method(pagination_info.method)
         for modifier in pagination_info.modifiers:
-            # TODO: Evaluate complex expressions
             value = evaluate(resp, modifier.value, path_values, query_params, headers)
             prepare_request(req, modifier.param, value)
 

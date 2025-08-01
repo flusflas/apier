@@ -145,9 +145,7 @@ def test_offset_pagination():
     for limit in range(1, 10):
 
         def request_handler(req: HTTPrettyRequest, uri, response_headers):
-            print(f"URL: {uri}")
-
-            # assert 'foo' in req.querystring
+            assert "foo" in req.querystring
             assert "limit" in req.querystring
             assert int(req.querystring["limit"][0]) == limit
 
@@ -186,4 +184,49 @@ def test_offset_pagination():
         )
 
 
-# TODO: test_page_pagination
+def test_page_pagination():
+    """
+    Tests a successful pagination using page pagination.
+    """
+    pagination_function = API().pagination().page().get
+
+    for page_size in range(1, 10):
+
+        def request_handler(req: HTTPrettyRequest, uri, response_headers):
+            assert "foo" in req.querystring
+            assert "page_size" in req.querystring
+            assert int(req.querystring["page_size"][0]) == page_size
+
+            page = int(req.querystring.get("page", [0])[0])
+
+            next_index_start = page * page_size
+            next_index_end = next_index_start + page_size
+
+            if next_index_end > len(expected_results):
+                next_index_end = len(expected_results)
+
+            if next_index_start >= len(expected_results):
+                data = []
+            else:
+                data = expected_results[next_index_start:next_index_end]
+
+            resp = {"results": data}
+
+            response_headers["Content-Type"] = "application/json"
+            return [200, response_headers, json.dumps(resp)]
+
+        expected_call_count = math.ceil(len(expected_results) / page_size)
+        if len(expected_results) % page_size == 0:
+            expected_call_count += 1
+
+        assert_pagination(
+            pagination_function=pagination_function,
+            function_params={"params": {"page_size": str(page_size), "foo": "bar"}},
+            request_handler=request_handler,
+            get_response_data=lambda response: response.results,
+            expected_url="https://pagination.test/pagination/page",
+            expected_results=expected_results,
+            expected_limit=page_size,
+            expected_call_count=expected_call_count,
+            expected_type=Result,
+        )
