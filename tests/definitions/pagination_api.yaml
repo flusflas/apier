@@ -44,7 +44,7 @@ paths:
       x-apier:
         pagination:
           next:
-            reuse-previous-request: true
+            reuse_previous_request: true
             modifiers:
               - param: "$request.query.next"
                 value: "$response.body#/cursors/next"
@@ -91,7 +91,7 @@ components:
   x-pagination:
     PagePagination:
       next:
-        reuse-previous-request: true
+        reuse_previous_request: true
         url: "$response.body#/next_page_url"
         result: "results"
         has_more: "$response.body#/next_page_url"

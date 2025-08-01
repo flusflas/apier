@@ -23,7 +23,7 @@ paths:
       x-apier:
         pagination:
           next:
-            reuse-previous-request: true
+            reuse_previous_request: true
             modifiers:
               - param: "$request.query.next"
                 value: "$response.body#/cursors/next"
@@ -45,7 +45,7 @@ components:
   x-pagination:
     PagePagination:
       next:
-        reuse-previous-request: true
+        reuse_previous_request: true
         url: "$response.body#/next_page_url"
         result: "results"
         has_more: "$response.body#/next_page_url"
@@ -57,7 +57,7 @@ The following attributes are supported in the pagination extension. Most fields 
 
 | Attribute                | Type      | Description                                                                                       |
 |--------------------------|-----------|---------------------------------------------------------------------------------------------------|
-| `reuse-previous-request` | boolean   | If true, the next request reuses the previous request's parameters.                               |
+| `reuse_previous_request` | boolean   | If true, the next request reuses the previous request's parameters.                               |
 | `modifiers`              | array     | List of request modifiers to update parameters for the next request.                              |
 | `param` (modifier)       | string    | The request parameter to modify (e.g., `$request.query.next`).                                    |
 | `value` (modifier)       | string    | Runtime expression to extract the value for the modifier.                                         |
@@ -85,7 +85,7 @@ The following example shows how to use a runtime expression to extract the next 
 x-apier:
   pagination:
     next:
-      reuse-previous-request: true
+      reuse_previous_request: true
       modifiers:
         - param: "$request.query.next"
           value: "$response.body#/cursors/next"
@@ -105,7 +105,7 @@ Uses a value (cursor) returned in the response to fetch the next page. The clien
 x-apier:
   pagination:
     next:
-      reuse-previous-request: true
+      reuse_previous_request: true
       modifiers:
         - param: "$request.query.next"
           value: "$response.body#/cursors/next"
@@ -121,7 +121,7 @@ Uses a URL provided in the response to fetch the next page. The client follows t
 x-apier:
   pagination:
     next:
-      reuse-previous-request: true
+      reuse_previous_request: true
       url: "$response.body#/next_page_url"
       result: "results"
       has_more: "$response.body#/next_page_url"
