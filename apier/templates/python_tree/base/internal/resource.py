@@ -21,7 +21,7 @@ from .content_type import (
     content_types_compatible,
     ContentTypeValidationResult,
 )
-from .runtime_expr import evaluate, prepare_request
+from .expressions.runtime import evaluate, prepare_request
 from ..models.basemodel import APIBaseModel
 from ..models.exceptions import ExceptionList, ResponseError
 from ..models.extensions.pagination import PaginationDescription

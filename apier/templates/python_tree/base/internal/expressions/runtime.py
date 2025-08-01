@@ -6,7 +6,7 @@ from urllib.parse import parse_qs, urlparse
 
 from requests import PreparedRequest, Request, Response
 
-from .expressions.evaluation import eval_expr
+from .evaluation import eval_expr
 
 
 class RuntimeExpressionError(Exception):
