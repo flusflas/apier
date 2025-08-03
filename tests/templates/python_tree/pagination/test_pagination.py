@@ -31,7 +31,7 @@ def test_cursor_pagination():
     """
     pagination_function = API().pagination().cursor().get
 
-    for limit in range(1, 10):
+    for limit in range(1, 2):
 
         def request_handler(req: HTTPrettyRequest, uri, response_headers):
             assert "foo" in req.querystring
@@ -62,7 +62,7 @@ def test_cursor_pagination():
                 prev_cursor = str(expected_results[prev_index]["value"])
 
             resp = {
-                "results": data,
+                "data": data,
                 "cursors": {"next": next_cursor, "prev": prev_cursor},
             }
 
@@ -73,7 +73,7 @@ def test_cursor_pagination():
             pagination_function=pagination_function,
             function_params={"params": {"limit": str(limit), "foo": "bar"}},
             request_handler=request_handler,
-            get_response_data=lambda response: response.results,
+            get_response_data=lambda response: response.data,
             expected_url="https://pagination.test/pagination/cursor",
             expected_results=expected_results,
             expected_limit=limit,

@@ -48,7 +48,7 @@ paths:
             modifiers:
               - param: "$request.query.next"
                 value: "$response.body#/cursors/next"
-            result: "results"
+            result: "#data"
             has_more: "$response.body#/cursors/next"
 
   /pagination/next_page_url:
@@ -124,8 +124,8 @@ paths:
             reuse_previous_request: true
             modifiers:
               - param: "$request.query.offset"
-                value: "$eval({$request.query.offset ?? 0} + len({results}))"
-            result: "results"
+                value: "$eval({$request.query.offset ?? 0} + len({#results}))"
+            result: "#results"
             has_more: "$eval(len({$response.body#/results}) >= {$request.query.limit})"
 
   /pagination/page:
@@ -166,7 +166,7 @@ paths:
             modifiers:
               - param: "$request.query.page"
                 value: "$eval({$request.query.page ?? 0} + 1)"
-            result: "results"
+            result: "#results"
             has_more: "$eval(len({$response.body#/results}) >= {$request.query.page_size})"
 
 components:
@@ -175,7 +175,7 @@ components:
       next:
         reuse_previous_request: true
         url: "$response.body#/next_page_url"
-        result: "results"
+        result: "#results"
         has_more: "$response.body#/next_page_url"
 
   schemas:
@@ -204,7 +204,7 @@ components:
       title: PageCursor
       type: object
       properties:
-        results:
+        data:
           type: array
         cursors:
           type: object

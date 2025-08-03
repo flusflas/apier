@@ -177,7 +177,6 @@ class PaginatorBaseModel(IterBaseModel, HTTPResponseModel, Paginator):
 
     def __next__(self):
         if self._pagination.supported:
-            self._pagination.results = self[self._pagination.results_attribute]
             return Paginator.__next__(self)
         else:
             return IterBaseModel.__next__(self)
