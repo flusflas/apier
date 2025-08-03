@@ -206,6 +206,11 @@ test_response = make_response(200, test_dict, test_request)
             "{#users.0.number ?? 42}",
             42,
         ),
+        (
+            test_response,
+            "{#has_more ?? false}",
+            False,
+        ),
     ],
 )
 def test_evaluate(resp: Union[dict, Request, Response], expression: str, expected):

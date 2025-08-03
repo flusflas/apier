@@ -35,6 +35,11 @@ from apier.templates.python_tree.base.internal.expressions.evaluation import eva
         ("a * b + c", {"a": 2, "b": 3, "c": 1}, 7),
         ("1 + len([x, y])", {"x": 1, "y": 2}, 3),
         ("(a + b) * c", {"a": 1, "b": 2, "c": 3}, 9),
+        ("false", None, False),
+        ("true", None, True),
+        ("null", None, None),
+        ("false != true", None, True),
+        ("var0 == true", {"var0": True}, True),
     ],
 )
 def test_eval_expr(expression, variables, expected):

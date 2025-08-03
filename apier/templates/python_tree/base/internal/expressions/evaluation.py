@@ -29,6 +29,13 @@ allowed_functions = {
     "ceil": lambda x: int(-(-x // 1)),
 }
 
+# Constants
+allowed_constants = {
+    "true": True,
+    "false": False,
+    "null": None,
+}
+
 
 def eval_expr(expr, vars=None):
     """
@@ -51,6 +58,9 @@ def eval_expr(expr, vars=None):
     """
     # Parse the expression into an AST
     tree = ast.parse(expr, mode="eval")
+
+    vars = vars.copy() if vars is not None else {}
+    vars.update(allowed_constants)
 
     def _eval(node: ast.AST):
         """Recursively evaluate supported AST nodes."""
