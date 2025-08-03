@@ -31,47 +31,57 @@ test_response = make_response(200, test_dict, test_request)
     [
         (
             test_dict,
-            "next_offset",
+            "Hello",
+            "Hello",
+        ),
+        (
+            test_dict,
+            "#",
+            test_dict,
+        ),
+        (
+            test_dict,
+            "#next_offset",
             2,
         ),
         (
             test_dict,
-            "users",
+            "#users",
             test_dict["users"],
         ),
         (
             test_dict,
-            "users.0",
+            "#users.0",
             test_dict["users"][0],
         ),
         (
             test_dict,
-            "users.1.name",
+            "#users.1.name",
             "Bob",
         ),
         (
             test_dict,
-            "{users.1.name}",
+            "{#users.1.name}",
             "Bob",
         ),
         (
             test_response,
-            "next_offset",
+            "#next_offset",
             2,
         ),
         (
             test_response,
-            "users",
+            "#users",
             test_dict["users"],
         ),
         (
             test_response,
-            "users.0",
+            "#users.0",
             test_dict["users"][0],
         ),
         (
             test_response,
-            "users.1.name",
+            "#users.1.name",
             "Bob",
         ),
         (
@@ -146,8 +156,13 @@ test_response = make_response(200, test_dict, test_request)
         ),
         (
             test_response,
-            "Alice: {users.0.id}, Bob: {users.1.id}",
+            "Alice: {#users.0.id}, Bob: {#users.1.id}",
             "Alice: 1, Bob: 2",
+        ),
+        (
+            test_response,
+            "Alice: {#users.0.id}, Bob: {foo}",
+            "Alice: 1, Bob: foo",
         ),
         # Evaluation expressions
         (
@@ -167,7 +182,7 @@ test_response = make_response(200, test_dict, test_request)
         ),
         (
             test_response,
-            "$eval({$response.body#/next_offset} + {users.1.id})",
+            "$eval({$response.body#/next_offset} + {#users.1.id})",
             4,
         ),
         (
@@ -188,7 +203,7 @@ test_response = make_response(200, test_dict, test_request)
         ),
         (
             test_response,
-            "{users.0.number ?? 42}",
+            "{#users.0.number ?? 42}",
             42,
         ),
     ],
@@ -238,9 +253,9 @@ def test_evaluate_with_type_casting(
 @pytest.mark.parametrize(
     "resp, expression, expected_cause_error",
     [
-        (test_request, "foo.bar", ValueError("Invalid response format")),
-        (test_response, "foo.bar", KeyError("Key 'foo.bar' not found")),
-        (test_dict, "users.2.name", IndexError("Index 'users.2.name' out of range")),
+        (test_request, "#foo.bar", ValueError("Invalid response format")),
+        (test_response, "#foo.bar", KeyError("Key 'foo.bar' not found")),
+        (test_dict, "#users.2.name", IndexError("Index 'users.2.name' out of range")),
         (
             test_response,
             "$request.body#/foo",

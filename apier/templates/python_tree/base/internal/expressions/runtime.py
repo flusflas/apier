@@ -137,14 +137,18 @@ def evaluate(
                 header_param_types=header_param_types,
             )
 
-        # At this point, the expression is treated as a dot-separated path
-        if isinstance(resp, Response):
-            resp = resp.json()
+        if expression.startswith("#"):
+            # Dot-separated path
+            if isinstance(resp, Response):
+                resp = resp.json()
 
-        if not isinstance(resp, dict):
-            raise ValueError("Invalid response format")
+            if not isinstance(resp, dict):
+                raise ValueError("Invalid response format")
 
-        return _get_from_dict(resp, expression)
+            return _get_from_dict(resp, expression[1:].strip())
+
+        # Return the expression as a literal value
+        return expression
 
     except RuntimeExpressionError as e:
         raise e
@@ -309,6 +313,9 @@ def _set_expression_value(req: PreparedRequest, expression: str, value):
 
 
 def _get_from_dict(d: dict, key: str, separator="."):
+    if key == "":
+        return d
+
     try:
 
         def get_item(a, b):

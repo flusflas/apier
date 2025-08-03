@@ -27,7 +27,7 @@ paths:
             modifiers:
               - param: "$request.query.next"
                 value: "$response.body#/cursors/next"
-            result: "results"
+            result: "#results"
             has_more: "$response.body#/cursors/next"
 ```
 
@@ -47,7 +47,7 @@ components:
       next:
         reuse_previous_request: true
         url: "$response.body#/next_page_url"
-        result: "results"
+        result: "#results"
         has_more: "$response.body#/next_page_url"
 ```
 
@@ -70,8 +70,9 @@ The following attributes are supported in the pagination extension. Most fields 
 [OpenAPI Runtime Expressions](https://swagger.io/docs/specification/v3_0/links/#runtime-expression-syntax) allow you to dynamically extract values from the request or response. In pagination configurations, they are used to specify how to retrieve the next page's cursor or URL, identify the result set, and determine if more pages are available, among other uses.
 
 In addition to the standard OpenAPI runtime expressions, apier also supports some additional features:
-- **Dot-separated paths** (e.g., `cursors.next`) can be used as a shortcut to access fields in the response body.
+- **Dot-separated paths** (e.g., `#cursors.next`) provide a convenient way to access fields in the response body. These paths must always begin with a `#`.
 - **Curly braces** can be used to include multiple runtime expressions in a single field (e.g., `/books/{$request.path.book_id}/authors/{$request.path.author_id}`).
+- Expressions that don’t start with `$` or `#` are treated as literal strings.
 
 ### Request Modifiers
 
@@ -89,7 +90,7 @@ x-apier:
       modifiers:
         - param: "$request.query.next"
           value: "$response.body#/cursors/next"
-      result: "results"
+      result: "#results"
       has_more: "$response.body#/cursors/next"
 ```
 
@@ -109,7 +110,7 @@ x-apier:
       modifiers:
         - param: "$request.query.next"
           value: "$response.body#/cursors/next"
-      result: "results"
+      result: "#results"
       has_more: "$response.body#/cursors/next"
 ```
 
@@ -123,7 +124,7 @@ x-apier:
     next:
       reuse_previous_request: true
       url: "$response.body#/next_page_url"
-      result: "results"
+      result: "#results"
       has_more: "$response.body#/next_page_url"
 ```
 
