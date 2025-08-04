@@ -2,8 +2,33 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+> ⚠️ **Warning: Pre-1.0.0 Release**
+> 
+> This project is in early development. Breaking changes may occur in any minor
+> or patch release until version 1.0.0. Follow changelogs closely and pin
+> versions if needed.
+
+## [0.4.0](https://github.com/flusflas/apier/tree/v0.4.0) (2025-08-04)
+
+This release adds `$eval` support for dynamic expressions, allowing complex
+evaluations and manipulations of request and response data, and unlocking
+advanced pagination strategies.
+
+### 🧨 Breaking Changes
+
+- Renamed `reuse-previous-request` to `reuse_previous_request` in pagination
+  configuration for naming consistency.
+- Enforced `#` prefix for dot-separated paths in dynamic expressions (e.g.,
+  `#users.0.name` instead of `users.0.name`).
+
+### Added
+
+- Simple expression evaluation with `ast` module.
+- Support for nullish coalescing operator (`??`) in dynamic expressions.
+
+### Fixed
+
+- Evaluation of `results` parameter in pagination configuration.
 
 ## [0.3.0](https://github.com/flusflas/apier/tree/v0.3.0) (2025-07-31)
 

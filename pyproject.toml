@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "apier"
-version = "0.3.0"
+version = "0.4.0"
 description = "Turn API specs into code"
 authors = ["flusflas <aflusflas@gmail.com>"]
 readme = "README.md"

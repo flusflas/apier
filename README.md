@@ -13,6 +13,8 @@
 
 apier provides a command-line interface (CLI) for building client libraries and merging OpenAPI documents.
 
+> 🐣 This project is in pre-1.0.0. Expect breaking changes in minor and patch versions.
+
 ## 🐍 Installation
 
 apier is available on PyPI:
