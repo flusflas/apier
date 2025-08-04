@@ -4,7 +4,7 @@ import json
 import pytest
 from requests import Request, Response, PreparedRequest
 
-from apier.templates.python_tree.base.internal.runtime_expr import (
+from apier.templates.python_tree.base.internal.expressions.runtime import (
     RuntimeExpressionError,
     prepare_request,
 )

@@ -66,11 +66,11 @@ paths:
       x-apier:
         pagination:
           next:
-            reuse-previous-request: true
+            reuse_previous_request: true
             modifiers:
               - param: "$request.query.next"
                 value: "$response.body#/cursors/next"
-            result: "results"
+            result: "#results"
             has_more: "$response.body#/cursors/next"
 ```
 

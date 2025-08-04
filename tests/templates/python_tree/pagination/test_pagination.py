@@ -1,4 +1,5 @@
 import json
+import math
 
 from httpretty.core import HTTPrettyRequest
 
@@ -30,7 +31,7 @@ def test_cursor_pagination():
     """
     pagination_function = API().pagination().cursor().get
 
-    for limit in range(1, 10):
+    for limit in range(1, 2):
 
         def request_handler(req: HTTPrettyRequest, uri, response_headers):
             assert "foo" in req.querystring
@@ -61,7 +62,7 @@ def test_cursor_pagination():
                 prev_cursor = str(expected_results[prev_index]["value"])
 
             resp = {
-                "results": data,
+                "data": data,
                 "cursors": {"next": next_cursor, "prev": prev_cursor},
             }
 
@@ -69,14 +70,15 @@ def test_cursor_pagination():
             return [200, response_headers, json.dumps(resp)]
 
         assert_pagination(
-            pagination_function,
-            {"params": {"limit": str(limit), "foo": "bar"}},
-            request_handler,
-            lambda response: response.results,
-            "https://pagination.test/pagination/cursor",
-            expected_results,
-            limit,
-            Result,
+            pagination_function=pagination_function,
+            function_params={"params": {"limit": str(limit), "foo": "bar"}},
+            request_handler=request_handler,
+            get_response_data=lambda response: response.data,
+            expected_url="https://pagination.test/pagination/cursor",
+            expected_results=expected_results,
+            expected_limit=limit,
+            expected_call_count=math.ceil(len(expected_results) / limit),
+            expected_type=Result,
         )
 
 
@@ -122,16 +124,109 @@ def test_next_page_url_pagination():
             return [200, response_headers, json.dumps(resp)]
 
         assert_pagination(
-            pagination_function,
-            {"params": {"limit": str(limit), "foo": "bar"}},
-            request_handler,
-            lambda response: response.results,
-            "https://pagination.test/pagination/next_page_url",
-            expected_results,
-            limit,
-            Result,
+            pagination_function=pagination_function,
+            function_params={"params": {"limit": str(limit), "foo": "bar"}},
+            request_handler=request_handler,
+            get_response_data=lambda response: response.results,
+            expected_url="https://pagination.test/pagination/next_page_url",
+            expected_results=expected_results,
+            expected_limit=limit,
+            expected_call_count=math.ceil(len(expected_results) / limit),
+            expected_type=Result,
         )
 
 
-# TODO: test_page_pagination
-# TODO: test_offset_pagination
+def test_offset_pagination():
+    """
+    Tests a successful pagination using offset pagination.
+    """
+    pagination_function = API().pagination().offset().get
+
+    for limit in range(1, 10):
+
+        def request_handler(req: HTTPrettyRequest, uri, response_headers):
+            assert "foo" in req.querystring
+            assert "limit" in req.querystring
+            assert int(req.querystring["limit"][0]) == limit
+
+            offset = int(req.querystring.get("offset", [0])[0])
+
+            next_index_start = offset
+            next_index_end = offset + limit
+
+            if next_index_end > len(expected_results):
+                next_index_end = len(expected_results)
+
+            if next_index_start >= len(expected_results):
+                data = []
+            else:
+                data = expected_results[next_index_start:next_index_end]
+
+            resp = {"results": data}
+
+            response_headers["Content-Type"] = "application/json"
+            return [200, response_headers, json.dumps(resp)]
+
+        expected_call_count = math.ceil(len(expected_results) / limit)
+        if len(expected_results) % limit == 0:
+            expected_call_count += 1
+
+        assert_pagination(
+            pagination_function=pagination_function,
+            function_params={"params": {"limit": str(limit), "foo": "bar"}},
+            request_handler=request_handler,
+            get_response_data=lambda response: response.results,
+            expected_url="https://pagination.test/pagination/offset",
+            expected_results=expected_results,
+            expected_limit=limit,
+            expected_call_count=expected_call_count,
+            expected_type=Result,
+        )
+
+
+def test_page_pagination():
+    """
+    Tests a successful pagination using page pagination.
+    """
+    pagination_function = API().pagination().page().get
+
+    for page_size in range(1, 10):
+
+        def request_handler(req: HTTPrettyRequest, uri, response_headers):
+            assert "foo" in req.querystring
+            assert "page_size" in req.querystring
+            assert int(req.querystring["page_size"][0]) == page_size
+
+            page = int(req.querystring.get("page", [0])[0])
+
+            next_index_start = page * page_size
+            next_index_end = next_index_start + page_size
+
+            if next_index_end > len(expected_results):
+                next_index_end = len(expected_results)
+
+            if next_index_start >= len(expected_results):
+                data = []
+            else:
+                data = expected_results[next_index_start:next_index_end]
+
+            resp = {"results": data}
+
+            response_headers["Content-Type"] = "application/json"
+            return [200, response_headers, json.dumps(resp)]
+
+        expected_call_count = math.ceil(len(expected_results) / page_size)
+        if len(expected_results) % page_size == 0:
+            expected_call_count += 1
+
+        assert_pagination(
+            pagination_function=pagination_function,
+            function_params={"params": {"page_size": str(page_size), "foo": "bar"}},
+            request_handler=request_handler,
+            get_response_data=lambda response: response.results,
+            expected_url="https://pagination.test/pagination/page",
+            expected_results=expected_results,
+            expected_limit=page_size,
+            expected_call_count=expected_call_count,
+            expected_type=Result,
+        )

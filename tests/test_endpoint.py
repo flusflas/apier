@@ -464,7 +464,7 @@ expected_endpoints = {
                             {
                                 "pagination": {
                                     "next": {
-                                        "reuse-previous-request": True,
+                                        "reuse_previous_request": True,
                                         "modifiers": [
                                             {
                                                 "param": "$request.query.next_cursor",

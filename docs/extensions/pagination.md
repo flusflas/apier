@@ -23,11 +23,11 @@ paths:
       x-apier:
         pagination:
           next:
-            reuse-previous-request: true
+            reuse_previous_request: true
             modifiers:
               - param: "$request.query.next"
                 value: "$response.body#/cursors/next"
-            result: "results"
+            result: "#results"
             has_more: "$response.body#/cursors/next"
 ```
 
@@ -45,9 +45,9 @@ components:
   x-pagination:
     PagePagination:
       next:
-        reuse-previous-request: true
+        reuse_previous_request: true
         url: "$response.body#/next_page_url"
-        result: "results"
+        result: "#results"
         has_more: "$response.body#/next_page_url"
 ```
 
@@ -57,7 +57,7 @@ The following attributes are supported in the pagination extension. Most fields 
 
 | Attribute                | Type      | Description                                                                                       |
 |--------------------------|-----------|---------------------------------------------------------------------------------------------------|
-| `reuse-previous-request` | boolean   | If true, the next request reuses the previous request's parameters.                               |
+| `reuse_previous_request` | boolean   | If true, the next request reuses the previous request's parameters.                               |
 | `modifiers`              | array     | List of request modifiers to update parameters for the next request.                              |
 | `param` (modifier)       | string    | The request parameter to modify (e.g., `$request.query.next`).                                    |
 | `value` (modifier)       | string    | Runtime expression to extract the value for the modifier.                                         |
@@ -65,13 +65,17 @@ The following attributes are supported in the pagination extension. Most fields 
 | `result`                 | string    | Runtime expression or path to extract the data results from the response.                         |
 | `has_more`               | string    | Runtime expression indicating if more pages are available.                                        |
 
-### Runtime Expressions
+### Dynamic Expressions
 
 [OpenAPI Runtime Expressions](https://swagger.io/docs/specification/v3_0/links/#runtime-expression-syntax) allow you to dynamically extract values from the request or response. In pagination configurations, they are used to specify how to retrieve the next page's cursor or URL, identify the result set, and determine if more pages are available, among other uses.
 
 In addition to the standard OpenAPI runtime expressions, apier also supports some additional features:
-- **Dot-separated paths** (e.g., `cursors.next`) can be used as a shortcut to access fields in the response body.
+- **Dot-separated paths** (e.g., `#cursors.next`) provide a convenient way to access fields in the response body. These paths must always begin with a `#`.
 - **Curly braces** can be used to include multiple runtime expressions in a single field (e.g., `/books/{$request.path.book_id}/authors/{$request.path.author_id}`).
+- Expressions that don’t start with `$` or `#` are treated as literal strings.
+- `$eval` allows for more complex evaluations, enabling the use of expressions that can manipulate or combine values from the request or response.
+
+Check the [Dynamic Expressions documentation](./expressions.md) for more details on how to use these expressions effectively.
 
 ### Request Modifiers
 
@@ -85,11 +89,11 @@ The following example shows how to use a runtime expression to extract the next 
 x-apier:
   pagination:
     next:
-      reuse-previous-request: true
+      reuse_previous_request: true
       modifiers:
         - param: "$request.query.next"
           value: "$response.body#/cursors/next"
-      result: "results"
+      result: "#results"
       has_more: "$response.body#/cursors/next"
 ```
 
@@ -105,11 +109,11 @@ Uses a value (cursor) returned in the response to fetch the next page. The clien
 x-apier:
   pagination:
     next:
-      reuse-previous-request: true
+      reuse_previous_request: true
       modifiers:
         - param: "$request.query.next"
           value: "$response.body#/cursors/next"
-      result: "results"
+      result: "#results"
       has_more: "$response.body#/cursors/next"
 ```
 
@@ -121,16 +125,40 @@ Uses a URL provided in the response to fetch the next page. The client follows t
 x-apier:
   pagination:
     next:
-      reuse-previous-request: true
+      reuse_previous_request: true
       url: "$response.body#/next_page_url"
-      result: "results"
+      result: "#results"
       has_more: "$response.body#/next_page_url"
 ```
 
-### Offset and Page Number Pagination
-Offset and page number strategies need more complex expression evaluation. For example:
-- `$eval({$request.query.page} + 1)` to increment the page number.
-- `$eval({$request.query.offset} + len({$response.body#/data}))` to increment the offset based on the number of items in the current response.
-- `$eval(len({$response.body#/data}) >= {$request.query.limit})` to determine if there are more pages based on the number of items returned.
+### Offset Pagination
+Uses an offset value to specify the starting point for the next page of results. The client updates the request with the new offset value based on the number of items returned in the previous response.
 
-This is still a work in progress, and you could expect to be available soon.
+**Example:**
+```yaml
+x-apier:
+  pagination:
+    next:
+      reuse_previous_request: true
+      modifiers:
+        - param: "$request.query.offset"
+          value: "$eval({$request.query.offset ?? 0} + len({#results}))"  # Increment offset by the number of results returned
+      result: "#results"
+      has_more: "$eval(len({$response.body#/results}) >= {$request.query.limit})"  # Keep fetching if the number of results is equal to the limit
+```
+
+### Page Number Pagination
+Uses a page number and limit to determine the next set of results. The client updates the request with the new page number for each subsequent request.
+
+**Example:**
+```yaml
+x-apier:
+  pagination:
+    next:
+      reuse_previous_request: true
+      modifiers:
+        - param: "$request.query.page"
+          value: "$eval({$request.query.page ?? 0} + 1)"  # Increment page number by 1
+      result: "#results"
+      has_more: "$eval(len({$response.body#/results}) >= {$request.query.page_size})"  # Keep fetching if the number of results is equal to the page size
+```

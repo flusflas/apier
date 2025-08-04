@@ -21,7 +21,7 @@ from .content_type import (
     content_types_compatible,
     ContentTypeValidationResult,
 )
-from .runtime_expr import evaluate, prepare_request
+from .expressions.runtime import evaluate, prepare_request
 from ..models.basemodel import APIBaseModel
 from ..models.exceptions import ExceptionList, ResponseError
 from ..models.extensions.pagination import PaginationDescription
@@ -269,10 +269,8 @@ class APIResource(ABC):
             )
             req.prepare_url(url, None)
         if pagination_info.method:
-            # TODO: Evaluate expression ???
             req.prepare_method(pagination_info.method)
         for modifier in pagination_info.modifiers:
-            # TODO: Evaluate complex expressions
             value = evaluate(resp, modifier.value, path_values, query_params, headers)
             prepare_request(req, modifier.param, value)
 

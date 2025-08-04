@@ -44,11 +44,11 @@ paths:
       x-apier:
         pagination:
           next:
-            reuse-previous-request: true
+            reuse_previous_request: true
             modifiers:
               - param: "$request.query.next"
                 value: "$response.body#/cursors/next"
-            result: "results"
+            result: "#data"
             has_more: "$response.body#/cursors/next"
 
   /pagination/next_page_url:
@@ -87,13 +87,95 @@ paths:
         pagination:
           $ref: '#/components/x-pagination/PagePagination'
 
+  /pagination/offset:
+    get:
+      tags:
+        - Pagination
+      summary: Offset pagination
+      description: Returns an offset-paginated list of responses.
+      operationId: GetPaginationOffset
+      parameters:
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageOffset'
+        '500':
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      x-apier:
+        pagination:
+          next:
+            reuse_previous_request: true
+            modifiers:
+              - param: "$request.query.offset"
+                value: "$eval({$request.query.offset ?? 0} + len({#results}))"
+            result: "#results"
+            has_more: "$eval(len({$response.body#/results}) >= {$request.query.limit})"
+
+  /pagination/page:
+    get:
+      tags:
+        - Pagination
+      summary: Page pagination
+      description: Returns a paginated list of responses using page pagination.
+      operationId: GetPaginationPage
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: page_size
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagePage'
+        '500':
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      x-apier:
+        pagination:
+          next:
+            reuse_previous_request: true
+            modifiers:
+              - param: "$request.query.page"
+                value: "$eval({$request.query.page ?? 0} + 1)"
+            result: "#results"
+            has_more: "$eval(len({$response.body#/results}) >= {$request.query.page_size})"
+
 components:
   x-pagination:
     PagePagination:
       next:
-        reuse-previous-request: true
+        reuse_previous_request: true
         url: "$response.body#/next_page_url"
-        result: "results"
+        result: "#results"
         has_more: "$response.body#/next_page_url"
 
   schemas:
@@ -122,7 +204,7 @@ components:
       title: PageCursor
       type: object
       properties:
-        results:
+        data:
           type: array
         cursors:
           type: object
@@ -140,3 +222,17 @@ components:
           type: array
         next_page_url:
             type: string
+
+    PageOffset:
+      title: PageOffset
+      type: object
+      properties:
+        results:
+          type: array
+
+    PagePage:
+      title: PageOffset
+      type: object
+      properties:
+        results:
+          type: array

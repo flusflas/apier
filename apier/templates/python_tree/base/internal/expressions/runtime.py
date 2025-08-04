@@ -6,6 +6,8 @@ from urllib.parse import parse_qs, urlparse
 
 from requests import PreparedRequest, Request, Response
 
+from .evaluation import eval_expr
+
 
 class RuntimeExpressionError(Exception):
     """Invalid runtime expression."""
@@ -21,6 +23,7 @@ def evaluate(
     path_values: dict = None,
     query_param_types: dict = None,
     header_param_types: dict = None,
+    **kwargs,
 ):
     """
     Evaluates an OpenAPI runtime expression (https://swagger.io/docs/specification/links/).
@@ -45,23 +48,85 @@ def evaluate(
                         will be returned.
     :return:            The result of the evaluated expression.
     """
+
+    # The 'eval_variables'  is a dictionary used to store variables when
+    # evaluating expressions within an $eval() expression. The result of the
+    # evaluation will be stored in this dictionary. This parameter is intended
+    # for internal use only and is not meant to be accessed directly outside the
+    # function.
+    eval_variables = kwargs.get("eval_variables")
+    is_eval = eval_variables is not None
+
     try:
         expression = expression.strip()
 
+        if expression.startswith("$eval("):
+            if is_eval:
+                raise RuntimeExpressionError(
+                    caused_by=ValueError(
+                        "Nested evaluation expressions are not supported"
+                    )
+                )
+
+            inner_expression = expression[len("$eval(") : -1].strip()
+            eval_variables = {}
+            expr = evaluate(
+                resp,
+                inner_expression,
+                path_values=path_values,
+                query_param_types=query_param_types,
+                header_param_types=header_param_types,
+                eval_variables=eval_variables,
+            )
+
+            return eval_expr(expr, eval_variables)
+
         if "{" in expression:
 
-            def replace_group(match):
-                return str(
-                    _evaluate_runtime_expression(
+            def replace_match(match):
+                default_value_defined = " ?? " in match
+
+                # Handle coalescing operator (??) to provide a default value
+                if default_value_defined:
+                    match, default_value = map(str.strip, match.split(" ?? ", 1))
+                    default_value = eval_expr(default_value)
+
+                try:
+                    group_result = evaluate(
                         resp,
-                        match.group(1),
+                        match,
                         path_values=path_values,
                         query_param_types=query_param_types,
                         header_param_types=header_param_types,
                     )
-                )
+                except RuntimeExpressionError as e:
+                    if default_value_defined and isinstance(
+                        e.caused_by, (KeyError, IndexError)
+                    ):
+                        group_result = default_value
+                    else:
+                        raise e
 
-            return re.sub(r"{(\$[^}]+)}", replace_group, expression)
+                # If inside an $eval(), the expression must be replaced with
+                # variables instead of the group result
+                if is_eval:
+                    var_name = f"var{len(eval_variables)}"
+                    eval_variables[var_name] = group_result
+                    return var_name
+
+                return group_result
+
+            parts = re.split(r"({\$?[^}]+})", expression)
+            parts = [part for part in parts if part]
+            for i, part in enumerate(parts):
+                if part.startswith("{") and part.endswith("}"):
+                    parts[i] = replace_match(part[1:-1])
+            return parts[0] if len(parts) == 1 else "".join(map(str, parts))
+
+        # If inside an $eval() expression, any subexpressions (enclosed in {})
+        # should already have been resolved, so the expression can be returned as is
+        if is_eval:
+            return expression
 
         if expression.startswith("$"):
             return _evaluate_runtime_expression(
@@ -72,15 +137,22 @@ def evaluate(
                 header_param_types=header_param_types,
             )
 
-        if isinstance(resp, Response):
-            resp = resp.json()
+        if expression.startswith("#"):
+            # Dot-separated path
+            if isinstance(resp, Response):
+                resp = resp.json()
 
-        if not isinstance(resp, dict):
-            raise ValueError("Invalid dict response")
+            if not isinstance(resp, dict):
+                raise ValueError("Invalid response format")
 
-        return _get_from_dict(resp, expression)
+            return _get_from_dict(resp, expression[1:].strip())
+
+        # Return the expression as a literal value
+        return expression
+
     except RuntimeExpressionError as e:
         raise e
+
     except Exception as e:
         raise RuntimeExpressionError(caused_by=e)
 
@@ -112,7 +184,9 @@ def _evaluate_runtime_expression(
         query_params = parse_qs(parsed_url.query)
         value = query_params.get(name, [])
         if len(value) == 0:
-            raise RuntimeExpressionError(f"Query parameter '{name}' not found")
+            raise RuntimeExpressionError(
+                caused_by=KeyError(f"Query parameter '{name}' not found")
+            )
         elif len(value) == 1:
             return value[0]
         else:
@@ -121,7 +195,9 @@ def _evaluate_runtime_expression(
     def get_path_value(name):
         if path_values is not None and name in path_values:
             return path_values[name]
-        raise RuntimeExpressionError(f"Path parameter '{name}' not found")
+        raise RuntimeExpressionError(
+            caused_by=KeyError(f"Path parameter '{name}' not found")
+        )
 
     expression_funcs = {
         "$url": lambda: resp.request.url,
@@ -151,7 +227,7 @@ def _evaluate_runtime_expression(
         if expr == expression:
             return fn()
 
-    raise RuntimeExpressionError("invalid runtime expression")
+    raise RuntimeExpressionError(caused_by=ValueError("Invalid runtime expression"))
 
 
 def prepare_request(req: Union[PreparedRequest, Request], expression: str, value):
@@ -237,6 +313,9 @@ def _set_expression_value(req: PreparedRequest, expression: str, value):
 
 
 def _get_from_dict(d: dict, key: str, separator="."):
+    if key == "":
+        return d
+
     try:
 
         def get_item(a, b):
