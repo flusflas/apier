@@ -11,11 +11,9 @@ with potential for other applications in the future.
 
 ### OpenAPI Runtime Expressions
 
-Dynamic Expressions support the standard OpenAPI runtime expressions, which allow you to extract values from requests
-and responses using a simple syntax.
-
-Dynamic Expressions also support standard OpenAPI runtime expressions, which use `$` to extract values from requests and
-responses.
+Dynamic Expressions
+support [OpenAPI Runtime Expressions](https://swagger.io/docs/specification/v3_0/links/#runtime-expression-syntax),
+which allow you to access and manipulate data from request and response objects.
 
 **Syntax:**
 
@@ -29,9 +27,6 @@ $expression
 - `$response.body#/users/0/name` extracts the `name` of the first user from the response body.
 - `$response.body#/cursors/has_more ?? false` returns the value of `has_more` from the response body,
   defaulting to `false` if it does not exist.
-
-You can read more about OpenAPI runtime expressions in
-the [OpenAPI Specification](https://swagger.io/docs/specification/v3_0/links/#runtime-expression-syntax).
 
 ### Dot-Separated Paths
 
@@ -54,9 +49,12 @@ When applied to an HTTP response object, the response body is used as the data s
 
 ### Compound Expressions
 
-Curly braces allow you to combine multiple expressions or include literal text alongside evaluated expressions. This is useful for constructing strings dynamically.
+Curly braces allow you to combine multiple expressions or include literal text alongside evaluated expressions. This is
+useful for constructing strings dynamically.
 
-Expressions within curly braces `{}` can use the nullish coalescing operator (`??`) to provide a default value if the expression evaluates to `null` or is undefined. This ensures a valid value is always available, even when the original expression yields no result.
+Expressions within curly braces `{}` can use the nullish coalescing operator (`??`) to provide a default value if the
+expression evaluates to `null` or is undefined. This ensures a valid value is always available, even when the original
+expression yields no result.
 
 **Syntax:**
 
@@ -69,8 +67,6 @@ Expressions within curly braces `{}` can use the nullish coalescing operator (`?
 - `Hello, {#users.0.name}!` evaluates to `Hello, Alice!` if the first user's name is `Alice`.
 - `/books/{#book.id}/authors/{#author.id}` constructs a URL path using dynamic values.
 - `{#users.0.age ?? 'unknown'}` evaluates to the first user's age, or `'unknown'` if the age is not available.
-
-
 
 ### Literals
 
@@ -140,8 +136,14 @@ And the response to this request is:
 ```json
 {
   "data": [
-    {"id": 1, "title": "Book One"},
-    {"id": 2, "title": "Book Two"}
+    {
+      "id": 1,
+      "title": "Book One"
+    },
+    {
+      "id": 2,
+      "title": "Book Two"
+    }
   ],
   "cursors": {
     "next": "https://api.example.com/books?limit=10&offset=30"
@@ -150,9 +152,13 @@ And the response to this request is:
 ```
 
 You can use Dynamic Expressions to access data from both the request and response:
+
 - `$request.query.limit` retrieves the `limit` query parameter from the request: `10`.
-- `$response.body#/cursors/next` extracts the next page URL from the response: `https://api.example.com/books?limit=10&offset=30`.
+- `$response.body#/cursors/next` extracts the next page URL from the response:
+  `https://api.example.com/books?limit=10&offset=30`.
 - `#data.0.title` retrieves the title of the first book in the response: `Book One`.
-- `$eval({$request.query.offset} + len({$response.body#/data}))` calculates the new offset based on the number of items in the response: `22`.
+- `$eval({$request.query.offset} + len({$response.body#/data}))` calculates the new offset based on the number of items
+  in the response: `22`.
 - `$eval(len({#data}) > 0)` checks if there are any items in the response: `True`.
-- `{{#data.0.title} ?? 'No title'}` retrieves the title of the first book, defaulting to "No title" if it does not exist: `Book One`.
+- `{{#data.0.title} ?? 'No title'}` retrieves the title of the first book, defaulting to "No title" if it does not
+  exist: `Book One`.
