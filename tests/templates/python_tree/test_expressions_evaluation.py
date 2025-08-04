@@ -53,10 +53,12 @@ def test_eval_expr(expression, variables, expected):
         ("5j", ValueError("Complex numbers are not supported.")),
         ("x + y", ValueError("Variable not defined: x")),
         ("x ** 2", SyntaxError("Unsupported syntax: BinOp")),
-        ("x + ", SyntaxError("invalid syntax")),
+        ("x + ", SyntaxError("Invalid expression syntax")),
         ("1 + foo()", ValueError("Function not allowed: 'foo'")),
         ("1 < 2 < 3", ValueError("Only simple comparisons are supported.")),
         ("1 in [1, 2, 3]", ValueError("Comparison operator not allowed: In")),
+        ("None", ValueError("Unsupported constant: None")),
+        ("True", ValueError("Unsupported constant: True")),
     ],
 )
 def test_eval_expr_errors(expression, error):

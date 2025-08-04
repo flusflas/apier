@@ -57,7 +57,10 @@ def eval_expr(expr, vars=None):
         The result of evaluating the expression.
     """
     # Parse the expression into an AST
-    tree = ast.parse(expr, mode="eval")
+    try:
+        tree = ast.parse(expr, mode="eval")
+    except SyntaxError as e:
+        raise SyntaxError(f"Invalid expression syntax: {e.msg}") from e
 
     vars = vars.copy() if vars is not None else {}
     vars.update(allowed_constants)
@@ -68,6 +71,8 @@ def eval_expr(expr, vars=None):
         if isinstance(node, ast.Constant):
             if isinstance(node.value, complex):
                 raise ValueError("Complex numbers are not supported.")
+            if node.value is True or node.value is False or node.value is None:
+                raise ValueError(f"Unsupported constant: {node.value}")
             return node.value
 
         elif isinstance(node, ast.Name):
