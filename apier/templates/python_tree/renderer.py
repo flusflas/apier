@@ -9,6 +9,7 @@ from apier.templates.python_tree.functions import (
     get_type_hint,
     payload_from_input_parameters,
     get_method_name,
+    chain_layers,
 )
 from apier.templates.python_tree.model_generation.generate import generate_models
 from apier.core.api.tree import APINode, build_endpoints_tree
@@ -66,6 +67,7 @@ class Renderer:
         self.render_security_schemes_file()
         self.render_api_file()
         self.render_api_components()
+        self.render_api_operations_file()
 
         format_file(self.output_path)
         self.create_init_files()
@@ -76,6 +78,33 @@ class Renderer:
 
         with open(self.output_path + "/models/__init__.py", "w") as f:
             f.write("from .models import *\n")
+
+    def render_api_operations_file(self):
+        filename = f"{self.output_path}/internal/api_operations.py"
+        environment = Environment(
+            loader=FileSystemLoader(abs_path("./")),
+            trim_blocks=True,
+            lstrip_blocks=True,
+        )
+
+        environment.filters["snake_case"] = to_snake_case
+        environment.filters["pascal_case"] = to_pascal_case
+        environment.filters["api_name"] = self.get_api_name
+        environment.filters["method_name"] = get_method_name
+
+        template = environment.get_template("templates/api_operations.jinja")
+        content = template.render(
+            openapi=self.definition.definition,
+            api_tree=self.api_tree,
+            endpoints=self.endpoints,
+            get_type_hint=get_type_hint,
+            chain_layers=chain_layers,
+            server_url=self.definition.get_value("servers.0.url", default=None),
+            root_branches=self.api_tree.branches,
+            security_scheme_names=self.security_scheme_names,
+        )
+        with open(filename, mode="w", encoding="utf-8") as message:
+            message.write(content)
 
     def render_api_file(self):
         filename = f"{self.output_path}/api.py"
