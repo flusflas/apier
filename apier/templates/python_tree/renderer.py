@@ -16,6 +16,7 @@ from apier.core.api.tree import APINode, build_endpoints_tree
 from apier.utils.path import abs_path_from_current_script as abs_path
 from apier.utils.strings import to_pascal_case, to_snake_case
 from .security import parse_security_schemes
+from ...utils.dicts import get_multi_key
 
 TEMPLATE_NAME = "python-tree"
 
@@ -42,10 +43,10 @@ class Renderer:
         self.definition = definition
         self.schemas = schemas
         self.endpoints = endpoints
-        self.api_tree = build_endpoints_tree(endpoints)
         self.output_path = output_path.rstrip("/")
         self.api_names = {}
         self.security_scheme_names = parse_security_schemes(self.definition)
+        self.api_tree: APINode | None = None
 
         self.verbose = ctx.get("verbose", False)
         self.output_logger = ctx.get("output_logger", print)
@@ -60,6 +61,8 @@ class Renderer:
         os.makedirs(self.output_path + "/apis")
         open(self.output_path + "/apis/__init__.py", "w").close()
 
+        self.prepare_endpoints()
+
         self.output_logger("  📜 Generating models...")
         generate_models(self.definition, self.schemas, self.output_path)
 
@@ -71,6 +74,24 @@ class Renderer:
 
         format_file(self.output_path)
         self.create_init_files()
+
+    def prepare_endpoints(self):
+        """
+        Prepares the endpoints by ensuring that data is in the correct format
+        and creates the API tree structure.
+        """
+        for endpoint in self.endpoints:
+            for op in endpoint.operations:
+                # Convert operation name in pagination extensions to snake_case
+                next_op_name = get_multi_key(
+                    op, "extensions.pagination.next.operation.name", default=None
+                )
+                if next_op_name:
+                    op.extensions.pagination.next.operation.name = to_snake_case(
+                        next_op_name
+                    )
+
+        self.api_tree = build_endpoints_tree(self.endpoints)
 
     def create_init_files(self):
         with open(self.output_path + "/__init__.py", "w") as f:

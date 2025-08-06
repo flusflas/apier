@@ -10,6 +10,7 @@ class _Default:
 _default = _Default()
 
 
+# TODO: Rename to "get_nested" (nested_access.py)
 def get_multi_key(d: dict, key: str, separator: str = ".", default=_default):
     """
     Returns the value of the dictionary given by a key, which can define
@@ -28,8 +29,12 @@ def get_multi_key(d: dict, key: str, separator: str = ".", default=_default):
 
         def get_item(a, b):
             if isinstance(a, list):
-                b = int(b)
-            return a[b]
+                return a[int(b)]
+            elif isinstance(a, dict):
+                return a[b]
+            elif hasattr(a, b):  # TODO: WIP
+                return getattr(a, b)
+            raise KeyError
 
         return reduce(get_item, key.split(separator), d)
     except KeyError:

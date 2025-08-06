@@ -1,10 +1,14 @@
 import json
 import math
 
+import httpretty
 from httpretty.core import HTTPrettyRequest
 
 from tests.templates.setup import build_client
 from .common import assert_pagination
+
+pkg_name = __name__.rsplit(".", 1)[0]
+request_mock_pkg = f"{pkg_name}._build.api.requests.request"
 
 build_client("python-tree", "pagination_api.yaml")
 if True:
@@ -230,3 +234,61 @@ def test_page_pagination():
             expected_call_count=expected_call_count,
             expected_type=Result,
         )
+
+
+@httpretty.activate
+def test_next_operation_pagination():
+    """
+    Tests a successful pagination that uses an API operation to fetch the first
+    page of results, and then uses a different API operation to fetch the next
+    one.
+    """
+
+    expected_resp_body = [
+        {
+            "results": expected_results[:4],
+            "cursor": "12345",
+            "hasMore": True,
+        },
+        {
+            "results": expected_results[4:8],
+            "cursor": "12345",
+            "hasMore": True,
+        },
+        {
+            "results": expected_results[8:],
+            "cursor": "12345",
+            "hasMore": False,
+        },
+    ]
+
+    httpretty.register_uri(
+        httpretty.GET,
+        "https://pagination.test/pagination/next_operation",
+        body=json.dumps(expected_resp_body[0]),
+        status=201,
+        content_type="application/json",
+    )
+
+    first_resp = API().pagination().next_operation().get()
+
+    assert first_resp.http_response().status_code == 201
+    assert first_resp.results == expected_results[:4]
+
+    def request_callback(request, uri, response_headers):
+        response_headers["Content-Type"] = "application/json"
+        resp_index = len(httpretty.HTTPretty.latest_requests) - 1
+        return [200, response_headers, json.dumps(expected_resp_body[resp_index])]
+
+    httpretty.register_uri(
+        httpretty.GET,
+        "https://pagination.test/pagination/next_operation/12345",
+        body=request_callback,
+    )
+
+    for result_index, result in enumerate(first_resp):
+        assert result == Result.parse_obj(expected_results[result_index])
+
+    assert len(httpretty.HTTPretty.latest_requests) == 3
+    assert result_index == len(expected_results) - 1
+    assert first_resp._pagination.results == expected_results
