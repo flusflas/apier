@@ -5,6 +5,7 @@ from jinja2 import Environment, FileSystemLoader
 
 from apier.core.api.endpoints import Endpoint
 from apier.core.api.openapi import Definition
+from apier.core.api.tree import APINode, build_endpoints_tree
 from apier.templates.python_tree.functions import (
     get_type_hint,
     payload_from_input_parameters,
@@ -12,11 +13,10 @@ from apier.templates.python_tree.functions import (
     chain_layers,
 )
 from apier.templates.python_tree.model_generation.generate import generate_models
-from apier.core.api.tree import APINode, build_endpoints_tree
+from apier.utils.data_access import get_nested
 from apier.utils.path import abs_path_from_current_script as abs_path
 from apier.utils.strings import to_pascal_case, to_snake_case
 from .security import parse_security_schemes
-from ...utils.dicts import get_multi_key
 
 TEMPLATE_NAME = "python-tree"
 
@@ -83,7 +83,7 @@ class Renderer:
         for endpoint in self.endpoints:
             for op in endpoint.operations:
                 # Convert operation name in pagination extensions to snake_case
-                next_op_name = get_multi_key(
+                next_op_name = get_nested(
                     op, "extensions.pagination.next.operation.name", default=None
                 )
                 if next_op_name:
