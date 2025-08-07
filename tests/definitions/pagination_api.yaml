@@ -203,11 +203,10 @@ paths:
       x-apier:
         pagination:
           next:
-            operation:
-              name: GetPaginationNextOperationCursor
-              parameters:
-                - name: cursor_id
-                  value: "#cursor"
+            operation_id: GetPaginationNextOperationCursor
+            parameters:
+              - name: cursor_id
+                value: "#cursor"
             result: "#results"
             has_more: "#hasMore"
 

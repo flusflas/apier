@@ -271,14 +271,14 @@ class APIResource(ABC):
             value = evaluate(resp, modifier.value, path_values, query_params, headers)
             prepare_request(req, modifier.param, value)
 
-        if pagination_info.operation:
+        if pagination_info.operation_id:
             # If a next operation is defined, prepare the parameters for it
             # and set the iter_func to call the next operation using the
             # API class with flat operation methods.
-            op_name = pagination_info.operation.name
+            op_id = pagination_info.operation_id
             evaluated_params = {}
 
-            for param in pagination_info.operation.parameters:
+            for param in pagination_info.parameters:
                 evaluated_params[param.name] = evaluate(
                     resp, param.value, path_values, query_params, headers
                 )
@@ -287,10 +287,10 @@ class APIResource(ABC):
             from .api_operations import APIOperations
 
             api_operations = APIOperations(api)
-            if not hasattr(api_operations, op_name):
-                raise ValueError(f"Next operation '{op_name}' not found in API")
+            if not hasattr(api_operations, op_id):
+                raise ValueError(f"Next operation '{op_id}' not found in API")
 
-            next_op = getattr(api_operations, op_name)
+            next_op = getattr(api_operations, op_id)
 
             # Check if next_op accepts a "req" parameter
             if "req" in next_op.__code__.co_varnames:

@@ -219,7 +219,7 @@ test_response = make_response(200, test_dict, test_request)
         ),
         (
             test_response,
-            '\{"name": "{#users.0.name}"\}',
+            '\\{"name": "{#users.0.name}"\\}',
             '{"name": "Alice"}',
         ),
         (
