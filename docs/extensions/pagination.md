@@ -55,15 +55,14 @@ components:
 
 The following attributes are supported in the pagination extension. Most fields accept [OpenAPI Runtime Expressions](https://swagger.io/docs/specification/v3_0/links/#runtime-expression-syntax) or dot-separated paths to extract values from the request or response.
 
-| Attribute                | Type      | Description                                                                                       |
-|--------------------------|-----------|---------------------------------------------------------------------------------------------------|
-| `reuse_previous_request` | boolean   | If true, the next request reuses the previous request's parameters.                               |
-| `modifiers`              | array     | List of request modifiers to update parameters for the next request.                              |
-| `param` (modifier)       | string    | The request parameter to modify (e.g., `$request.query.next`).                                    |
-| `value` (modifier)       | string    | Runtime expression to extract the value for the modifier.                                         |
-| `url`                    | string    | Runtime expression to extract the next page URL from the response.                                |
-| `result`                 | string    | Runtime expression or path to extract the data results from the response.                         |
-| `has_more`               | string    | Runtime expression indicating if more pages are available.                                        |
+| Attribute                | Type      | Description                                                                                                                                                             |
+|--------------------------|-----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `reuse_previous_request` | boolean   | If true, the next request reuses the previous request's parameters.                                                                                                     |
+| `modifiers`              | array     | List of request modifiers to update parameters for the next request.                                                                                                    |
+| `param` (modifier)       | string    | The request parameter to modify (e.g., `$request.query.next`).                                                                                                          |
+| `value` (modifier)       | string    | Runtime expression to extract the value for the modifier.                                                                                                               |
+| `result`                 | string    | Runtime expression or path to extract the data results from the response.                                                                                               |
+| `has_more`               | string    | Runtime expression that determines if additional pages are available. If the evaluated result is `false` or empty (such as `null`, `0`, or `""`), pagination will stop. |
 
 ### Dynamic Expressions
 
@@ -126,7 +125,9 @@ x-apier:
   pagination:
     next:
       reuse_previous_request: true
-      url: "$response.body#/next_page_url"
+      modifiers:
+        - param: "url"
+          value: "$response.body#/next_page_url"  # Update the request URL with the next page URL
       result: "#results"
       has_more: "$response.body#/next_page_url"
 ```
