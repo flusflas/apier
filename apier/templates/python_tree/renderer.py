@@ -54,12 +54,20 @@ class Renderer:
     def render(self):
         self.api_names = {}
 
+        # Copy the base directory to the output path
         if os.path.exists(self.output_path):
             # TODO: Ask before removing
             shutil.rmtree(self.output_path)
         shutil.copytree(abs_path("./base"), self.output_path)
+
+        # Copy the pagination extension to the output directory. This is done
+        # to prevent code duplication in the base directory.
+        shutil.copyfile(
+            abs_path("../../extensions/pagination.py"),
+            self.output_path + "/models/extensions/pagination.py",
+        )
+
         os.makedirs(self.output_path + "/apis")
-        open(self.output_path + "/apis/__init__.py", "w").close()
 
         self.prepare_endpoints()
 
@@ -99,6 +107,8 @@ class Renderer:
 
         with open(self.output_path + "/models/__init__.py", "w") as f:
             f.write("from .models import *\n")
+
+        open(self.output_path + "/apis/__init__.py", "w").close()
 
     def render_api_operations_file(self):
         filename = f"{self.output_path}/internal/api_operations.py"

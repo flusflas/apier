@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import List, Optional, Union, Literal
 
 from pydantic import BaseModel, Field, root_validator
 
@@ -35,44 +35,52 @@ class NextOperation(BaseModel):
     )
 
 
+class PaginationModifier(BaseModel):
+    """Represents a request modifier to update parameters for the next request."""
+
+    op: Optional[str] = "set"
+    param: str
+    value: str
+
+
 class PaginationDescription(BaseModel):
-    """Describes the pagination configuration for an API endpoint."""
+    """Represents a pagination mode that uses modifiers to control the pagination flow."""
 
     class Config:
         allow_population_by_field_name = True
 
     operation: Optional[NextOperation] = Field(
-        None,
-        description="The next operation to execute. If not provided, the next "
-        "pagination step will use the current operation.",
+        None, description="The next operation to execute for pagination."
     )
     reuse_previous_request: bool = Field(
         default=False,
-        alias="reuse_previous_request",
-        description="Whether to reuse the previous request for pagination.",
+        description="Whether the next request should reuse the previous request's parameters.",
     )
-    method: str = ""
-    url: str = ""
-    modifiers: List[PaginationModifier] = Field(default_factory=list)
-    result: str
-    has_more: str
+    modifiers: List[PaginationModifier] = Field(
+        default_factory=list,
+        description="List of request modifiers to update parameters for the next request.",
+    )
+    result: str = Field(
+        ...,
+        description="A dynamic expression that evaluates to the list of results in the response.",
+    )
+    has_more: str = Field(
+        ...,
+        description="A dynamic expression that evaluates to a boolean indicating if there are more results.",
+    )
 
-    # TODO: Validate that operation is not set with reuse_previous_request or modifiers
-    # TODO: Remove method and url, as they can be assigned by modifiers
+    @root_validator
+    def check_mutually_exclusive_fields(cls, values):
+        next_op = values.get("operation")
+        reuse = values.get("reuse_previous_request")
+        modifiers = values.get("modifiers")
 
-    # @root_validator
-    # def validate_fields(cls, values: dict):
-    #     if isinstance(values, PaginationDescription):
-    #         values = values.dict()
-    #     reuse = values.get("reuse_previous_request") or values.get(
-    #         "reuse_previous_request"
-    #     )
-    #     for attr in ["method", "url"]:
-    #         if not reuse and not values[attr]:
-    #             raise ValueError(
-    #                 f"The field '{attr}' is required if 'reuse_previous_request' is False"
-    #             )
-    #     return values
+        if next_op and (reuse or modifiers):
+            raise ValueError(
+                "'operation' cannot be set with 'reuse_previous_request' or 'modifiers'."
+            )
+
+        return values
 
 
 class PaginationModifier(BaseModel):

@@ -249,7 +249,9 @@ components:
     PagePagination:
       next:
         reuse_previous_request: true
-        url: "$response.body#/next_page_url"
+        modifiers:
+          - param: "$url"
+            value: "$response.body#/next_page_url"
         result: "#results"
         has_more: "$response.body#/next_page_url"
 

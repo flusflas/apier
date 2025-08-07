@@ -266,13 +266,7 @@ class APIResource(ABC):
         req.prepare_method(resp.request.method)
         if pagination_info.reuse_previous_request:
             req = resp.request
-        if pagination_info.url:
-            url = evaluate(
-                resp, pagination_info.url, path_values, query_params, headers
-            )
-            req.prepare_url(url, None)
-        if pagination_info.method:
-            req.prepare_method(pagination_info.method)
+
         for modifier in pagination_info.modifiers:
             value = evaluate(resp, modifier.value, path_values, query_params, headers)
             prepare_request(req, modifier.param, value)
