@@ -91,13 +91,9 @@ class Renderer:
         for endpoint in self.endpoints:
             for op in endpoint.operations:
                 # Convert operation name in pagination extensions to snake_case
-                next_op_id = get_nested(
-                    op, "extensions.pagination.next.operation_id", default=None
-                )
-                if next_op_id:
-                    op.extensions.pagination.next.operation_id = to_snake_case(
-                        next_op_id
-                    )
+                next_op = get_nested(op, "extensions.pagination.next", default=None)
+                if next_op:
+                    next_op.update_operation_case(to_snake_case)
 
         self.api_tree = build_endpoints_tree(self.endpoints)
 

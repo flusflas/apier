@@ -205,12 +205,12 @@ paths:
           next:
             operation_id: GetPaginationNextOperationCursor
             parameters:
-              - name: cursor_id
+              - name: cursor-id
                 value: "#cursor"
             result: "#results"
             has_more: "#hasMore"
 
-  /pagination/next_operation/{cursor_id}:
+  /pagination/next_operation/{cursor-id}:
     get:
       tags:
         - Pagination
@@ -218,7 +218,7 @@ paths:
       description: Fetches the next page of results using a cursor ID.
       operationId: GetPaginationNextOperationCursor
       parameters:
-        - name: cursor_id
+        - name: cursor-id
           in: path
           required: true
           schema:

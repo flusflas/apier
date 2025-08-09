@@ -267,7 +267,7 @@ class APIResource(ABC):
         if pagination_info.reuse_previous_request:
             req = resp.request
 
-        for modifier in pagination_info.modifiers:
+        for modifier in pagination_info.modifiers or []:
             value = evaluate(resp, modifier.value, path_values, query_params, headers)
             prepare_request(req, modifier.param, value)
 
@@ -278,7 +278,7 @@ class APIResource(ABC):
             op_id = pagination_info.operation_id
             evaluated_params = {}
 
-            for param in pagination_info.parameters:
+            for param in pagination_info.parameters or []:
                 evaluated_params[param.name] = evaluate(
                     resp, param.value, path_values, query_params, headers
                 )
@@ -291,10 +291,6 @@ class APIResource(ABC):
                 raise ValueError(f"Next operation '{op_id}' not found in API")
 
             next_op = getattr(api_operations, op_id)
-
-            # Check if next_op accepts a "req" parameter
-            if "req" in next_op.__code__.co_varnames:
-                evaluated_params["req"] = req.body
 
             ret._pagination.iter_func = lambda: next_op(**evaluated_params)
             return
