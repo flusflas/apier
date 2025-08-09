@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 
 from .input_parameters import InputParametersDescription
 from .method_name import MethodNameDescription
@@ -65,4 +65,10 @@ def parse_extensions(endpoint: Endpoint):
                     extension_def["$ref"]
                 )
 
-        op.extensions = Extensions.parse_obj(extensions_def)
+        try:
+            op.extensions = Extensions.parse_obj(extensions_def)
+        except ValidationError as e:
+            extension_name = e.errors()[0]["loc"][0]
+            raise ValueError(
+                f"Invalid extension '{extension_name}' in operation '{endpoint_def.get('operationId')}': {e}"
+            ) from e
