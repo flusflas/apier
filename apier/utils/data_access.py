@@ -1,4 +1,5 @@
 from functools import reduce
+from typing import Union
 
 
 class _Default:
@@ -10,7 +11,9 @@ class _Default:
 _default = _Default()
 
 
-def get_nested(d: dict | object, key: str, separator: str = ".", default=_default):
+def get_nested(
+    d: Union[dict, object], key: str, separator: str = ".", default=_default
+):
     """
     Returns the value of the object or dictionary given by a key, which can define
     multiple levels (e.g. "info.version").
