@@ -211,6 +211,22 @@ test_response = make_response(200, test_dict, test_request)
             "{#has_more ?? false}",
             False,
         ),
+        # Escape sequences
+        (
+            test_response,
+            "Alice: {#users.0.id}, Bob: {#users.1.id} \\{escaped\\}",
+            "Alice: 1, Bob: 2 {escaped}",
+        ),
+        (
+            test_response,
+            '\\{"name": "{#users.0.name}"\\}',
+            '{"name": "Alice"}',
+        ),
+        (
+            test_response,
+            '\\\\{"name": "{$response.body#/users/0/name}"\\\\}',
+            '\\{"name": "Alice"\\}',
+        ),
     ],
 )
 def test_evaluate(resp: Union[dict, Request, Response], expression: str, expected):

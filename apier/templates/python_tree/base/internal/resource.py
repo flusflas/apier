@@ -261,18 +261,39 @@ class APIResource(ABC):
             return
 
         req = PreparedRequest()
+        req.headers = CaseInsensitiveDict()
+        req.prepare_url(resp.request.url, None)
+        req.prepare_method(resp.request.method)
         if pagination_info.reuse_previous_request:
             req = resp.request
-        if pagination_info.url:
-            url = evaluate(
-                resp, pagination_info.url, path_values, query_params, headers
-            )
-            req.prepare_url(url, None)
-        if pagination_info.method:
-            req.prepare_method(pagination_info.method)
-        for modifier in pagination_info.modifiers:
+
+        for modifier in pagination_info.modifiers or []:
             value = evaluate(resp, modifier.value, path_values, query_params, headers)
             prepare_request(req, modifier.param, value)
+
+        if pagination_info.operation_id:
+            # If a next operation is defined, prepare the parameters for it
+            # and set the iter_func to call the next operation using the
+            # API class with flat operation methods.
+            op_id = pagination_info.operation_id
+            evaluated_params = {}
+
+            for param in pagination_info.parameters or []:
+                evaluated_params[param.name] = evaluate(
+                    resp, param.value, path_values, query_params, headers
+                )
+
+            api = self._api()
+            from .api_operations import APIOperations
+
+            api_operations = APIOperations(api)
+            if not hasattr(api_operations, op_id):
+                raise ValueError(f"Next operation '{op_id}' not found in API")
+
+            next_op = getattr(api_operations, op_id)
+
+            ret._pagination.iter_func = lambda: next_op(**evaluated_params)
+            return
 
         def make_request():
             api = self._api()

@@ -56,7 +56,7 @@ class {{ api_node.api | pascal_case }}{{ loop.index }}(APIResource{% for next_no
         {# Pagination description #}
         {% set has_pagination = op.extensions and op.extensions.pagination and op.extensions.pagination.next %}
         {% if has_pagination %}
-        pagination_info = PaginationDescription.parse_obj({{ op.extensions.pagination.next.dict() }})
+        pagination_info = PaginationDescription.parse_obj({{ op.extensions.pagination.next.dict(exclude_none=True) }})
 
         {% endif -%}
 

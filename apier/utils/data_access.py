@@ -1,4 +1,5 @@
 from functools import reduce
+from typing import Union
 
 
 class _Default:
@@ -10,12 +11,14 @@ class _Default:
 _default = _Default()
 
 
-def get_multi_key(d: dict, key: str, separator: str = ".", default=_default):
+def get_nested(
+    d: Union[dict, object], key: str, separator: str = ".", default=_default
+):
     """
-    Returns the value of the dictionary given by a key, which can define
+    Returns the value of the object or dictionary given by a key, which can define
     multiple levels (e.g. "info.version").
 
-    :param d: The dictionary object.
+    :param d: The object or dictionary.
     :param key: The key of the value that will be returned. It can define
                 multiple levels by using a separator (which is '.' by default).
     :param separator: The separator of a multi-level key.
@@ -28,8 +31,12 @@ def get_multi_key(d: dict, key: str, separator: str = ".", default=_default):
 
         def get_item(a, b):
             if isinstance(a, list):
-                b = int(b)
-            return a[b]
+                return a[int(b)]
+            elif isinstance(a, dict):
+                return a[b]
+            elif hasattr(a, b):
+                return getattr(a, b)
+            raise KeyError
 
         return reduce(get_item, key.split(separator), d)
     except KeyError:
