@@ -56,6 +56,8 @@ Expressions within curly braces `{}` can use the nullish coalescing operator (`?
 expression evaluates to `null` or is undefined. This ensures a valid value is always available, even when the original
 expression yields no result.
 
+If an expression does not begin with `{$` or `{#`, it is interpreted as a literal and remains unevaluated.
+
 **Syntax:**
 
 ```
@@ -67,6 +69,7 @@ expression yields no result.
 - `Hello, {#users.0.name}!` evaluates to `Hello, Alice!` if the first user's name is `Alice`.
 - `/books/{#book.id}/authors/{#author.id}` constructs a URL path using dynamic values.
 - `{#users.0.age ?? 'unknown'}` evaluates to the first user's age, or `'unknown'` if the age is not available.
+- `{"foo": 123}` returns a literal JSON object without evaluation, remaining as `{"foo": 123}`.
 
 ### Literals
 
@@ -162,3 +165,4 @@ You can use Dynamic Expressions to access data from both the request and respons
 - `$eval(len({#data}) > 0)` checks if there are any items in the response: `True`.
 - `{{#data.0.title} ?? 'No title'}` retrieves the title of the first book, defaulting to "No title" if it does not
   exist: `Book One`.
+- `{}` represents an empty JSON object literal: `{}`.

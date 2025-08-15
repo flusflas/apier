@@ -162,7 +162,7 @@ test_response = make_response(200, test_dict, test_request)
         (
             test_response,
             "Alice: {#users.0.id}, Bob: {foo}",
-            "Alice: 1, Bob: foo",
+            "Alice: 1, Bob: {foo}",
         ),
         # Evaluation expressions
         (
@@ -224,8 +224,33 @@ test_response = make_response(200, test_dict, test_request)
         ),
         (
             test_response,
+            '{"name": "{#users.0.name}"}',
+            '{"name": "Alice"}',
+        ),
+        (
+            test_response,
             '\\\\{"name": "{$response.body#/users/0/name}"\\\\}',
             '\\{"name": "Alice"\\}',
+        ),
+        (
+            test_response,
+            "\\{$response.url\\}",
+            "{$response.url}",
+        ),
+        (
+            test_response,
+            "\\{#users.0.name\\}",
+            "{#users.0.name}",
+        ),
+        (
+            test_response,
+            "\\{\\}",
+            "{}",
+        ),
+        (
+            test_response,
+            "{}",
+            "{}",
         ),
     ],
 )
