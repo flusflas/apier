@@ -51,50 +51,73 @@ components:
         has_more: "$response.body#/next_page_url"
 ```
 
-## Pagination Extension Attributes
+## Pagination Extension Configuration
 
-The following attributes are supported in the pagination extension. Most fields accept [OpenAPI Runtime Expressions](https://swagger.io/docs/specification/v3_0/links/#runtime-expression-syntax) or dot-separated paths to extract values from the request or response.
+Pagination in apier can be configured in two main ways: **Modifiers-based Pagination** and **Operation-based Pagination**. Each approach is suited to different API designs and use cases.
 
-| Attribute                | Type      | Description                                                                                       |
-|--------------------------|-----------|---------------------------------------------------------------------------------------------------|
-| `reuse_previous_request` | boolean   | If true, the next request reuses the previous request's parameters.                               |
-| `modifiers`              | array     | List of request modifiers to update parameters for the next request.                              |
-| `param` (modifier)       | string    | The request parameter to modify (e.g., `$request.query.next`).                                    |
-| `value` (modifier)       | string    | Runtime expression to extract the value for the modifier.                                         |
-| `url`                    | string    | Runtime expression to extract the next page URL from the response.                                |
-| `result`                 | string    | Runtime expression or path to extract the data results from the response.                         |
-| `has_more`               | string    | Runtime expression indicating if more pages are available.                                        |
+> 🧙‍♂️ **Using Dynamic Expressions**: Most pagination attributes accept [Dynamic Expressions](./expressions.md), which are a superset of OpenAPI Runtime Expressions. They allow you to extract and manipulate values from the request or response, combine multiple expressions, and perform advanced evaluations.
 
-### Dynamic Expressions
+### 1. Modifiers-based Pagination
 
-[OpenAPI Runtime Expressions](https://swagger.io/docs/specification/v3_0/links/#runtime-expression-syntax) allow you to dynamically extract values from the request or response. In pagination configurations, they are used to specify how to retrieve the next page's cursor or URL, identify the result set, and determine if more pages are available, among other uses.
+Use this approach when you need to update the parameters of the next request based on the previous response or request. Modifiers allow you to dynamically adjust query parameters, headers, or other request fields to fetch the next page.
 
-In addition to the standard OpenAPI runtime expressions, apier also supports some additional features:
-- **Dot-separated paths** (e.g., `#cursors.next`) provide a convenient way to access fields in the response body. These paths must always begin with a `#`.
-- **Curly braces** can be used to include multiple runtime expressions in a single field (e.g., `/books/{$request.path.book_id}/authors/{$request.path.author_id}`).
-- Expressions that don’t start with `$` or `#` are treated as literal strings.
-- `$eval` allows for more complex evaluations, enabling the use of expressions that can manipulate or combine values from the request or response.
+| Attribute                | Type    | Required | Description                                                                                                                                                  |
+|--------------------------|---------|----------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `reuse_previous_request` | boolean | False    | If true, the next request reuses the previous request's parameters.                                                                                          |
+| `modifiers`              | array   | False    | List of request modifiers to update parameters for the next request. Each modifier specifies which parameter to update and how to extract its new value.     |
+| `result`                 | string  | True     | [Dynamic Expression](./expressions.md) or path to extract the data results from the response.                                                                |
+| `has_more`               | string  | True     | [Dynamic Expression](./expressions.md) that determines if additional pages are available. If the evaluated result is `false` or empty, pagination will stop. |
 
-Check the [Dynamic Expressions documentation](./expressions.md) for more details on how to use these expressions effectively.
+If `reuse_previous_request` is not set, the next request will default to the same URL and method as the previous one, unless the modifiers specify otherwise.
 
-### Request Modifiers
+Modifiers define how to update the next request based on the previous response. Each modifier specifies which request parameter to change and how to compute its new value:
 
-Request modifiers let you update request parameters for the next page based on values from the previous request or response. Modifiers are defined as an array of objects, each specifying a parameter to modify and the value to set it to.
-- **param**: The request parameter to modify (e.g., `$request.query.next`). Here, `$request` refers to the request being prepared to fetch the next page.
-- **value**: A runtime expression that extracts the value from the previous response or request. This value will be used to update the specified parameter for the next request. In this context, `$response` refers to the response from the previous request, and `$request` refers to the previous request.
+| Attribute | Type   | Description                                                                   |
+|-----------|--------|-------------------------------------------------------------------------------|
+| `param`   | string | The request parameter to modify (e.g., `$request.query.next`).                |
+| `value`   | string | [Dynamic Expression](./expressions.md) to extract the value for the modifier. |
 
-The following example shows how to use a runtime expression to extract the next cursor value from the response body (`$response.body#/cursors/next`) and use it to update the `next` query parameter (`$request.query.next`) for the next request:
-
+**Example:**
 ```yaml
-x-apier:
-  pagination:
-    next:
-      reuse_previous_request: true
-      modifiers:
-        - param: "$request.query.next"
-          value: "$response.body#/cursors/next"
-      result: "#results"
-      has_more: "$response.body#/cursors/next"
+x-pagination:
+  next:
+    reuse_previous_request: true
+    modifiers:
+      - param: $request.query.page
+        value: "$response.body#/next_page"
+    result: "#results"
+    has_more: "$response.body#/next_page"
+```
+
+### 2. Operation-based Pagination
+
+Use this approach when the next page should be fetched by invoking a different or specific OpenAPI operation, rather than modifying the current request.
+
+This pagination mode could be useful for non-standard pagination strategies where the next page is determined by a separate operation.
+
+| Attribute      | Type   | Required | Description                                                                                                                                                  |
+|----------------|--------|----------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `operation_id` | string | Yes      | Defines the OpenAPI operation to fetch the next page.                                                                                                        |
+| `parameters`   | array  | No       | Parameters to pass to the operation. This allows you to specify any parameters required by the operation, such as path or query parameters.                  |
+| `result`       | string | Yes      | [Dynamic Expression](./expressions.md) or path to extract the data results from the response.                                                                |
+| `has_more`     | string | Yes      | [Dynamic Expression](./expressions.md) that determines if additional pages are available. If the evaluated result is `false` or empty, pagination will stop. |
+
+Parameters can be specified to pass values to the operation. If the operation requires specific parameters, they need to be defined here or the operation will fail.
+
+| Attribute | Type   | Description                                                                                                 |
+|-----------|--------|-------------------------------------------------------------------------------------------------------------|
+| `name`    | string | The name of the parameter to pass to the operation. This should match the operation's parameter definition. |
+| `value`   | string | [Dynamic Expression](./expressions.md) to extract the value for the parameter.                              |
+
+**Example:**
+```yaml
+x-pagination:
+  operation_id: getNextPage  (e.g. GET /items/{cursor-id})
+  parameters:
+    - name: "cursor-id"  # The required 'cursor-id' parameter
+      value: "$response.body#/next_id"
+  result: "#items"
+  has_more: "$response.body#/next_id"
 ```
 
 ## Supported Pagination Strategies (Use Cases)
@@ -126,7 +149,9 @@ x-apier:
   pagination:
     next:
       reuse_previous_request: true
-      url: "$response.body#/next_page_url"
+      modifiers:
+        - param: "url"
+          value: "$response.body#/next_page_url"  # Update the request URL with the next page URL
       result: "#results"
       has_more: "$response.body#/next_page_url"
 ```

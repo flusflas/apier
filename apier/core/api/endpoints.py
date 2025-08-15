@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, List, Tuple
 from apier.core.api.openapi import Definition
 from apier.core.consts import NO_RESPONSE_ID
 from apier.extensions.extensions import Extensions, parse_extensions
-from apier.utils.dicts import get_multi_key
+from apier.utils.data_access import get_nested
 from apier.utils.strings import to_pascal_case
 
 if TYPE_CHECKING:
@@ -189,7 +189,7 @@ class EndpointsParser:
             endpoint_operation = endpoint.layers[-1].get_operation(method_name)
 
             req_schemas = []
-            req_definition = get_multi_key(operation, "requestBody.content", ".", {})
+            req_definition = get_nested(operation, "requestBody.content", ".", {})
             for content_type, content_type_definition in req_definition.items():
                 schema = content_type_definition.get("schema", {})
                 req_schemas.append(
@@ -385,7 +385,7 @@ def get_first_endpoint_param(
             name=param_name,
             description=param_schema.get("description", ""),
             in_location=in_location,
-            type=get_multi_key(param_schema, "schema.type", default="string"),
+            type=get_nested(param_schema, "schema.type", default="string"),
             required=(
                 param_schema.get("required", False) if in_location != "path" else True
             ),
@@ -447,7 +447,7 @@ def parse_parameter(definition: Definition, parameter_info: dict) -> EndpointPar
         name=info["name"],
         description=info.get("description", ""),
         in_location=info["in"],
-        type=get_multi_key(info, "schema.type", default="string"),
+        type=get_nested(info, "schema.type", default="string"),
         required=info.get("required", False) if info["in"] != "path" else True,
         format=info.get("format", ""),
     )

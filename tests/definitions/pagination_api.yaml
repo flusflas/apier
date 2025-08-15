@@ -169,12 +169,88 @@ paths:
             result: "#results"
             has_more: "$eval(len({$response.body#/results}) >= {$request.query.page_size})"
 
+  /pagination/next_operation:
+    get:
+      tags:
+        - Pagination
+      summary: Next operation pagination
+      description: Returns a paginated list of responses and uses an existing operation to fetch the next page.
+      operationId: GetPaginationNextOperation
+      parameters:
+        - name: operation
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageNextOperation'
+        '500':
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      x-apier:
+        pagination:
+          next:
+            operation_id: GetPaginationNextOperationCursor
+            parameters:
+              - name: cursor-id
+                value: "#cursor"
+            result: "#results"
+            has_more: "#hasMore"
+
+  /pagination/next_operation/{cursor-id}:
+    get:
+      tags:
+        - Pagination
+      summary: Next operation with cursor ID
+      description: Fetches the next page of results using a cursor ID.
+      operationId: GetPaginationNextOperationCursor
+      parameters:
+        - name: cursor-id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageNextOperation'
+        '500':
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      x-apier:
+        pagination:
+          next:
+            reuse_previous_request: true
+            result: "#results"
+            has_more: "$response.body#/hasMore"
+
 components:
   x-pagination:
     PagePagination:
       next:
         reuse_previous_request: true
-        url: "$response.body#/next_page_url"
+        modifiers:
+          - param: "$url"
+            value: "$response.body#/next_page_url"
         result: "#results"
         has_more: "$response.body#/next_page_url"
 
@@ -221,7 +297,7 @@ components:
         results:
           type: array
         next_page_url:
-            type: string
+          type: string
 
     PageOffset:
       title: PageOffset
@@ -236,3 +312,18 @@ components:
       properties:
         results:
           type: array
+
+    PageNextOperation:
+      title: PageNextOperation
+      description: Response containing a cursor ID for fetching the next operation, which must be set in the URL of the next operation.
+      type: object
+      properties:
+        results:
+          type: array
+          description: List of results.
+        hasMore:
+          type: boolean
+          description: Indicates if there are more results to fetch.
+        cursor:
+          type: string
+          description: Cursor for the next operation.

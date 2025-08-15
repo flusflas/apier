@@ -3,7 +3,7 @@ from typing import Mapping, Any
 from openapi_spec_validator import validate
 from openapi_spec_validator.readers import read_from_filename
 
-from apier.utils.dicts import get_multi_key, _default
+from apier.utils.data_access import get_nested, _default
 
 
 class Definition:
@@ -48,7 +48,7 @@ class Definition:
                  the value is not found and default is not set.
         """
         try:
-            return get_multi_key(self.definition, key, separator, default)
+            return get_nested(self.definition, key, separator, default)
         except KeyError:
             raise KeyError(f"Key '{key}' not found")
 

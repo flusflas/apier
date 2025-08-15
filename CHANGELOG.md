@@ -8,6 +8,41 @@ All notable changes to this project will be documented in this file.
 > or patch release until version 1.0.0. Follow changelogs closely and pin
 > versions if needed.
 
+## [0.5.0](https://github.com/flusflas/apier/tree/v0.5.0) (2025-08-15)
+
+The pagination extension now supports setting the API operation to fetch the
+next page of results, using the `operationId` parameter as defined in the
+OpenAPI specification.
+
+### 🧨 Breaking Changes
+
+- Removed `url` parameter from pagination configuration. Now, the previous
+  request URL is automatically reused for the next page request. If the URL
+  needs to be changed, it can be done adding a modifier on the `$url` field.
+
+  Before:
+  ```yaml
+  pagination:
+    next:
+      url: "https://api.example.com/next-page"
+  ```
+  
+  After:
+  ```yaml
+  pagination:
+    next:
+      modifiers:
+        - param: "$url"
+          value: "https://api.example.com/next-page"
+  ```
+
+### Added
+
+- `APIOperation` class for `python-tree` template with one method for each OpenAPI operation. This serves for pagination operations and is not meant for direct use.
+- Support for literal curly braces in dynamic expressions (e.g., `{"foo": 123}` will be evaluated as a literal string).
+- Pagination strategy to retrieve the next page of results using an existing API operation.
+- Improved error details when extensions parsing fails.
+
 ## [0.4.0](https://github.com/flusflas/apier/tree/v0.4.0) (2025-08-04)
 
 This release adds `$eval` support for dynamic expressions, allowing complex

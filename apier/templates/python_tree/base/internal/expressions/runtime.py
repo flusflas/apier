@@ -81,7 +81,7 @@ def evaluate(
 
             return eval_expr(expr, eval_variables)
 
-        if "{" in expression:
+        if "{$" in expression or "{#" in expression:
 
             def replace_match(match):
                 default_value_defined = " ?? " in match
@@ -116,12 +116,24 @@ def evaluate(
 
                 return group_result
 
-            parts = re.split(r"({\$?[^}]+})", expression)
+            expression = expression.replace(r"\{", "__ESCAPED_OPEN__").replace(
+                r"\}", "__ESCAPED_CLOSE__"
+            )
+
+            parts = re.split(r"({[$#][^}]+})", expression)
             parts = [part for part in parts if part]
             for i, part in enumerate(parts):
-                if part.startswith("{") and part.endswith("}"):
+                if part.startswith(("{$", "{#")) and part.endswith("}"):
                     parts[i] = replace_match(part[1:-1])
+                else:
+                    parts[i] = (
+                        parts[i]
+                        .replace("__ESCAPED_OPEN__", "{")
+                        .replace("__ESCAPED_CLOSE__", "}")
+                    )
             return parts[0] if len(parts) == 1 else "".join(map(str, parts))
+
+        expression = expression.replace(r"\{", "{").replace(r"\}", "}")
 
         # If inside an $eval() expression, any subexpressions (enclosed in {})
         # should already have been resolved, so the expression can be returned as is
