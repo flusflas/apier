@@ -11,7 +11,7 @@ pkg_name = __name__.rsplit(".", 1)[0]
 request_mock_pkg = f"{pkg_name}._build.api.requests.request"
 
 if True:
-    from ._build.api import API
+    from ._build import CompanyMaker
     from ._build.security import BearerToken
     from ._build.models.exceptions import ResponseError
     from ._build.models.models import (
@@ -45,13 +45,11 @@ def test_create(req, expected_resp):
     """
     Tests a successful request to create a Employee.
     """
-    from ._build.api import API
-
     expected_raw_resp = make_response(201, expected_resp)
 
     with mock.patch(request_mock_pkg, return_value=expected_raw_resp) as m:
         resp = (
-            API(host="test-api.com")
+            CompanyMaker(host="test-api.com")
             .with_security(BearerToken("token"))
             .companies("shiny_stickers")
             .employees()
@@ -83,7 +81,7 @@ def test_get():
 
     with mock.patch(request_mock_pkg, return_value=expected_resp) as m:
         resp = (
-            API(host="test-api.com")
+            CompanyMaker(host="test-api.com")
             .with_security(BearerToken("token"))
             .companies("shiny_stickers")
             .employees(1000)
@@ -127,7 +125,7 @@ def test_list():
 
     with mock.patch(request_mock_pkg, return_value=expected_resp) as m:
         resp = (
-            API(host="test-api.com")
+            CompanyMaker(host="test-api.com")
             .with_security(BearerToken("token"))
             .companies("shiny_stickers")
             .employees()
@@ -159,7 +157,7 @@ def test_get_from_department():
 
     with mock.patch(request_mock_pkg, return_value=expected_resp) as m:
         resp = (
-            API(host="test-api.com")
+            CompanyMaker(host="test-api.com")
             .with_security(BearerToken("token"))
             .companies("shiny_stickers")
             .departments("marketing")
@@ -193,7 +191,7 @@ def test_get_error():
     with mock.patch(request_mock_pkg, return_value=expected_resp) as m:
         with pytest.raises(ResponseError) as e:
             (
-                API(host="test-api.com")
+                CompanyMaker(host="test-api.com")
                 .with_security(BearerToken("token"))
                 .companies("shiny_stickers")
                 .get()

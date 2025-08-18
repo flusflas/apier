@@ -76,6 +76,7 @@ print(f"Employee Name: {employee.name}")
 The `python-tree` template supports the following OpenAPI extensions to enhance the generated client. For detailed descriptions, refer to the [OpenAPI extensions documentation](../extensions/README.md):
 - [Template Configuration](../extensions/README.md#template-configuration) (`x-apier.templates`)
 - [Equivalent Paths](../extensions/README.md#equivalent-paths) (`x-apier.equivalent-paths`)
+- [Ignore Operation](../extensions/README.md#ignore-operation) (`x-apier.ignore`)
 - [Pagination](../extensions/README.md#pagination) (`x-apier.pagination`)
 - [Method Name](../extensions/README.md#method-name) (`x-apier.method-name`)
 - [Input Parameters](../extensions/README.md#input-parameters) (`x-apier.input-parameters`)
@@ -85,6 +86,7 @@ The `python-tree` template supports the following OpenAPI extensions to enhance 
 
 This template supports the following template configuration options:
 - `raise-response-errors`: When set to `true`, the client raises a `ResponseError` for non-2xx responses. If set to `false`, the client returns the raw response object, allowing you to handle errors manually. The default value is `true`.
+- `client-name`: Allows you to specify a custom name for the generated client class. If not provided, the default name is `API`.
 
 Configuration example:
 ```yaml
@@ -93,6 +95,7 @@ info:
     templates:
       python-tree:
         raise-response-errors: true  # Enable raising exceptions for non-2xx responses
+        client-name: MyAPIClient     # Custom name for the generated client class
 ```
 
 ### Pagination
