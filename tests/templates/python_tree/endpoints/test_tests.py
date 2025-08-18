@@ -169,3 +169,15 @@ def test_xml(req, expected_resp, expected_resp_xml):
     assert resp.http_response().status_code == 200
     assert resp == expected_resp
     assert isinstance(resp, Company)
+
+
+def test_ignored_endpoint():
+    """
+    Tests that an endpoint marked with the `ignore` extension is not included
+    in the API client.
+    """
+    api = API(host="test-api.com")
+    assert not hasattr(api.tests(), "ignored")
+
+    with pytest.raises(AttributeError):
+        api.tests().ignored()

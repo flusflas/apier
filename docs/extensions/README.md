@@ -54,6 +54,20 @@ graph LR;
 
 These extensions are defined within the `paths` section of the OpenAPI document and apply to specific operations. These extensions can modify how individual operations are handled in the generated client.
 
+### Ignore Operation
+
+The `x-apier.ignore` extension allows you to exclude specific endpoint operations from the generated client. This is useful for endpoints that are not relevant to the client or when you want to prevent certain operations from being included in the generated code.
+
+#### Example
+
+```yaml
+paths:
+  /companies/{company_id}/employees:
+    get:
+      x-apier:
+        ignore: true
+```
+
 ### Pagination
 The `x-apier.pagination` extension enables handling of paginated endpoints in generated clients. It supports various pagination strategies, such as cursor-based and next-page URL pagination. For detailed documentation, refer to [Pagination Extension](./pagination.md).
 
@@ -151,13 +165,14 @@ paths:
 
 The table below indicates the support of each built-in template for the described extensions.
 
-| Extension                | python-tree |
-|--------------------------|-------------|
-| Pagination               | Yes         |
-| Method Name              | Yes         |
-| Equivalent Paths         | Yes         |
-| Input Parameters         | Yes         |
-| Template Configuration   | Yes         |
-| Response Stream          | Yes         |
+| Extension              | python-tree |
+|------------------------|-------------|
+| Template Configuration | Yes         |
+| Equivalent Paths       | Yes         |
+| Ignore Operation       | Yes         |
+| Pagination             | Yes         |
+| Method Name            | Yes         |
+| Input Parameters       | Yes         |
+| Response Stream        | Yes         |
 
 For more details on templates, refer to the [Templates Documentation](../templates/README.md).

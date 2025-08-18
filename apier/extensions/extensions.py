@@ -26,6 +26,7 @@ class Extensions(BaseModel):
     class Config:
         allow_population_by_field_name = True
 
+    ignore: bool = Field(default=False, alias="ignore")
     pagination: Pagination = Field(default=None, alias="pagination")
     input_parameters: InputParametersDescription = Field(
         default=None, alias="input-parameters"

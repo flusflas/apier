@@ -76,6 +76,7 @@ print(f"Employee Name: {employee.name}")
 The `python-tree` template supports the following OpenAPI extensions to enhance the generated client. For detailed descriptions, refer to the [OpenAPI extensions documentation](../extensions/README.md):
 - [Template Configuration](../extensions/README.md#template-configuration) (`x-apier.templates`)
 - [Equivalent Paths](../extensions/README.md#equivalent-paths) (`x-apier.equivalent-paths`)
+- [Ignore Operation](../extensions/README.md#ignore-operation) (`x-apier.ignore`)
 - [Pagination](../extensions/README.md#pagination) (`x-apier.pagination`)
 - [Method Name](../extensions/README.md#method-name) (`x-apier.method-name`)
 - [Input Parameters](../extensions/README.md#input-parameters) (`x-apier.input-parameters`)

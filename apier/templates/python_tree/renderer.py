@@ -88,8 +88,16 @@ class Renderer:
         Prepares the endpoints by ensuring that data is in the correct format
         and creates the API tree structure.
         """
-        for endpoint in self.endpoints:
-            for op in endpoint.operations:
+        for endpoint in self.endpoints.copy():
+            for op in endpoint.operations.copy():
+                # Remove operations that are marked to be ignored
+                if op.extensions and op.extensions.ignore:
+                    endpoint.operations.remove(op)
+                    # If the endpoint has no operations left, remove it
+                    if not endpoint.operations:
+                        self.endpoints.remove(endpoint)
+                    continue
+
                 # Convert operation name in pagination extensions to snake_case
                 next_op = get_nested(op, "extensions.pagination.next", default=None)
                 if next_op:

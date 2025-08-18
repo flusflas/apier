@@ -639,6 +639,21 @@ paths:
             application/xml:
               schema:
                 $ref: '#/components/schemas/Company'
+      x-apier:
+        ignore: false
+
+  /tests/ignored:
+    get:
+      tags:
+        - Tests
+      summary: Ignored endpoint
+      description: This endpoint will not be included in the generated client.
+      operationId: GetIgnoredEndpoint
+      responses:
+        '202':
+          description: Accepted
+      x-apier:
+        ignore: true
 
 components:
   securitySchemes:
