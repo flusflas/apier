@@ -8,6 +8,34 @@ All notable changes to this project will be documented in this file.
 > or patch release until version 1.0.0. Follow changelogs closely and pin
 > versions if needed.
 
+## [0.6.0](https://github.com/flusflas/apier/tree/v0.6.0) (2025-08-18)
+
+This release introduces new extension features.
+
+### Added
+
+- Ignore operation extension to skip specific API operations during code generation.
+
+  Example:
+  ```yaml
+  paths:
+    /companies/{company_id}/employees:
+      get:
+        x-apier:
+          ignore: true
+  ```
+
+- Option to specify a custom client name for the generated API client in the `python-tree` template.
+
+  Example:
+  ```yaml
+  info:
+    x-apier:
+      templates:
+        python-tree:
+          client-name: MyAPIClient
+  ```
+
 ## [0.5.0](https://github.com/flusflas/apier/tree/v0.5.0) (2025-08-15)
 
 The pagination extension now supports setting the API operation to fetch the
