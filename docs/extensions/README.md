@@ -17,7 +17,10 @@ info:
     templates:
       python-tree:
         raise-response-errors: true
+        client-name: MyAPIClient
 ```
+
+To know the details of the available template configurations, refer to the documentation of the specific template you are using (right now, only [`python-tree`](../templates/python_tree.md#template-configuration) is available).
 
 ### Equivalent Paths
 The `x-apier.equivalent_paths` extension maps equivalent paths in the OpenAPI specification to simplify client generation. This is particularly useful for templates that generate clients with hierarchical method structures, such as the `python-tree` template.

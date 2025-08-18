@@ -10,6 +10,7 @@ info:
     templates:
       python-tree:
         raise-response-errors: true
+        client-name: CompanyMaker
 servers:
   - url: 'https://company-maker.test'
     description: Testing server

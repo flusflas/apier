@@ -86,6 +86,7 @@ The `python-tree` template supports the following OpenAPI extensions to enhance 
 
 This template supports the following template configuration options:
 - `raise-response-errors`: When set to `true`, the client raises a `ResponseError` for non-2xx responses. If set to `false`, the client returns the raw response object, allowing you to handle errors manually. The default value is `true`.
+- `client-name`: Allows you to specify a custom name for the generated client class. If not provided, the default name is `API`.
 
 Configuration example:
 ```yaml
@@ -94,6 +95,7 @@ info:
     templates:
       python-tree:
         raise-response-errors: true  # Enable raising exceptions for non-2xx responses
+        client-name: MyAPIClient     # Custom name for the generated client class
 ```
 
 ### Pagination

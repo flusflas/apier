@@ -106,8 +106,16 @@ class Renderer:
         self.api_tree = build_endpoints_tree(self.endpoints)
 
     def create_init_files(self):
+        api_class_name = self.definition.get_value(
+            f"info.x-apier.templates.{TEMPLATE_NAME}.client-name",
+            default=None,
+        )
+
         with open(self.output_path + "/__init__.py", "w") as f:
-            f.write("from .api import API\n")
+            if not api_class_name:
+                f.write("from .api import API\n")
+            else:
+                f.write(f"from .api import API as {api_class_name}\n")
 
         with open(self.output_path + "/models/__init__.py", "w") as f:
             f.write("from .models import *\n")
